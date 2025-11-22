@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <!-- 子模块继承于yun-blog模块-->
-        <groupId>org.example</groupId>
+        <groupId>com.mengze</groupId>
         <artifactId>yun-blog</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
