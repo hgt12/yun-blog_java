@@ -30,6 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/login").anonymous()
                 // 对于热门文章列表接口 允许匿名访问
                 .antMatchers("/article/hotArticleList").permitAll()
+                // 对于文章分类列表接口 允许匿名访问
+                .antMatchers("/category/getCategoryList").permitAll()
                 // 除上面外的所有请求全部需要鉴权认证
                 .anyRequest().authenticated();
     }

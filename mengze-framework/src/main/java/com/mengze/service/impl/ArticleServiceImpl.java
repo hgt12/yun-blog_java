@@ -10,10 +10,8 @@ import com.mengze.mapper.ArticleMapper;
 import com.mengze.domain.entity.Article;
 import com.mengze.service.ArticleService;
 import com.mengze.utils.BeanCopyUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
