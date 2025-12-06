@@ -1,13 +1,14 @@
 package com.mengze.controller;
 
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.entity.Article;
 import com.mengze.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
+//文章列表
 @RestController
 @RequestMapping("/article")//对应本地链接http://localhost:1314/article/
 public class ArticleController {
@@ -28,5 +29,12 @@ public class ArticleController {
     {
         ResponseResult result = articleService.hotArticleList();
         return result;
+    }
+
+    //分页查询文章列表（要有分类id，页码，每页大小参数）
+    @GetMapping("/articleList")
+    public  ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId)
+    {
+        return articleService.articleList(pageNum, pageSize, categoryId);
     }
 }
