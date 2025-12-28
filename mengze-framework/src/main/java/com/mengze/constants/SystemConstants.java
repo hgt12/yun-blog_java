@@ -16,4 +16,8 @@ public class SystemConstants
      *  文章是正常发布状态字符串型
      */
     public static final String STATUS_NORMAL = "0";
+    /**
+     *  友链审核通过状态
+     */
+    public static final String LINK_STATUS_NORMAL = "0";
 }

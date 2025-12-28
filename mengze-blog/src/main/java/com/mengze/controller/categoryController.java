@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-//分类列表
+//分类列表接口
 @RestController
 @RequestMapping("/category")
 public class categoryController
