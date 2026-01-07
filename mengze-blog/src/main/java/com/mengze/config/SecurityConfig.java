@@ -1,7 +1,8 @@
-package com.mengze.domain.config;
+package com.mengze.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,23 +29,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问
                 .antMatchers("/login").anonymous()
-                // 对于热门文章列表接口 允许所有人访问
-                .antMatchers("/article/hotArticleList").permitAll()
-                // 对于文章分类列表接口 允许所有人访问
-                .antMatchers("/category/getCategoryList").permitAll()
-                // 对于分页查询文章列表接口 允许所有人访问
-                .antMatchers("/article/articleList").permitAll()
-                // 对于文章详情接口 允许所有人访问
-                .antMatchers("/article/{id}").permitAll()
-                // 对于友链查询接口 允许所有人访问
-                .antMatchers("/link/getAllLink").permitAll()
-                // 除上面外的所有请求全部需要鉴权认证
-                .anyRequest().authenticated();
+                // 除上面外的所有请求不需要认证就可以访问
+                .anyRequest().permitAll();
+
+        http.logout().disable();
+        //允许跨域
+        http.cors();
+    }
+
+    //对密码进行加密
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
+    public AuthenticationManager authenticationManager() throws Exception
+    {
+        return super.authenticationManager();
     }
 }
 

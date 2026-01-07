@@ -88,10 +88,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //查询categoryName
         List<Article> articles = page.getRecords();
-        //stream流方式查询(方法1简化版)
-        articles.stream()
-                .map(article -> article.setCategoryName(categoryService.getById(article.getCategoryId()).getName()))
-                .collect(Collectors.toList());
+        //stream流方式查询
+        articles.forEach(article -> 
+                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
+        );
 
         //stream流方式查询(方法1)
 //        articles.stream()
