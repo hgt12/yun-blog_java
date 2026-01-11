@@ -16,4 +16,10 @@ public class CategoryVo
     private Long id;
     //分类名
     private String name;
+    //分类描述
+    private String description;
+    //文章数量
+    private Integer articleCount;
+    //状态
+    private String status;
 }

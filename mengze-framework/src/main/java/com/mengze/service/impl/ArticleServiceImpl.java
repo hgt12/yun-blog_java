@@ -136,5 +136,32 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //封装响应返回
         return ResponseResult.okResult(articleDetailVo);
     }
+
+    @Override
+    public ResponseResult articleListByCategoryId(Long categoryId, Integer pageNum, Integer pageSize) {
+        //查询条件
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //根据分类id查询
+        lambdaQueryWrapper.eq(Article::getCategoryId, categoryId);
+        //状态是正式发布的
+        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //置顶的文章要放在前面
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //分页查询
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        page(page, lambdaQueryWrapper);
+
+        //查询categoryName
+        List<Article> articles = page.getRecords();
+        articles.forEach(article ->
+                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
+        );
+
+        //封装查询结果为Vo
+        List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
+
+        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
+        return ResponseResult.okResult(pageVo);
+    }
 }
 

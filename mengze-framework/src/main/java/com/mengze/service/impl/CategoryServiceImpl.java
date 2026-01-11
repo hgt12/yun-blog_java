@@ -50,6 +50,15 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
                 .collect(Collectors.toList());
         // 封装成Vo
         final List<CategoryVo> categoryVos = BeanCopyUtils.copyBeanList(categories, CategoryVo.class);
+        
+        //统计每个分类下的文章数量
+        for (CategoryVo categoryVo : categoryVos) {
+            long count = articleList.stream()
+                    .filter(article -> article.getCategoryId().equals(categoryVo.getId()))
+                    .count();
+            categoryVo.setArticleCount((int) count);
+        }
+        
         return ResponseResult.okResult(categoryVos);
     }
 }

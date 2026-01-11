@@ -46,7 +46,10 @@ public class ArticleController {
         return articleService.getArticleDetail(id);
     }
 
-//    //根据分类id查询文章列表
-//    @GetMapping("articleListByCategoryId/{categoryId}")
-//    public ResponseResult getArticleListByCategoryId()
+    //根据分类id查询文章列表
+    @GetMapping("/articleListByCategoryId/{categoryId}")
+    public ResponseResult articleListByCategoryId(@PathVariable("categoryId") Long categoryId, Integer pageNum, Integer pageSize)
+    {
+        return articleService.articleListByCategoryId(categoryId, pageNum, pageSize);
+    }
 }
