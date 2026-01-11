@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 //友链列表接口
 @RestController
-@RequestMapping("/link")
+@RequestMapping("/links")
 public class LinkController
 {
     @Autowired

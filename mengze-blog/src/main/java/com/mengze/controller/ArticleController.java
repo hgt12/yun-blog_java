@@ -45,4 +45,8 @@ public class ArticleController {
     {
         return articleService.getArticleDetail(id);
     }
+
+//    //根据分类id查询文章列表
+//    @GetMapping("articleListByCategoryId/{categoryId}")
+//    public ResponseResult getArticleListByCategoryId()
 }
