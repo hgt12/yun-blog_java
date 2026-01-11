@@ -52,4 +52,11 @@ public class ArticleController {
     {
         return articleService.articleListByCategoryId(categoryId, pageNum, pageSize);
     }
+
+    //根据标签id查询文章列表
+//    @GetMapping("/articleListByTagId/{tagId}")
+//    public ResponseResult articleListByTagId(@PathVariable("tagId") Long tagId, Integer pageNum, Integer pageSize)
+//    {
+//        return articleService.articleListByTagId(tagId, pageNum, pageSize);
+//    }
 }

@@ -20,5 +20,7 @@ public interface ArticleService extends IService<Article> {
     ResponseResult getArticleDetail(Long id);
 
     ResponseResult articleListByCategoryId(Long categoryId, Integer pageNum, Integer pageSize);
+
+    //esponseResult articleListByTagId(Long tagId, Integer pageNum, Integer pageSize);
 }
 
