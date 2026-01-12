@@ -82,6 +82,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //置顶的文章要放在前面，isTop进行降序排序
         lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //按发布时间降序排序，越新发布的文章越靠前
+        lambdaQueryWrapper.orderByDesc(Article::getCreateTime);
         //分页查询
         Page<Article> page = new Page<>(pageNum, pageSize);
         page(page, lambdaQueryWrapper);
@@ -149,6 +151,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //置顶的文章要放在前面
         lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //按发布时间降序排序，越新发布的文章越靠前
+        lambdaQueryWrapper.orderByDesc(Article::getCreateTime);
         //分页查询
         Page<Article> page = new Page<>(pageNum, pageSize);
         page(page, lambdaQueryWrapper);

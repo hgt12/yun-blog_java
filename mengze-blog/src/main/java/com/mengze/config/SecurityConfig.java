@@ -44,7 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // 对于登出接口 需要认证后才能访问
                 .antMatchers("/logout").authenticated()
                 //测试，友链接口需要认证才能访问（后续可以开发为发表文章页面要登录之后才能访问，发表文章直接跳转到后台）
-                .antMatchers("/links/getAllLink").authenticated()
+                //.antMatchers("/links/getAllLink").authenticated()
                 // 除上面外的所有请求不需要认证就可以访问
                 .anyRequest().permitAll();
 

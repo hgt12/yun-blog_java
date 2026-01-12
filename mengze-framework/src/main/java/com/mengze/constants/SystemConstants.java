@@ -20,4 +20,16 @@ public class SystemConstants
      *  友链审核通过状态
      */
     public static final String LINK_STATUS_NORMAL = "0";
+    /**
+     *  评论类型：文章评论
+     */
+    public static final String COMMENT_TYPE_ARTICLE = "0";
+    /**
+     *  评论状态：正常
+     */
+    public static final String COMMENT_STATUS_NORMAL = "0";
+    /**
+     *  根评论标识（rootId为-1表示是根评论）
+     */
+    public static final Long COMMENT_ROOT_ID = -1L;
 }
