@@ -7,8 +7,10 @@ import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.domain.vo.UserInfoVo;
 import com.mengze.service.BlogLoginService;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.GravatarUtils;
 import com.mengze.utils.JwtUtil;
 import com.mengze.utils.RedisCache;
+import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +32,8 @@ public class BlogLoginServiceImpl implements BlogLoginService
     private RedisCache redisCache;
 
     @Override
-    public ResponseResult login(User user) {
+    public ResponseResult login(User user)
+    {
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
@@ -47,7 +50,18 @@ public class BlogLoginServiceImpl implements BlogLoginService
 
         //把token和userInfo封装，返回
         //把User转化成UserInfoVo
-        UserInfoVo userInfoVo = BeanCopyUtils.copyBean(loginUser.getUser(), UserInfoVo.class);
+        User user1 = loginUser.getUser();
+        UserInfoVo userInfoVo = BeanCopyUtils.copyBean(user1, UserInfoVo.class);
+        
+        // 如果昵称为空，使用用户名代替
+        if (!StringUtils.hasText(userInfoVo.getNickname())) {
+            userInfoVo.setNickname(user1.getUsername());
+        }
+        // 如果头像为空，根据邮箱生成头像
+        if (!StringUtils.hasText(userInfoVo.getAvatar())) {
+            userInfoVo.setAvatar(GravatarUtils.getGravatarUrl(user1.getEmail()));
+        }
+        
         BlogUserLoginVo vo = new BlogUserLoginVo(jwt, userInfoVo);
         return ResponseResult.okResult(vo);
     }

@@ -13,7 +13,7 @@ public class UserInfoVo {
     /**
      * 昵称
      */
-    private String nickName;
+    private String nickname;
     /**
      * 头像
      */

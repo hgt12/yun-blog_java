@@ -34,6 +34,8 @@ public class Comment extends Model<Comment> {
     private String nickname;
     //邮箱
     private String email;
+    //个人网址
+    private String personalWebsite;
     //头像URL
     private String avatar;
     //评论内容

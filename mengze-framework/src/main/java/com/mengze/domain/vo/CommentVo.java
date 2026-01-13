@@ -20,6 +20,10 @@ public class CommentVo {
     private String type;
     //文章ID
     private Long articleId;
+    //用户ID
+    private Long userId;
+    //用户类型（0表示普通用户，1表示管理员/博主）
+    private String userType;
     //昵称
     private String nickname;
     //头像URL
@@ -32,6 +36,8 @@ public class CommentVo {
     private Long replyToCommentId;
     //回复目标评论的用户昵称
     private String replyToCommentNickname;
+    //回复目标评论的用户类型（0表示普通用户，1表示博主/管理员）
+    private String replyToCommentUserType;
     //点赞数
     private Integer likeCount;
     //创建时间

@@ -6,9 +6,6 @@ import com.mengze.domain.entity.Comment;
 
 /**
  * 评论表(Comment)表服务接口
- *
- * @author makejava
- * @since 2026-01-12 15:48:35
  */
 public interface CommentService extends IService<Comment> {
 
@@ -21,5 +18,11 @@ public interface CommentService extends IService<Comment> {
      * @return 评论列表
      */
     ResponseResult commentList(Integer type, Long articleId, Integer pageNum, Integer pageSize);
-}
 
+    /**
+     * 添加评论
+     * @param comment 评论信息
+     * @return 评论结果
+     */
+    ResponseResult addComment(Comment comment);
+}
