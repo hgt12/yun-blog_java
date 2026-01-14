@@ -7,7 +7,8 @@ import com.mengze.domain.entity.Comment;
 /**
  * 评论表(Comment)表服务接口
  */
-public interface CommentService extends IService<Comment> {
+public interface CommentService extends IService<Comment>
+{
 
     /**
      * 获取评论列表（统一接口，支持文章评论、友链评论、留言板评论）
@@ -25,4 +26,6 @@ public interface CommentService extends IService<Comment> {
      * @return 评论结果
      */
     ResponseResult addComment(Comment comment);
+
+    ResponseResult likeComment(Long commentId);
 }

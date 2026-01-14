@@ -39,7 +39,6 @@ public class CommentController {
 
     /**
      * 添加评论（支持文章评论、友链评论、留言板评论）
-     * 
      * 请求体示例：
      * 文章评论（需登录）：{"type":"0", "articleId":1, "content":"评论内容", "rootId":-1}
      * 友链评论（需登录）：{"type":"1", "content":"评论内容", "rootId":-1}
@@ -53,5 +52,16 @@ public class CommentController {
     public ResponseResult addComment(@RequestBody Comment comment)
     {
         return commentService.addComment(comment);
+    }
+
+    /**
+     * 点赞评论
+     * @param commentId 评论ID
+     * @return 更新后的点赞数
+     */
+    @PutMapping("/like/{commentId}")
+    public ResponseResult likeComment(@PathVariable("commentId") Long commentId)
+    {
+        return commentService.likeComment(commentId);
     }
 }

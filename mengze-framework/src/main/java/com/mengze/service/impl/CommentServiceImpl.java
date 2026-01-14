@@ -150,6 +150,24 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return ResponseResult.okResult();
     }
 
+    //点赞评论
+    @Override
+    public ResponseResult likeComment(Long commentId)
+    {
+        //查询评论是否存在且状态正常
+        Comment comment = getById(commentId);
+        if (comment == null || !SystemConstants.COMMENT_STATUS_NORMAL.equals(comment.getStatus())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.COMMENT_NOT_EXIST);
+        }
+        
+        // 点赞数+1
+        comment.setLikeCount(comment.getLikeCount() + 1);
+        updateById(comment);
+        
+        // 返回更新后的点赞数
+        return ResponseResult.okResult();
+    }
+
     //获取子评论列表
     private List<CommentVo> getChildren(Long rootId)
     {
