@@ -18,6 +18,7 @@ public class UserInfoVo {
      * 头像
      */
     private String avatar;
+    private String phone;
     private String sex;
     private String email;
 }
