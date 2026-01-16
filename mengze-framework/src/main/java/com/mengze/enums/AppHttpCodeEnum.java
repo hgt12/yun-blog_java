@@ -18,6 +18,7 @@ public enum AppHttpCodeEnum {
     CONTENT_NOT_NULL(506, "评论内容不能为空"),
     NICKNAME_NOT_NULL(507, "昵称不能为空"),
     EMAIL_NOT_NULL(508, "邮箱不能为空"),
+    FILE_TYPE_ERROR(509, "文件类型错误！请上传.png或.jpg或.gif格式的文件！"),
     COMMENT_NOT_EXIST(1004, "评论不存在");
     int code;
     String msg;
