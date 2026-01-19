@@ -33,12 +33,22 @@ public class OssUploadServiceImpl implements UploadService
     @Override
     public ResponseResult uploadImg(MultipartFile img)
     {
+        //判断文件是否为空
+        if (img == null || img.isEmpty()) {
+            throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
+        }
+        
+        //判断文件大小（限制2MB）
+        long maxSize = 2 * 1024 * 1024; // 2MB
+        if (img.getSize() > maxSize) {
+            throw new SystemException(AppHttpCodeEnum.FILE_SIZE_ERROR);
+        }
+        
         //判断文件类型
         //获取原始文件名
         String originalFilename = img.getOriginalFilename();
         //判断文件名是否为png，jpg，gif
-        if (!originalFilename.endsWith(".png") || originalFilename.endsWith(".jpg") || originalFilename.endsWith(".gif"))
-        {
+        if (!originalFilename.endsWith(".png") && !originalFilename.endsWith(".jpg") && !originalFilename.endsWith(".gif") && !originalFilename.endsWith(".jpeg")) {
             throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
         }
         //如果判断通过就上传到Oss
