@@ -29,6 +29,9 @@ public enum AppHttpCodeEnum {
     COMMENT_NOT_EXIST(1016, "评论不存在"),
     PHONE_FORMAT_ERROR(1017, "电话号码格式错误"),
     FILE_SIZE_ERROR(1018, "文件大小超过限制！请上传小于2MB的图片！"),
+    SMS_SEND_FREQUENTLY(1019, "验证码发送过于频繁，请稍后再试"),
+    IP_REQUEST_LIMIT(1020, "请求过于频繁，请稍后再试"),
+    VERIFICATION_CODE_ERROR(1021, "验证码错误或已过期"),
     ;
     int code;
     String msg;

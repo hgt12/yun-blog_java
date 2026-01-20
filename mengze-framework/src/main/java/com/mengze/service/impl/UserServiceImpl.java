@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.vo.UserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.UserMapper;
 import com.mengze.domain.entity.User;
 import com.mengze.service.UserService;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.RedisCache;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -117,64 +119,126 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private RedisCache redisCache;
 
     //用户注册
     @Override
-    public ResponseResult userRegister(User user)
+    public ResponseResult userRegister(UserRegisterDto dto)
     {
         //对用户名和密码进行非空判断
-        if (!StringUtils.hasText(user.getUsername())) {
+        if (!StringUtils.hasText(dto.getUsername())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_NOT_NULL, "用户名不能为空");
         }
-        if (!StringUtils.hasText(user.getPassword())) {
+        if (!StringUtils.hasText(dto.getPassword())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL, "密码不能为空");
         }
         
+        //验证码不能为空
+        if (!StringUtils.hasText(dto.getCode())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+        
         //邮箱和手机号至少要有一个
-        if (!StringUtils.hasText(user.getEmail()) && !StringUtils.hasText(user.getPhone())) {
+        if (!StringUtils.hasText(dto.getEmail()) && !StringUtils.hasText(dto.getPhone())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱和手机号至少填写一个");
         }
         
         //校验手机号格式
-        if (StringUtils.hasText(user.getPhone()) && !user.getPhone().matches(PHONE_REGEX)) {
+        if (StringUtils.hasText(dto.getPhone()) && !dto.getPhone().matches(PHONE_REGEX)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR, "请输入正确的手机号码");
         }
         
+        //验证验证码
+        ResponseResult verifyResult = verifyCode(dto);
+        if (verifyResult != null) {
+            return verifyResult;
+        }
+        
         //用户名，手机号，邮箱不能和数据库中原有的数据重复
-        if (StringUtils.hasText(user.getUsername())) {
+        if (StringUtils.hasText(dto.getUsername())) {
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(User::getUsername, user.getUsername());
+            queryWrapper.eq(User::getUsername, dto.getUsername());
             User existUser = getOne(queryWrapper);
             if (existUser != null) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_OCCUPIED, "用户名已被占用！");
             }
         }
-        if (StringUtils.hasText(user.getPhone())) {
+        if (StringUtils.hasText(dto.getPhone())) {
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(User::getPhone, user.getPhone());
+            queryWrapper.eq(User::getPhone, dto.getPhone());
             User existUser = getOne(queryWrapper);
             if (existUser != null) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_OCCUPIED, "该手机号已被注册！");
             }
         }
-        if (StringUtils.hasText(user.getEmail())) {
+        if (StringUtils.hasText(dto.getEmail())) {
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(User::getEmail, user.getEmail());
+            queryWrapper.eq(User::getEmail, dto.getEmail());
             User existUser = getOne(queryWrapper);
             if (existUser != null) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_OCCUPIED, "该邮箱已被注册！");
             }
         }
+        
+        //创建用户对象
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        
         //密码必须密文存储到数据库中
-        String encodePassword = passwordEncoder.encode(user.getPassword());
+        String encodePassword = passwordEncoder.encode(dto.getPassword());
         user.setPassword(encodePassword);
+        
         //如果没有设置昵称，使用用户名作为默认昵称
-        if (!StringUtils.hasText(user.getNickname())) {
-            user.setNickname(user.getUsername());
+        if (StringUtils.hasText(dto.getNickname())) {
+            user.setNickname(dto.getNickname());
+        } else {
+            user.setNickname(dto.getUsername());
         }
+        
         //存入数据库
         save(user);
-        return ResponseResult.okResult();
+        return ResponseResult.okResult("注册成功");
+    }
+    
+    //验证注册验证码
+    private ResponseResult verifyCode(UserRegisterDto dto)
+    {
+        String code = dto.getCode();
+        String redisKey;
+        String account;
+        
+        // 判断是邮箱注册还是手机注册
+        if (StringUtils.hasText(dto.getEmail())) {
+            account = dto.getEmail();
+            redisKey = "register:code:email:" + account;
+        } else if (StringUtils.hasText(dto.getPhone())) {
+            account = dto.getPhone();
+            redisKey = "register:code:phone:" + account;
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱和手机号至少填写一个");
+        }
+        
+        // 从Redis获取验证码
+        String redisCode = redisCache.getCacheObject(redisKey);
+        
+        // 验证码不存在或已过期
+        if (!StringUtils.hasText(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误或已过期");
+        }
+        
+        // 验证码错误
+        if (!code.equals(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误");
+        }
+        
+        // 验证通过，立即删除Redis中的验证码（防止重复使用）
+        redisCache.deleteObject(redisKey);
+        
+        return null;
     }
 }
 

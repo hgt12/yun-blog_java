@@ -1,10 +1,14 @@
 package com.mengze.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.domain.vo.UserInfoVo;
+import com.mengze.enums.AppHttpCodeEnum;
+import com.mengze.mapper.UserMapper;
 import com.mengze.service.BlogLoginService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
@@ -30,6 +34,9 @@ public class BlogLoginServiceImpl implements BlogLoginService
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public ResponseResult login(User user)
@@ -77,5 +84,129 @@ public class BlogLoginServiceImpl implements BlogLoginService
         //删除redis中的用户信息
         redisCache.deleteObject("bloglogin:" + userId);
         return ResponseResult.okResult();
+    }
+    
+    //通过邮箱登录
+    @Override
+    public ResponseResult loginByEmail(LoginDto dto)
+    {
+        String email = dto.getEmail();
+        String code = dto.getCode();
+        
+        // 验证邮箱和验证码不能为空
+        if (!StringUtils.hasText(email)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
+        }
+        if (!StringUtils.hasText(code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+        
+        // 从Redis获取验证码
+        String redisKey = "login:code:email:" + email;
+        String redisCode = redisCache.getCacheObject(redisKey);
+        
+        // 验证码不存在或已过期
+        if (!StringUtils.hasText(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR);
+        }
+        
+        // 验证码错误
+        if (!code.equals(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR);
+        }
+        
+        // 验证通过，立即删除Redis中的验证码（防止重复使用）
+        redisCache.deleteObject(redisKey);
+        
+        // 查询用户信息
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getEmail, email);
+        User user = userMapper.selectOne(queryWrapper);
+        
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+        
+        // 生成token并返回用户信息
+        return generateLoginResponse(user);
+    }
+    
+    //通过手机登录
+    @Override
+    public ResponseResult loginByPhone(LoginDto dto)
+    {
+        String phone = dto.getPhone();
+        String code = dto.getCode();
+        
+        // 验证手机号和验证码不能为空
+        if (!StringUtils.hasText(phone)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
+        }
+        if (!StringUtils.hasText(code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+        
+        // 验证手机号格式
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
+        }
+        
+        // 从Redis获取验证码
+        String redisKey = "login:code:phone:" + phone;
+        String redisCode = redisCache.getCacheObject(redisKey);
+        
+        // 验证码不存在或已过期
+        if (!StringUtils.hasText(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR);
+        }
+        
+        // 验证码错误
+        if (!code.equals(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR);
+        }
+        
+        // 验证通过，立即删除Redis中的验证码（防止重复使用）
+        redisCache.deleteObject(redisKey);
+        
+        // 查询用户信息
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getPhone, phone);
+        User user = userMapper.selectOne(queryWrapper);
+        
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+        
+        // 生成token并返回用户信息
+        return generateLoginResponse(user);
+    }
+    
+    //生成登录响应（token和用户信息）
+    private ResponseResult generateLoginResponse(User user)
+    {
+        // 创建LoginUser对象
+        LoginUser loginUser = new LoginUser(user);
+        
+        // 生成JWT token
+        String userId = user.getId().toString();
+        String jwt = JwtUtil.createJWT(userId);
+        
+        // 把用户信息存入Redis
+        redisCache.setCacheObject("bloglogin:" + userId, loginUser);
+        
+        // 封装返回数据
+        UserInfoVo userInfoVo = BeanCopyUtils.copyBean(user, UserInfoVo.class);
+        
+        // 如果昵称为空，使用用户名代替
+        if (!StringUtils.hasText(userInfoVo.getNickname())) {
+            userInfoVo.setNickname(user.getUsername());
+        }
+        // 如果头像为空，根据邮箱生成头像
+        if (!StringUtils.hasText(userInfoVo.getAvatar())) {
+            userInfoVo.setAvatar(GravatarUtils.getGravatarUrl(user.getEmail()));
+        }
+        
+        BlogUserLoginVo vo = new BlogUserLoginVo(jwt, userInfoVo);
+        return ResponseResult.okResult(vo);
     }
 }

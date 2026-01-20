@@ -1,6 +1,7 @@
 package com.mengze.controller;
 
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.entity.User;
 import com.mengze.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,9 @@ public class UserController
 
     //用户注册
     @PostMapping("/userRegister")
-    public ResponseResult userRegister(@RequestBody User user)
+    public ResponseResult userRegister(@RequestBody UserRegisterDto dto)
     {
-        return userService.userRegister(user);
+        return userService.userRegister(dto);
     }
 
 }

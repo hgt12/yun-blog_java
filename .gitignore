@@ -36,3 +36,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### 敏感信息 ###
+.env
+.env.local
+.env.*.local
+**/application-local.yml
+**/application-dev.yml

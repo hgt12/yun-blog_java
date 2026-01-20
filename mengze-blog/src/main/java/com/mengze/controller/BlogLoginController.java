@@ -1,6 +1,7 @@
 package com.mengze.controller;
 
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.entity.User;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
@@ -18,6 +19,7 @@ public class BlogLoginController
     @Autowired
     private BlogLoginService blogLoginService;
 
+    //通过用户名密码登录
     @PostMapping("/login")
     public ResponseResult login(@RequestBody User user)
     {
@@ -34,6 +36,20 @@ public class BlogLoginController
     public ResponseResult logout()
     {
         return blogLoginService.logout();
+    }
+    
+    //通过邮箱登录
+    @PostMapping("/loginByEmail")
+    public ResponseResult loginByEmail(@RequestBody LoginDto dto)
+    {
+        return blogLoginService.loginByEmail(dto);
+    }
+    
+    //通过手机登录
+    @PostMapping("/loginByPhone")
+    public ResponseResult loginByPhone(@RequestBody LoginDto dto)
+    {
+        return blogLoginService.loginByPhone(dto);
     }
 
 }
