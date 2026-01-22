@@ -35,34 +35,42 @@ public class AuthServiceImpl implements AuthService
     @Autowired
     private RedisCache redisCache;
 
-    //发送邮箱登录验证码
+    //统一发送验证码接口
     @Override
-    public ResponseResult sendEmailLoginCode(SendCodeDto dto) {
-        return sendVerificationCode(dto.getEmail(), "email", "login", true);
-    }
-
-    //发送手机登录验证码
-    @Override
-    public ResponseResult sendPhoneLoginCode(SendCodeDto dto) {
-        return sendVerificationCode(dto.getPhone(), "phone", "login", true);
-    }
-
-    //发送邮箱注册验证码
-    @Override
-    public ResponseResult sendEmailRegisterCode(SendCodeDto dto) {
-        return sendVerificationCode(dto.getEmail(), "email", "register", false);
-    }
-
-    //发送手机号注册验证码
-    @Override
-    public ResponseResult sendPhoneRegisterCode(SendCodeDto dto) {
-        return sendVerificationCode(dto.getPhone(), "phone", "register", false);
-    }
-
-    //发送忘记密码的邮箱验证码
-    @Override
-    public ResponseResult sendEmailForgotPasswordCode(SendCodeDto dto) {
-        return sendVerificationCode(dto.getEmail(), "email", "forgot", true);
+    public ResponseResult sendCode(SendCodeDto dto)
+    {
+        //验证必填参数
+        if (!StringUtils.hasText(dto.getAccount())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "账号不能为空");
+        }
+        if (!StringUtils.hasText(dto.getType())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码类型不能为空");
+        }
+        
+        String account = dto.getAccount().trim();
+        String type = dto.getType().toLowerCase();
+        
+        //验证类型的有效性
+        if (!type.equals("login") && !type.equals("register") && !type.equals("forgot_password")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码类型无效");
+        }
+        
+        //判断登录类型（邮箱或手机号）
+        String channel;
+        if (account.contains("@")) {
+            //包含@符号，判断为邮箱
+            channel = "email";
+        } else if (account.matches("^1[3-9]\\d{9}$")) {
+            //符合手机号格式
+            channel = "phone";
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请输入正确的邮箱或手机号");
+        }
+        
+        //判断是否需要判断账号已存在（登录和忘记密码需要，注册不需要）
+        boolean needAccountExists = !type.equals("register");
+        
+        return sendVerificationCode(account, channel, type, needAccountExists);
     }
 
     //通用验证码发送方法

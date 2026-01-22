@@ -7,12 +7,12 @@ import lombok.Data;
 public class SendCodeDto {
     
     /**
-     * 邮箱地址（邮箱验证码时使用）
+     * 账号（邮箱或手机号，后端自动识别）
      */
-    private String email;
+    private String account;
     
     /**
-     * 手机号（手机验证码时使用）
+     * 验证码类型：LOGIN-登录, REGISTER-注册, FORGOT_PASSWORD-忘记密码
      */
-    private String phone;
+    private String type;
 }

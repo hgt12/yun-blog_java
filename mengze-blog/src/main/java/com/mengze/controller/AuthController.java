@@ -15,38 +15,10 @@ public class AuthController
     @Autowired
     AuthService authService;
 
-    //发送邮箱登录验证码
-    @PostMapping("/sendEmailLoginCode")
-    public ResponseResult sendEmailLoginCode(@RequestBody SendCodeDto dto)
+     //发送验证码接口，邮箱/手机号两种方式，登录/注册/忘记密码时使用
+    @PostMapping("/sendCode")
+    public ResponseResult sendCode(@RequestBody SendCodeDto dto)
     {
-        return authService.sendEmailLoginCode(dto);
-    }
-
-    //发送手机登录验证码
-    @PostMapping("/sendPhoneLoginCode")
-    public ResponseResult sendPhoneLoginCode(@RequestBody SendCodeDto dto)
-    {
-        return authService.sendPhoneLoginCode(dto);
-    }
-
-    //发送邮箱注册验证码
-    @PostMapping("/sendEmailRegisterCode")
-    public ResponseResult sendEmailRegisterCode(@RequestBody SendCodeDto dto)
-    {
-        return authService.sendEmailRegisterCode(dto);
-    }
-
-    //发送手机注册验证码
-    @PostMapping("/sendPhoneRegisterCode")
-    public ResponseResult sendPhoneRegisterCode(@RequestBody SendCodeDto dto)
-    {
-        return authService.sendPhoneRegisterCode(dto);
-    }
-
-    //发送邮箱忘记密码的验证码
-    @PostMapping("/sendEmailForgotPasswordCode")
-    public ResponseResult sendEmailForgotPasswordCode(@RequestBody SendCodeDto dto)
-    {
-        return authService.sendEmailForgotPasswordCode(dto);
+        return authService.sendCode(dto);
     }
 }
