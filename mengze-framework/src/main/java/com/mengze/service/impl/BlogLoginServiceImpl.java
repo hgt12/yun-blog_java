@@ -232,7 +232,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
 
         //从Redis获取验证码
-        String redisKey = "forgot:code:email:" + dto.getEmail();
+        String redisKey = "forgot_password:code:email:" + dto.getEmail();
         String redisCode = redisCache.getCacheObject(redisKey);
 
         //验证码不存在或已过期
@@ -273,7 +273,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
 
         //从Redis获取验证码
-        String redisKey = "forgot:code:email:" + dto.getEmail();
+        String redisKey = "forgot_password:code:email:" + dto.getEmail();
         String redisCode = redisCache.getCacheObject(redisKey);
 
         //验证码不存在或已过期
