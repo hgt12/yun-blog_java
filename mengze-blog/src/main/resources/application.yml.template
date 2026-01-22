@@ -1,0 +1,125 @@
+# 配置文件使用说明：
+# 1. 复制此文件为 application.yml
+# 2. 修改所有标记为"请修改"的配置项
+# 3. 不要将 application.yml 提交到Git
+
+# 服务器配置
+server:
+  port: 1314  # 应用服务端口号
+
+# Spring框架配置
+spring:
+  # 数据源配置（MySQL）
+  datasource:
+    # 数据库连接URL
+    # characterEncoding=utf8: 字符编码设置为UTF-8
+    # serverTimezone=Asia/Shanghai: 时区设置为上海（东八区）
+    url: jdbc:mysql://localhost:3306/yun_blog?characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root                          # 数据库用户名
+    password: YOUR_DATABASE_PASSWORD        # 【请修改】数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL驱动类
+
+  # Spring Security配置
+  security:
+    user:
+      name: root                            # 默认用户名
+      password: YOUR_SECURITY_PASSWORD      # 【请修改】默认密码
+
+  # Redis配置
+  redis:
+    host: localhost             # Redis服务器地址
+    port: 6379                  # Redis端口号
+    database: 0                 # Redis数据库索引（0-15）
+    timeout: 3000               # 连接超时时间（毫秒）
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 2MB        # 单个文件最大大小
+      max-request-size: 5MB     # 单次请求最大大小
+
+  # 邮件服务配置（QQ邮箱）
+  # 获取授权码步骤：
+  # 1. 登录QQ邮箱 https://mail.qq.com
+  # 2. 设置 -> 账户 -> POP3/IMAP/SMTP服务
+  # 3. 开启"POP3/SMTP服务"
+  # 4. 生成授权码（16位字符）
+  mail:
+    host: smtp.qq.com                       # SMTP服务器地址
+    port: 587                               # SMTP端口（587为TLS端口）
+    username: YOUR_EMAIL@qq.com             # 【请修改】发件人邮箱地址
+    password: YOUR_EMAIL_AUTH_CODE          # 【请修改】QQ邮箱授权码（不是QQ密码）
+    properties:
+      mail:
+        smtp:
+          auth: true            # 启用SMTP认证
+          starttls:
+            enable: true        # 启用TLS加密
+            required: true      # 要求TLS加密
+    default-encoding: UTF-8     # 邮件编码格式
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    # 开启SQL日志输出到控制台（开发环境使用，生产环境建议关闭）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 开启驼峰命名转换（Java驼峰 <-> 数据库下划线）
+    # 例如：userName <-> user_name
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      # 逻辑删除配置
+      logic-delete-field: delFlag    # 逻辑删除字段名
+      logic-delete-value: 1          # 逻辑删除值（已删除）
+      logic-not-delete-value: 0      # 逻辑未删除值（未删除）
+      id-type: auto                  # 主键策略：数据库自增
+
+# 七牛云对象存储配置
+# 用于文件上传功能（头像、文章图片等）
+# 获取密钥步骤：
+# 1. 登录七牛云 https://portal.qiniu.com
+# 2. 个人中心 -> 密钥管理
+# 3. 复制AccessKey和SecretKey
+# 
+# 推荐使用环境变量方式配置：
+# Windows CMD: set OSS_ACCESS_KEY=your_key
+# Windows PowerShell: $env:OSS_ACCESS_KEY="your_key"
+oss:
+  # 七牛云AccessKey（从环境变量读取，未设置时使用默认值）
+  accessKey: ${OSS_ACCESS_KEY:your_access_key}
+  # 七牛云SecretKey（从环境变量读取，未设置时使用默认值）
+  secretKey: ${OSS_SECRET_KEY:your_secret_key}
+  # 存储空间名称改成你自己的存储空间名称（Bucket）
+  bucket: yun-mengze-blog
+
+# 阿里云号码认证服务配置
+# 用于发送短信验证码（登录、注册、忘记密码）
+# 获取密钥步骤：
+# 1. 登录阿里云 https://www.aliyun.com
+# 2. 控制台 -> AccessKey管理
+# 3. 创建AccessKey
+# 4. 开通号码认证服务 https://dypns.console.aliyun.com
+# 
+# 推荐使用环境变量方式配置：
+# Windows CMD: set ALIYUN_ACCESS_KEY_ID=your_key_id
+# Windows PowerShell: $env:ALIYUN_ACCESS_KEY_ID="your_key_id"
+aliyun:
+  sms:
+    # 阿里云AccessKeyId（从环境变量读取，未设置时使用默认值）
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:your_access_key_id}
+    # 阿里云AccessKeySecret（从环境变量读取，未设置时使用默认值）
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:your_access_key_secret}
+    # 短信签名（需要在阿里云控制台申请）
+    sign-name: 云梦泽的个人博客验证码
+    # 短信模板CODE（100001为通用验证码模板，无需审核）
+    template-code: 100001
+
+# 配置说明
+# 1. 必须修改的配置：
+#    - spring.datasource.password（数据库密码）
+#    - spring.mail.username（邮箱地址）
+#    - spring.mail.password（邮箱授权码）
+#
+# 2. 可选配置（如需使用相关功能）：
+#    - oss.accessKey 和 oss.secretKey（文件上传）
+#    - aliyun.sms.access-key-id 和 access-key-secret（短信验证码）

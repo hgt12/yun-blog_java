@@ -43,3 +43,5 @@ build/
 .env.*.local
 **/application-local.yml
 **/application-dev.yml
+**/application.yml
+!**/application.yml.template

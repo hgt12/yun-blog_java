@@ -1,8 +1,11 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginDto;
+import com.mengze.domain.dto.ResetPasswordDto;
+import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.BlogUserLoginVo;
@@ -20,6 +23,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -37,6 +41,9 @@ public class BlogLoginServiceImpl implements BlogLoginService
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public ResponseResult login(User user)
@@ -208,5 +215,108 @@ public class BlogLoginServiceImpl implements BlogLoginService
         
         BlogUserLoginVo vo = new BlogUserLoginVo(jwt, userInfoVo);
         return ResponseResult.okResult(vo);
+    }
+
+    //验证重置验证码
+    @Override
+    public ResponseResult verifyResetCode(VerifyResetCodeDto dto)
+    {
+        //邮箱不能为空
+        if (!StringUtils.hasText(dto.getEmail())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
+        }
+
+        //验证码不能为空
+        if (!StringUtils.hasText(dto.getCode())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+
+        //从Redis获取验证码
+        String redisKey = "forgot:code:email:" + dto.getEmail();
+        String redisCode = redisCache.getCacheObject(redisKey);
+
+        //验证码不存在或已过期
+        if (!StringUtils.hasText(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误或已过期");
+        }
+
+        //验证码错误
+        if (!dto.getCode().equals(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误");
+        }
+
+        return ResponseResult.okResult("验证成功");
+    }
+
+    //重置密码
+    @Override
+    public ResponseResult resetPassword(ResetPasswordDto dto)
+    {
+        //邮箱不能为空
+        if (!StringUtils.hasText(dto.getEmail())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
+        }
+
+        //验证码不能为空
+        if (!StringUtils.hasText(dto.getCode())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+
+        //新密码不能为空
+        if (!StringUtils.hasText(dto.getNewPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL);
+        }
+
+        //新密码至少6位
+        if (dto.getNewPassword().length() < 6) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码至少6位");
+        }
+
+        //从Redis获取验证码
+        String redisKey = "forgot:code:email:" + dto.getEmail();
+        String redisCode = redisCache.getCacheObject(redisKey);
+
+        //验证码不存在或已过期
+        if (!StringUtils.hasText(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误或已过期");
+        }
+
+        //验证码错误
+        if (!dto.getCode().equals(redisCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.VERIFICATION_CODE_ERROR, "验证码错误");
+        }
+
+        //查询用户是否存在
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getEmail, dto.getEmail());
+        User user = userMapper.selectOne(queryWrapper);
+
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该邮箱未注册");
+        }
+
+        //验证新密码不能与旧密码相同
+        if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新密码不能与旧密码相同");
+        }
+
+        //加密新密码
+        String encodePassword = passwordEncoder.encode(dto.getNewPassword());
+
+        //更新密码
+        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(User::getId, user.getId())
+                .set(User::getPassword, encodePassword);
+
+        int result = userMapper.update(null, updateWrapper);
+
+        if (result == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码重置失败");
+        }
+
+        //密码重置成功后，删除Redis中的验证码（防止重复使用）
+        redisCache.deleteObject(redisKey);
+
+        return ResponseResult.okResult("密码重置成功");
     }
 }

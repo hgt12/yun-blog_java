@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-//认证服务类
+//发送验证码服务类
 @Service
 public class AuthServiceImpl implements AuthService
 {
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService
         return sendVerificationCode(dto.getPhone(), "phone", "register", false);
     }
 
-    //发送邮箱忘记密码的验证码
+    //发送忘记密码的邮箱验证码
     @Override
     public ResponseResult sendEmailForgotPasswordCode(SendCodeDto dto) {
         return sendVerificationCode(dto.getEmail(), "email", "forgot", true);
@@ -78,7 +78,7 @@ public class AuthServiceImpl implements AuthService
             return validateResult;
         }
 
-        //检查账号存在性
+        //检查账号是否存在
         ResponseResult accountCheckResult = checkAccountForScene(account, type, scene, needAccountExists);
         if (accountCheckResult != null) {
             return accountCheckResult;
