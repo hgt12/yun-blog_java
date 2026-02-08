@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.service.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ public class LinkController
     @Autowired
     private LinkService linkService;
 
+    @SystemLog(businessName = "查询友链列表")
     @GetMapping("getAllLink")
     public ResponseResult getAllLink()
     {

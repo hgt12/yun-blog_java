@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.entity.User;
@@ -16,6 +17,7 @@ public class UserController
     private UserService userService;
 
     //获取个人信息
+    @SystemLog(businessName = "查询用户信息")
     @GetMapping("/userInfo")
     public ResponseResult userInfo()
     {
@@ -23,6 +25,7 @@ public class UserController
     }
 
     //更新个人信息
+    @SystemLog(businessName = "更新用户信息")
     @PutMapping("/userInfo")
     public ResponseResult updateUserInfo(@RequestBody User user)
     {
@@ -30,6 +33,7 @@ public class UserController
     }
 
     //用户注册
+    @SystemLog(businessName = "用户注册")
     @PostMapping("/userRegister")
     public ResponseResult userRegister(@RequestBody UserRegisterDto dto)
     {

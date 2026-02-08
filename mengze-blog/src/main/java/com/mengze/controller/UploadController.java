@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ public class UploadController
 {
     @Autowired
     private UploadService uploadService;
+    @SystemLog(businessName = "上传图片")
     @PostMapping("/upload")
     public ResponseResult uploadImg(MultipartFile img)
     {

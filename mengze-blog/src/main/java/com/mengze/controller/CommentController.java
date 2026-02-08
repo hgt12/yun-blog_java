@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Comment;
 import com.mengze.service.CommentService;
@@ -29,6 +30,7 @@ public class CommentController {
      * @param pageSize 每页数量
      * @return 评论列表
      */
+    @SystemLog(businessName = "查询评论列表")
     @GetMapping("/commentList")
     public ResponseResult commentList(@RequestParam Integer type,
                                       @RequestParam(required = false) Long articleId,
@@ -48,6 +50,7 @@ public class CommentController {
      * @param comment 评论信息
      * @return 评论结果
      */
+    @SystemLog(businessName = "添加评论")
     @PostMapping
     public ResponseResult addComment(@RequestBody Comment comment)
     {
@@ -59,6 +62,7 @@ public class CommentController {
      * @param commentId 评论ID
      * @return 更新后的点赞数
      */
+    @SystemLog(businessName = "点赞评论")
     @PutMapping("/like/{commentId}")
     public ResponseResult likeComment(@PathVariable("commentId") Long commentId)
     {

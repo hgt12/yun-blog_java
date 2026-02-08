@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.dto.ResetPasswordDto;
@@ -26,6 +27,7 @@ public class BlogLoginController
     private UserService userService;
 
     //通过用户名密码登录
+    @SystemLog(businessName = "用户名密码登录")
     @PostMapping("/login")
     public ResponseResult login(@RequestBody User user)
     {
@@ -38,6 +40,7 @@ public class BlogLoginController
         return blogLoginService.login(user);
     }
 
+    @SystemLog(businessName = "用户登出")
     @PostMapping("logout")
     public ResponseResult logout()
     {
@@ -45,6 +48,7 @@ public class BlogLoginController
     }
     
     //通过邮箱登录
+    @SystemLog(businessName = "邮箱验证码登录")
     @PostMapping("/loginByEmail")
     public ResponseResult loginByEmail(@RequestBody LoginDto dto)
     {
@@ -52,6 +56,7 @@ public class BlogLoginController
     }
     
     //通过手机登录
+    @SystemLog(businessName = "手机验证码登录")
     @PostMapping("/loginByPhone")
     public ResponseResult loginByPhone(@RequestBody LoginDto dto)
     {
@@ -59,6 +64,7 @@ public class BlogLoginController
     }
 
     //验证重置验证码
+    @SystemLog(businessName = "验证重置密码验证码")
     @PostMapping("/verifyResetCode")
     public ResponseResult verifyResetCode(@RequestBody VerifyResetCodeDto dto)
     {
@@ -66,6 +72,7 @@ public class BlogLoginController
     }
 
     //重置密码
+    @SystemLog(businessName = "重置密码")
     @PostMapping("/resetPassword")
     public ResponseResult resetPassword(@RequestBody ResetPasswordDto dto)
     {

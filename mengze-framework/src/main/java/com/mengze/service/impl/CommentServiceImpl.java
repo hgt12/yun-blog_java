@@ -33,6 +33,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private EmailServiceImpl emailService;
+
     //查询评论列表（包括文章评论，友链评论和留言板评论）
     @Override
     public ResponseResult commentList(Integer type, Long articleId, Integer pageNum, Integer pageSize)
@@ -131,6 +134,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setCreateTime(new Date());
 
         save(comment);
+        
+        //发送邮件通知
+        emailService.sendCommentNotificationByEmail(comment);
         
         //封装成Vo返回，判断是否为博主（通过邮箱匹配）
         CommentVo commentVo = BeanCopyUtils.copyBean(comment, CommentVo.class);

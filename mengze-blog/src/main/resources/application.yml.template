@@ -114,11 +114,18 @@ aliyun:
     # 短信模板CODE（100001为通用验证码模板，无需审核）
     template-code: 100001
 
+# 博客前端配置
+blog:
+  frontend:
+    # 前端网站URL（用于邮件通知中的链接）
+    url: http://localhost:3000  # 【请修改】改为你的前端网站地址，例如：https://www.yourdomain.com
+
 # 配置说明
 # 1. 必须修改的配置：
 #    - spring.datasource.password（数据库密码）
 #    - spring.mail.username（邮箱地址）
 #    - spring.mail.password（邮箱授权码）
+#    - blog.frontend.url（前端网站地址）
 #
 # 2. 可选配置（如需使用相关功能）：
 #    - oss.accessKey 和 oss.secretKey（文件上传）

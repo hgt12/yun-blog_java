@@ -1,5 +1,6 @@
 package com.mengze.controller;
 
+import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Article;
 import com.mengze.service.ArticleService;
@@ -25,6 +26,7 @@ public class ArticleController {
     //先在Controller中定义对应的接口方法，具体业务逻辑的代码在Service方法里实现
     //然后再去写Service方法
     //热门文档查询接口
+    @SystemLog(businessName = "查询热门文章列表")
     @GetMapping("/hotArticleList")
     public ResponseResult hotArticleList()
     {
@@ -33,6 +35,7 @@ public class ArticleController {
     }
 
     //分页查询文章列表（要有分类id，页码，每页大小参数）
+    @SystemLog(businessName = "分页查询文章列表")
     @GetMapping("/articleList")
     public  ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId)
     {
@@ -40,6 +43,7 @@ public class ArticleController {
     }
 
     //文章详情接口
+    @SystemLog(businessName = "查询文章详情")
     @GetMapping("/{id}")
     public  ResponseResult getArticleDetail(@PathVariable("id") Long id)
     {
@@ -47,6 +51,7 @@ public class ArticleController {
     }
 
     //根据分类id查询文章列表
+    @SystemLog(businessName = "根据分类ID查询文章列表")
     @GetMapping("/articleListByCategoryId/{categoryId}")
     public ResponseResult articleListByCategoryId(@PathVariable("categoryId") Long categoryId, Integer pageNum, Integer pageSize)
     {
