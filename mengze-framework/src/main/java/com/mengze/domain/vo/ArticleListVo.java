@@ -1,5 +1,7 @@
 package com.mengze.domain.vo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,20 +11,28 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ApiModel(description = "文章列表响应对象")
 public class ArticleListVo
 {
+    @ApiModelProperty(value = "文章ID")
     private Long id;
-    //标题
+    
+    @ApiModelProperty(value = "文章标题")
     private String title;
-    //文章摘要
+    
+    @ApiModelProperty(value = "文章摘要")
     private String summary;
-    //所属分类名
+    
+    @ApiModelProperty(value = "所属分类名")
     private String categoryName;
-    //缩略图
+    
+    @ApiModelProperty(value = "缩略图URL")
     private String thumbnail;
-    //访问量
+    
+    @ApiModelProperty(value = "访问量")
     private Long viewCount;
-    //创建时间
+    
+    @ApiModelProperty(value = "创建时间")
     private Date createTime;
 
 }

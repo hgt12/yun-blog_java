@@ -2,6 +2,8 @@ package com.mengze.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.mengze.enums.AppHttpCodeEnum;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +13,16 @@ import java.io.Serializable;
 @Setter
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ApiModel(description = "统一响应结果")
 public class ResponseResult<T> implements Serializable {
+    
+    @ApiModelProperty(value = "响应码（200-成功，其他-失败）")
     private Integer code;
+    
+    @ApiModelProperty(value = "响应消息")
     private String msg;
-    //需要通过枚举类对code和msg进行封装
+    
+    @ApiModelProperty(value = "响应数据")
     private T data;
 
     public ResponseResult() {

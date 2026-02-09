@@ -1,23 +1,20 @@
 package com.mengze.domain.dto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 //登录请求DTO
 @Data
+@ApiModel(description = "登录请求对象")
 public class LoginDto {
     
-    /**
-     * 手机号
-     */
+    @ApiModelProperty(value = "手机号", example = "13800138000")
     private String phone;
 
-    /**
-     * 邮箱地址
-     */
+    @ApiModelProperty(value = "邮箱地址", example = "user@example.com")
     private String email;
     
-    /**
-     * 验证码
-     */
+    @ApiModelProperty(value = "验证码", required = true, example = "123456")
     private String code;
 }

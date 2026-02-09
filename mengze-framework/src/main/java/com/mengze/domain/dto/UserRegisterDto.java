@@ -1,39 +1,30 @@
 package com.mengze.domain.dto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 //用户注册DTO
 @Data
+@ApiModel(description = "用户注册请求对象")
 public class UserRegisterDto {
     
-    /**
-     * 用户名
-     */
+    @ApiModelProperty(value = "用户名", required = true, example = "zhangsan")
     private String username;
     
-    /**
-     * 密码
-     */
+    @ApiModelProperty(value = "密码", required = true, example = "123456")
     private String password;
     
-    /**
-     * 邮箱（邮箱注册时必填）
-     */
+    @ApiModelProperty(value = "邮箱（邮箱注册时必填）", example = "user@example.com")
     private String email;
     
-    /**
-     * 手机号（手机注册时必填）
-     */
+    @ApiModelProperty(value = "手机号（手机注册时必填）", example = "13800138000")
     private String phone;
     
-    /**
-     * 验证码（必填）
-     */
+    @ApiModelProperty(value = "验证码", required = true, example = "123456")
     private String code;
 
-    /**
-     * 用户名代替昵称
-     */
+    @ApiModelProperty(value = "昵称", example = "张三")
     private String nickname;
 
 }

@@ -1,5 +1,7 @@
 package com.mengze.domain.vo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,16 +11,21 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ApiModel(description = "友链响应对象")
 public class LinkVo
 {
-    //id
+    @ApiModelProperty(value = "友链ID")
     private Long id;
-    //友链名字
+    
+    @ApiModelProperty(value = "友链名字")
     private String name;
-    //头像
+    
+    @ApiModelProperty(value = "友链Logo")
     private String logo;
-    //个人描述
+    
+    @ApiModelProperty(value = "个人描述")
     private String description;
-    //网站地址
+    
+    @ApiModelProperty(value = "网站地址")
     private String address;
 }
