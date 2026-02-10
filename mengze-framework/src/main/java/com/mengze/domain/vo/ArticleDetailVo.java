@@ -41,4 +41,7 @@ public class ArticleDetailVo
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 
+    @ApiModelProperty(value = "最后更新时间")
+    private Date updateTime;
+
 }

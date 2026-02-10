@@ -11,8 +11,12 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 //日志打印切面类
 @Component
@@ -70,8 +74,20 @@ public class LogAspect
         log.info("Class Method      : {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         // 打印请求的 IP
         log.info("IP                : {}", request.getRemoteHost());
-        // 打印请求入参
-        log.info("Request Args      : {}", JSON.toJSONString(joinPoint.getArgs()));
+        // 打印请求入参（过滤掉无法序列化的参数）
+        Object[] args = joinPoint.getArgs();
+        List<Object> logArgs = new ArrayList<>();
+        for (Object arg : args) {
+            if (arg instanceof MultipartFile) {
+                MultipartFile file = (MultipartFile) arg;
+                logArgs.add("MultipartFile{name='" + file.getOriginalFilename() + "', size=" + file.getSize() + "}");
+            } else if (arg instanceof HttpServletRequest || arg instanceof HttpServletResponse) {
+                // 跳过 Request 和 Response
+            } else {
+                logArgs.add(arg);
+            }
+        }
+        log.info("Request Args      : {}", JSON.toJSONString(logArgs));
 
     }
 
