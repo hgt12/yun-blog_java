@@ -44,4 +44,8 @@ public class SystemConstants
      *  博主邮箱（用于匿名评论时识别博主身份）
      */
     public static final String BLOGGER_EMAIL = "2962933152@qq.com";
+    /**
+     *  未删除标识
+     */
+    public static final String NOT_DELETED = "0";
 }

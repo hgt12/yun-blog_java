@@ -46,8 +46,7 @@ public class CommentController {
             @ApiImplicitParam(name = "articleId",value = "文章id"),
             @ApiImplicitParam(name = "pageNum",value = "页号"),
             @ApiImplicitParam(name = "pageSize",value = "每页数量")
-    }
-    )
+    })
     public ResponseResult commentList(@RequestParam Integer type,
                                       @RequestParam(required = false) Long articleId,
                                       @RequestParam Integer pageNum,
