@@ -7,6 +7,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.vo.UserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
+import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.UserMapper;
 import com.mengze.domain.entity.User;
 import com.mengze.service.UserService;
@@ -101,6 +102,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
+        //获取更新前的用户信息，用于判断头像和昵称是否变化
+        User oldUser = getById(currentUserId);
+        
         //使用LambdaUpdateWrapper条件更新
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<User>()
                 .eq(User::getId, currentUserId)
@@ -114,6 +118,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!success) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新用户信息失败");
         }
+        
+        //如果头像或昵称发生变化，同步更新评论表中该用户的所有评论
+        boolean avatarChanged = !user.getAvatar().equals(oldUser.getAvatar());
+        boolean nicknameChanged = !user.getNickname().equals(oldUser.getNickname());
+        
+        if (avatarChanged || nicknameChanged) {
+            LambdaUpdateWrapper<com.mengze.domain.entity.Comment> commentWrapper = 
+                new LambdaUpdateWrapper<com.mengze.domain.entity.Comment>()
+                    .eq(com.mengze.domain.entity.Comment::getUserId, currentUserId);
+            
+            if (avatarChanged) {
+                commentWrapper.set(com.mengze.domain.entity.Comment::getAvatar, user.getAvatar());
+            }
+            if (nicknameChanged) {
+                commentWrapper.set(com.mengze.domain.entity.Comment::getNickname, user.getNickname());
+            }
+            
+            commentMapper.update(null, commentWrapper);
+        }
+        
         return ResponseResult.okResult();
     }
 
@@ -122,6 +146,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Autowired
     private RedisCache redisCache;
+    
+    @Autowired
+    private CommentMapper commentMapper;
 
     //用户注册
     @Override
@@ -199,9 +226,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setNickname(dto.getUsername());
         }
         
+        //设置默认头像
+        String avatar = generateDefaultAvatar(dto.getEmail());
+        user.setAvatar(avatar);
+        
         //存入数据库
         save(user);
         return ResponseResult.okResult("注册成功");
+    }
+    
+    //生成默认头像
+    private String generateDefaultAvatar(String email)
+    {
+        if (StringUtils.hasText(email)) {
+            //检查是否是QQ邮箱
+            if (email.matches("^\\d+@qq\\.com$")) {
+                //提取QQ号
+                String qqNumber = email.substring(0, email.indexOf("@"));
+                //返回QQ头像URL
+                return "https://q1.qlogo.cn/g?b=qq&nk=" + qqNumber + "&s=100";
+            }
+            //其他邮箱使用Gravatar
+            return com.mengze.utils.GravatarUtils.getGravatarUrl(email);
+        }
+        //如果没有邮箱，返回默认Gravatar
+        return com.mengze.utils.GravatarUtils.getGravatarUrl("");
     }
     
     //验证注册验证码

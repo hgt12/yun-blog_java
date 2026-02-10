@@ -7,12 +7,15 @@ import com.mengze.domain.entity.Comment;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.CommentService;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.GravatarUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * 评论接口
@@ -25,7 +28,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/comment")
 @Api(tags = "评论", description = "评论相关接口")
-public class CommentController {
+public class CommentController
+{
 
     @Autowired
     private CommentService commentService;
@@ -88,5 +92,24 @@ public class CommentController {
     public ResponseResult likeComment(@PathVariable("commentId") Long commentId)
     {
         return commentService.likeComment(commentId);
+    }
+
+    /**
+     * 生成评论头像（用于评论框预览）
+     * 规则：
+     * - 空邮箱：返回 d=mp（神秘人物轮廓）
+     * - 邮箱格式错误：返回 d=identicon（彩色几何图案）
+     * - 邮箱格式正确：返回对应邮箱的头像，默认使用 d=identicon
+     * 
+     * @param params 包含email参数的Map
+     * @return 头像URL
+     */
+    @PostMapping("/generateAvatar")
+    @SystemLog(businessName = "生成评论头像")
+    @ApiOperation(value = "生成评论头像", notes = "根据邮箱生成评论框预览头像")
+    public ResponseResult generateAvatar(@RequestBody Map<String, String> params)
+    {
+        String email = params.get("email");
+        return commentService.generateAvatar(email);
     }
 }

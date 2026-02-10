@@ -27,5 +27,17 @@ public interface CommentService extends IService<Comment>
      */
     ResponseResult addComment(Comment comment);
 
+    /**
+     * 点赞评论
+     * @param commentId 评论ID
+     * @return 点赞结果
+     */
     ResponseResult likeComment(Long commentId);
+
+    /**
+     * 根据邮箱生成评论头像
+     * @param email 邮箱地址
+     * @return 头像URL
+     */
+    ResponseResult generateAvatar(String email);
 }

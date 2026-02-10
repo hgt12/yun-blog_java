@@ -122,9 +122,21 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
         }
 
-        //如果前端没有传头像，则根据邮箱生成
+        //如果前端没有传头像，则根据用户信息获取
         if (!StringUtils.hasText(comment.getAvatar())) {
-            comment.setAvatar(GravatarUtils.getGravatarUrl(comment.getEmail()));
+            if (comment.getUserId() != null) {
+                //已登录用户，使用用户表中的最新头像
+                User user = userMapper.selectById(comment.getUserId());
+                if (user != null && StringUtils.hasText(user.getAvatar())) {
+                    comment.setAvatar(user.getAvatar());
+                } else {
+                    //用户表中没有头像，根据邮箱生成（使用评论专用头像）
+                    comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
+                }
+            } else {
+                //未登录用户，根据邮箱生成（使用评论专用头像）
+                comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
+            }
         }
         
         //设置默认值
@@ -174,6 +186,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return ResponseResult.okResult();
     }
 
+    //生成评论头像
+    @Override
+    public ResponseResult generateAvatar(String email)
+    {
+        // 使用工具类生成头像URL
+        String avatarUrl = GravatarUtils.getCommentPreviewAvatarUrl(email);
+        
+        // 封装返回结果
+        java.util.Map<String, String> result = new java.util.HashMap<>();
+        result.put("avatar", avatarUrl);
+        
+        return ResponseResult.okResult(result);
+    }
+
     //获取子评论列表
     private List<CommentVo> getChildren(Long rootId)
     {
@@ -192,37 +218,56 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         for (int i = 0; i < voList.size(); i++) {
             CommentVo vo = voList.get(i);
             Comment original = comments.get(i);
-            // 直接使用数据库中保存的头像
-            vo.setAvatar(original.getAvatar());
-            // 设置用户类型（用于显示博主标识）
-            // 优先通过邮箱判断是否为博主（支持匿名评论识别博主）
-            if (StringUtils.hasText(original.getEmail()) 
-                    && original.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
-                vo.setUserType("1"); //博主标识
-            } else if (original.getUserId() != null) {
+            
+            // 只有评论时已登录（有user_id）的评论才实时获取最新头像和昵称
+            if (original.getUserId() != null) {
                 User user = userMapper.selectById(original.getUserId());
                 if (user != null) {
+                    // 使用用户表中的最新头像和昵称
+                    vo.setAvatar(user.getAvatar());
+                    vo.setNickname(user.getNickname());
                     vo.setUserType(user.getUserType());
+                } else {
+                    // 用户不存在，使用评论表中的数据
+                    vo.setAvatar(original.getAvatar());
+                    vo.setUserType("0");
                 }
             } else {
-                vo.setUserType("0"); //普通用户
+                // 未登录时的评论，保持匿名性，使用评论表中保存的头像
+                vo.setAvatar(original.getAvatar());
+                // 优先通过邮箱判断是否为博主（支持匿名评论识别博主）
+                if (StringUtils.hasText(original.getEmail()) 
+                        && original.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
+                    vo.setUserType("1"); //博主标识
+                } else {
+                    vo.setUserType("0"); //普通用户
+                }
             }
+            
             // 设置回复目标昵称和用户类型
             if (vo.getReplyToCommentId() != null && vo.getReplyToCommentId() > 0) {
                 Comment replyTo = getById(vo.getReplyToCommentId());
                 if (replyTo != null) {
-                    vo.setReplyToCommentNickname(replyTo.getNickname());
-                    // 判断被回复者是否为博主
-                    if (StringUtils.hasText(replyTo.getEmail()) 
-                            && replyTo.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
-                        vo.setReplyToCommentUserType("1"); //博主或者管理员
-                    } else if (replyTo.getUserId() != null) {
+                    // 如果被回复的评论是登录后发布的，获取最新昵称
+                    if (replyTo.getUserId() != null) {
                         User replyToUser = userMapper.selectById(replyTo.getUserId());
                         if (replyToUser != null) {
+                            vo.setReplyToCommentNickname(replyToUser.getNickname());
                             vo.setReplyToCommentUserType(replyToUser.getUserType());
+                        } else {
+                            vo.setReplyToCommentNickname(replyTo.getNickname());
+                            vo.setReplyToCommentUserType("0");
                         }
                     } else {
-                        vo.setReplyToCommentUserType("0"); //普通用户
+                        // 被回复的评论是匿名评论，使用评论表中的昵称
+                        vo.setReplyToCommentNickname(replyTo.getNickname());
+                        // 判断被回复者是否为博主
+                        if (StringUtils.hasText(replyTo.getEmail()) 
+                                && replyTo.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
+                            vo.setReplyToCommentUserType("1"); //博主或者管理员
+                        } else {
+                            vo.setReplyToCommentUserType("0"); //普通用户
+                        }
                     }
                 }
             }
