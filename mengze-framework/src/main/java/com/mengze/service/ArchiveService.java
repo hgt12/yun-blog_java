@@ -5,9 +5,12 @@ import com.mengze.domain.ResponseResult;
 public interface ArchiveService
 {
     /**
-     * 获取归档列表（按年月分组）
+     * 获取归档列表（分页）
+     * @param pageNum 页号
+     * @param pageSize 每页数量
+     * @return 文章列表（按创建时间倒序）
      */
-    ResponseResult getArchiveList();
+    ResponseResult getArchiveList(Integer pageNum, Integer pageSize);
 
     /**
      * 根据年月获取文章列表

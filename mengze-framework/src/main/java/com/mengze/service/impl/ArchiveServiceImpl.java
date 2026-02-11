@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+//归档
 @Service
 public class ArchiveServiceImpl implements ArchiveService
 {
@@ -25,47 +26,30 @@ public class ArchiveServiceImpl implements ArchiveService
     private ArticleMapper articleMapper;
 
     @Override
-    public ResponseResult getArchiveList()
+    public ResponseResult getArchiveList(Integer pageNum, Integer pageSize)
     {
-        // 查询所有已发布的文章，按创建时间倒序
+        // 构建查询条件：查询所有已发布的文章，按创建时间倒序
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL)
                 .eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
                 .orderByDesc(Article::getCreateTime);
 
-        List<Article> articles = articleMapper.selectList(queryWrapper);
+        // 分页查询
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        articleMapper.selectPage(page, queryWrapper);
 
-        // 按年月分组
-        Map<String, List<Article>> groupedArticles = articles.stream()
-                .collect(Collectors.groupingBy(article -> {
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(article.getCreateTime());
-                    int year = calendar.get(Calendar.YEAR);
-                    int month = calendar.get(Calendar.MONTH) + 1;
-                    return year + "-" + month;
-                }, LinkedHashMap::new, Collectors.toList()));
-
-        // 转换为 ArchiveVo
+        // 转换为 VO
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        List<ArchiveVo> archiveVos = groupedArticles.entrySet().stream()
-                .map(entry -> {
-                    String[] yearMonth = entry.getKey().split("-");
-                    Integer year = Integer.parseInt(yearMonth[0]);
-                    Integer month = Integer.parseInt(yearMonth[1]);
-
-                    List<ArchiveArticleVo> articleVos = entry.getValue().stream()
-                            .map(article -> new ArchiveArticleVo(
-                                    article.getId(),
-                                    article.getTitle(),
-                                    sdf.format(article.getCreateTime())
-                            ))
-                            .collect(Collectors.toList());
-
-                    return new ArchiveVo(year, month, articleVos.size(), articleVos);
-                })
+        List<ArchiveArticleVo> articleVos = page.getRecords().stream()
+                .map(article -> new ArchiveArticleVo(
+                        article.getId(),
+                        article.getTitle(),
+                        sdf.format(article.getCreateTime())
+                ))
                 .collect(Collectors.toList());
 
-        return ResponseResult.okResult(archiveVos);
+        PageVo pageVo = new PageVo(articleVos, page.getTotal());
+        return ResponseResult.okResult(pageVo);
     }
 
     @Override
