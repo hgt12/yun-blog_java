@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Category;
+import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.ArticleDetailVo;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.HotArticleListVo;
@@ -14,6 +15,7 @@ import com.mengze.mapper.ArticleMapper;
 import com.mengze.domain.entity.Article;
 import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
+import com.mengze.service.UserService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -36,6 +38,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Autowired
     @Lazy
     private CategoryService categoryService;
+
+    @Autowired
+    @Lazy
+    private UserService userService;
 
     //热门文章列表方法，用mybatis_plus中的相关的一些查询，
     // 最后再把结果封装到ResponseResult对象当中统一响应格式
@@ -130,12 +136,40 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         Article article = getById(id);
         //转化成Vo
         ArticleDetailVo articleDetailVo = BeanCopyUtils.copyBean(article, ArticleDetailVo.class);
+        
         //根据分类id查询分类名
         Long categoryId = articleDetailVo.getCategoryId();
         Category category = categoryService.getById(categoryId);
         if (category != null) {
             articleDetailVo.setCategoryName(category.getName());//根据id查到了才进行下去防止空指针异常
         }
+        
+        //根据创建者ID查询作者昵称
+        Long createBy = article.getCreateBy();
+        String author = "云梦泽"; // 默认作者名
+        if (createBy != null) {
+            User user = userService.getById(createBy);
+            if (user != null && user.getNickname() != null) {
+                author = user.getNickname();
+            }
+        }
+        articleDetailVo.setAuthor(author);
+        
+        //计算字数统计（去除HTML标签后的纯文本字符数）
+        String content = article.getContent();
+        if (content != null) {
+            String textContent = content.replaceAll("<[^>]*>", "").trim();
+            int wordCount = textContent.length();
+            articleDetailVo.setWordCount(wordCount);
+            
+            //计算阅读时长（分钟），假设每分钟阅读300字，最小值为1分钟
+            int readTime = Math.max(1, (int) Math.ceil(wordCount / 300.0));
+            articleDetailVo.setReadTime(readTime);
+        } else {
+            articleDetailVo.setWordCount(0);
+            articleDetailVo.setReadTime(1);
+        }
+        
         //封装响应返回
         return ResponseResult.okResult(articleDetailVo);
     }

@@ -35,8 +35,17 @@ public class ArticleDetailVo
     @ApiModelProperty(value = "文章内容")
     private String content;
     
+    @ApiModelProperty(value = "文章作者")
+    private String author;
+    
     @ApiModelProperty(value = "访问量")
     private Long viewCount;
+    
+    @ApiModelProperty(value = "字数统计")
+    private Integer wordCount;
+    
+    @ApiModelProperty(value = "阅读时长（分钟）")
+    private Integer readTime;
     
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
