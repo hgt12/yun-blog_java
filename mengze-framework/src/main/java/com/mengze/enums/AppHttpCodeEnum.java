@@ -32,6 +32,7 @@ public enum AppHttpCodeEnum {
     SMS_SEND_FREQUENTLY(1019, "验证码发送过于频繁，请稍后再试"),
     IP_REQUEST_LIMIT(1020, "请求过于频繁，请稍后再试"),
     VERIFICATION_CODE_ERROR(1021, "验证码错误或已过期"),
+    SELECT_ERROR(1022, "未查到信息")
     ;
     int code;
     String msg;

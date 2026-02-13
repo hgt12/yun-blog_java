@@ -50,4 +50,13 @@ public class UserController
         return userService.userRegister(dto);
     }
 
+    //获取博主信息
+    @GetMapping("/bloggerInfo")
+    @SystemLog(businessName = "查询博主信息")
+    @ApiOperation(value = "获取博主信息", notes = "获取博主的昵称和头像，用于在关于页面进行展示")
+    public ResponseResult getBloggerInfo()
+    {
+        return userService.getBloggerInfo();
+    }
+
 }

@@ -289,5 +289,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         return null;
     }
+
+    //获取博主信息（公开接口，无需登录）
+    @Override
+    public ResponseResult getBloggerInfo()
+    {
+        // 查询 user_type = 1 的用户（博主）
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUserType, "1")
+                .select(User::getNickname, User::getAvatar)
+                .last("LIMIT 1");
+        
+        User blogger = getOne(queryWrapper);
+        
+        if (blogger == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SELECT_ERROR, "未找到博主信息");
+        }
+        
+        // 封装成 BloggerInfoVo
+        com.mengze.domain.vo.BloggerInfoVo vo = new com.mengze.domain.vo.BloggerInfoVo(
+            blogger.getNickname(),
+            blogger.getAvatar()
+        );
+        
+        return ResponseResult.okResult(vo);
+    }
 }
 
