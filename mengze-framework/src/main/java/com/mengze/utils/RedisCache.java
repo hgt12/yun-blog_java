@@ -242,10 +242,51 @@ public class RedisCache
      * @param key 键值
      * @param hkey 哈希值字段对应的键值
      * @param v 递增的值
-     * @return 对象列表
      */
     public void incrementCacheMapValue(String key, String hkey, long v)
     {
         redisTemplate.boundHashOps(key).increment(hkey, v);
     }
+
+    /**
+     * 向 List 左侧推入一个元素（队列入队）
+     *
+     * @param key   Redis键
+     * @param value 值
+     */
+    public <T> void pushToList(final String key, final T value)
+    {
+        redisTemplate.opsForList().leftPush(key, value);
+    }
+
+    /**
+     * 从 List 右侧批量弹出所有元素并清空
+     *
+     * @param key Redis键
+     * @return 所有元素列表
+     */
+    public <T> List<T> popAllFromList(final String key)
+    {
+        Long size = redisTemplate.opsForList().size(key);
+        if (size == null || size == 0) {
+            return Collections.emptyList();
+        }
+        List<T> result = redisTemplate.opsForList().range(key, 0, -1);
+        redisTemplate.delete(key);
+        return result == null ? Collections.emptyList() : result;
+    }
+
+    /**
+     * 向 Set 中添加一个元素，返回是否为新元素（true=新增成功，false=已存在）
+     *
+     * @param key   Redis键
+     * @param value 值
+     * @return 是否为新元素
+     */
+    public <T> boolean addToSet(final String key, final T value)
+    {
+        Long result = redisTemplate.opsForSet().add(key, value);
+        return result != null && result > 0;
+    }
+
 }

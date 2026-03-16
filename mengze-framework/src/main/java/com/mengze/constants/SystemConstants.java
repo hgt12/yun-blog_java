@@ -52,4 +52,28 @@ public class SystemConstants
      *  文章预览量
      */
     public static final String ARTICLE_VIEW_COUNT = "article:viewCount";
+    /**
+     *  网站总预览量（PV）Redis key
+     */
+    public static final String SITE_TOTAL_VIEWS = "site:totalViews";
+    /**
+     *  网站总预览量 Hash field
+     */
+    public static final String SITE_TOTAL_VIEWS_FIELD = "total";
+    /**
+     *  网站总访客数（UV）Redis key
+     */
+    public static final String SITE_TOTAL_VISITORS = "site:totalVisitors";
+    /**
+     *  网站总访客数 Hash field
+     */
+    public static final String SITE_TOTAL_VISITORS_FIELD = "total";
+    /**
+     *  访客去重 Set key 前缀（按月分 key，格式：site:visitor:set:yyyy-MM）
+     */
+    public static final String SITE_VISITOR_SET_PREFIX = "site:visitor:set:";
+    /**
+     *  访问日志队列 key
+     */
+    public static final String VISIT_LOG_QUEUE = "site:visitLog:queue";
 }
