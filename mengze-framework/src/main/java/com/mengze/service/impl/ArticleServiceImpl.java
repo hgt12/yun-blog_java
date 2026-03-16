@@ -17,6 +17,7 @@ import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
 import com.mengze.service.UserService;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Lazy
     private UserService userService;
 
+    @Autowired
+    private RedisCache redisCache;
+
     //热门文章列表方法，用mybatis_plus中的相关的一些查询，
     // 最后再把结果封装到ResponseResult对象当中统一响应格式
     @Override
@@ -57,6 +61,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         page(page, queryWrapper);
 
         List<Article> list = page.getRecords();
+
+        //从redis中获取viewCount
+        list.forEach(article -> {
+            Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
+            article.setViewCount(viewCount.longValue());
+        });
 
         //使用bean拷贝封装Vo（需要注意的是，使用bean拷贝时要求拷贝前后的字段名和字段类型是要一致的，否则无法拷贝）
         //目前先在该类中实现，后续接口多了再把他封装成一个接口
@@ -95,9 +105,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //查询categoryName
         List<Article> articles = page.getRecords();
         //stream流方式查询
-        articles.forEach(article -> 
-                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
-        );
+        articles.forEach(article -> {
+            article.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
+            //从redis中获取viewCount
+            Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
+            article.setViewCount(viewCount.longValue());
+        });
 
         //stream流方式查询(方法1)
 //        articles.stream()
@@ -132,6 +145,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public ResponseResult getArticleDetail(Long id) {
         //根据id查询文章
         Article article = getById(id);
+        //从redis中获取viewCount
+        Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
+        article.setViewCount(viewCount.longValue());
         //转化成Vo
         ArticleDetailVo articleDetailVo = BeanCopyUtils.copyBean(article, ArticleDetailVo.class);
         
@@ -191,15 +207,26 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //查询categoryName
         List<Article> articles = page.getRecords();
-        articles.forEach(article ->
-                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
-        );
+        articles.forEach(article -> {
+            article.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
+            //从redis中获取viewCount
+            Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
+            article.setViewCount(viewCount.longValue());
+        });
 
         //封装查询结果为Vo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
 
         PageVo pageVo = new PageVo(articleListVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
+    }
+
+    @Override
+    public ResponseResult viewCount(Long id)
+    {
+        // 更新redis中对应文章id的浏览量
+        redisCache.incrementCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, id.toString(), 1);
+        return ResponseResult.okResult();
     }
 
     //根据标签id查询文章列表

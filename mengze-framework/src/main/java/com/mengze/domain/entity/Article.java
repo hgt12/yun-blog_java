@@ -58,5 +58,10 @@ public class Article extends Model<Article> {
     //更新时间
     private Date updateTime;
 
+    public Article(Long id, long viewCount)
+    {
+        this.id = id;
+        this.viewCount = viewCount;
+    }
 }
 

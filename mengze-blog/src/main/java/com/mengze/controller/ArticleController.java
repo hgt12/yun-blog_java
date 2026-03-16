@@ -11,10 +11,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -75,5 +72,17 @@ public class ArticleController {
     public ResponseResult articleListByCategoryId(@PathVariable("categoryId") Long categoryId, Integer pageNum, Integer pageSize)
     {
         return articleService.articleListByCategoryId(categoryId, pageNum, pageSize);
+    }
+
+    // 预览量接口
+    @PutMapping("/viewCount/{id}")
+    @SystemLog(businessName = "根据根据文章id获取预览量")
+    @ApiOperation(value = "预览量", notes = "根据根据文章id获取预览量")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "文章id"),
+    })
+    public ResponseResult viewCount(@PathVariable("id") Long id)
+    {
+        return articleService.viewCount(id);
     }
 }
