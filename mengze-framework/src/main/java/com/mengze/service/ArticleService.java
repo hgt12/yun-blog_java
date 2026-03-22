@@ -23,6 +23,6 @@ public interface ArticleService extends IService<Article> {
 
     ResponseResult viewCount(Long id);
 
-    //esponseResult articleListByTagId(Long tagId, Integer pageNum, Integer pageSize);
+    ResponseResult articleListByTagId(Long tagId, Integer pageNum, Integer pageSize);
 }
 

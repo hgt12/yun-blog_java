@@ -50,14 +50,14 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 .map(Article::getId)
                 .collect(Collectors.toSet());
 
-        //如果没有已发布的文章，返回空列表
-        if (articleIds.isEmpty()) {
-            return ResponseResult.okResult(List.of());
-        }
-
         //查询这些文章关联的标签
         LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
-        articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
+        if (!articleIds.isEmpty()) {
+            articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
+        } else {
+            //没有已发布文章时返回空结果
+            articleTagWrapper.eq(ArticleTag::getArticleId, -1L);
+        }
         List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
 
         //获取标签ID集合并去重
@@ -65,19 +65,19 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 .map(ArticleTag::getTagId)
                 .collect(Collectors.toSet());
 
-        //如果没有关联的标签，返回空列表
-        if (tagIds.isEmpty()) {
-            return ResponseResult.okResult(List.of());
-        }
-
         //统计每个标签关联的文章数量
         Map<Long, Long> tagArticleCountMap = articleTagList.stream()
                 .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
 
         //查询标签详细信息
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-        tagWrapper.in(Tag::getId, tagIds)
-                .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        if (!tagIds.isEmpty()) {
+            tagWrapper.in(Tag::getId, tagIds);
+        } else {
+            //没有标签时返回空结果
+            tagWrapper.eq(Tag::getId, -1L);
+        }
+        tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
         List<Tag> tagList = list(tagWrapper);
 
         //转换为TagVo并设置文章数量

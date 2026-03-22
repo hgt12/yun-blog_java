@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Category;
 import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.ArticleDetailVo;
@@ -13,6 +14,7 @@ import com.mengze.domain.vo.HotArticleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.domain.entity.Article;
+import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
 import com.mengze.service.UserService;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 文章表(Article)表服务实现类
@@ -44,6 +47,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private ArticleTagMapper articleTagMapper;
 
     //热门文章列表方法，用mybatis_plus中的相关的一些查询，
     // 最后再把结果封装到ResponseResult对象当中统一响应格式
@@ -230,31 +236,47 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     //根据标签id查询文章列表
-//    @Override
-//    public ResponseResult articleListByTagId(Long tagId, Integer pageNum, Integer pageSize) {
-//        //查询条件
-//        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        //根据标签id查询
-//        lambdaQueryWrapper.eq(Article::getTagId, tagId);
-//        //状态是正式发布的
-//        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-//        //置顶的文章要放在前面
-//        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
-//        //分页查询
-//        Page<Article> page = new Page<>(pageNum, pageSize);
-//        page(page, lambdaQueryWrapper);
-//
-//        //查询categoryName
-//        List<Article> articles = page.getRecords();
-//        articles.forEach(article ->
-//                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
-//        );
-//
-//        //封装查询结果为Vo
-//        List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
-//
-//        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
-//        return ResponseResult.okResult(pageVo);
-//    }
+    @Override
+    public ResponseResult articleListByTagId(Long tagId, Integer pageNum, Integer pageSize)
+    {
+        //先通过ArticleTag关联表查询该标签下的所有文章ID
+        LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
+        articleTagWrapper.eq(ArticleTag::getTagId, tagId);
+        List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
+
+        //获取文章ID列表
+        List<Long> articleIds = articleTagList.stream()
+                .map(ArticleTag::getArticleId)
+                .collect(Collectors.toList());
+
+        //查询条件
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //如果有文章ID，则根据文章ID列表查询；否则查询条件会返回空结果
+        if (!articleIds.isEmpty()) {
+            lambdaQueryWrapper.in(Article::getId, articleIds);
+        } else {
+            //没有文章时返回空结果
+            lambdaQueryWrapper.eq(Article::getId, -1L);
+        }
+        //状态是正式发布的
+        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //置顶的文章要放在前面
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //分页查询
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        page(page, lambdaQueryWrapper);
+
+        //查询categoryName
+        List<Article> articles = page.getRecords();
+        articles.forEach(article ->
+                article.setCategoryName(categoryService.getById(article.getCategoryId()).getName())
+        );
+
+        //封装查询结果为Vo
+        List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
+
+        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
+        return ResponseResult.okResult(pageVo);
+    }
 }
 

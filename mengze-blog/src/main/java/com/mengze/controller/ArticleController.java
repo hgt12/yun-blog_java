@@ -74,6 +74,20 @@ public class ArticleController {
         return articleService.articleListByCategoryId(categoryId, pageNum, pageSize);
     }
 
+    //根据标签id查询文章列表
+    @GetMapping("/articleListByTagId/{tagId}")
+    @SystemLog(businessName = "根据标签ID查询文章列表")
+    @ApiOperation(value = "根据标签查询文章", notes = "根据标签id分页查询文章列表", response = PageVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "tagId", value = "标签id"),
+            @ApiImplicitParam(name = "pageNum", value = "页号"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量")
+    })
+    public ResponseResult articleListByTagId(@PathVariable("tagId") Long tagId, Integer pageNum, Integer pageSize)
+    {
+        return articleService.articleListByTagId(tagId, pageNum, pageSize);
+    }
+
     // 预览量接口
     @PutMapping("/viewCount/{id}")
     @SystemLog(businessName = "根据根据文章id获取预览量")
