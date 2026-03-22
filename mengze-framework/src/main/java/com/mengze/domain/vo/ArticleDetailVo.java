@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -52,5 +53,8 @@ public class ArticleDetailVo
 
     @ApiModelProperty(value = "最后更新时间")
     private Date updateTime;
+
+    @ApiModelProperty(value = "标签列表")
+    private List<TagVo> tags;
 
 }

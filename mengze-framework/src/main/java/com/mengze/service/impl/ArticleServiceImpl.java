@@ -7,14 +7,17 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Category;
+import com.mengze.domain.entity.Tag;
 import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.ArticleDetailVo;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.HotArticleListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.domain.entity.Article;
 import com.mengze.mapper.ArticleTagMapper;
+import com.mengze.mapper.TagMapper;
 import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
 import com.mengze.service.UserService;
@@ -25,6 +28,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -51,10 +55,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Autowired
     private ArticleTagMapper articleTagMapper;
 
+    @Autowired
+    private TagMapper tagMapper;
+
     //热门文章列表方法，用mybatis_plus中的相关的一些查询，
     // 最后再把结果封装到ResponseResult对象当中统一响应格式
     @Override
-    public ResponseResult hotArticleList() {
+    public ResponseResult hotArticleList()
+    {
         //查询热门文章，封装成ResponseResult返回
 
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
@@ -92,7 +100,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     //分页查询文章列表
     @Override
-    public ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId) {
+    public ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId)
+    {
         //查询条件
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //如果有categoryId，就要求查询时要和从传入的categoryId相同，如果没有则不需要进行判断
@@ -141,6 +150,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //封装查询结果为Vo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
+        
+        //获取标签
+        fillArticleListTags(articleListVos);
 
         PageVo pageVo = new PageVo(articleListVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
@@ -148,7 +160,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     //查询文章详情
     @Override
-    public ResponseResult getArticleDetail(Long id) {
+    public ResponseResult getArticleDetail(Long id)
+    {
         //根据id查询文章
         Article article = getById(id);
         //从redis中获取viewCount
@@ -190,13 +203,17 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             articleDetailVo.setReadTime(1);
         }
         
+        //获取标签数据
+        fillArticleDetailTags(articleDetailVo);
+        
         //封装响应返回
         return ResponseResult.okResult(articleDetailVo);
     }
 
     //根据分类id查询文章列表
     @Override
-    public ResponseResult articleListByCategoryId(Long categoryId, Integer pageNum, Integer pageSize) {
+    public ResponseResult articleListByCategoryId(Long categoryId, Integer pageNum, Integer pageSize)
+    {
         //查询条件
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //根据分类id查询
@@ -277,6 +294,104 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         PageVo pageVo = new PageVo(articleListVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
+    }
+
+    /**
+     * 为文章列表添加标签数据
+     * @param articleListVos 文章列表VO
+     */
+    private void fillArticleListTags(List<ArticleListVo> articleListVos)
+    {
+        if (articleListVos == null || articleListVos.isEmpty()) {
+            return;
+        }
+
+        //收集所有文章ID
+        List<Long> articleIds = articleListVos.stream()
+                .map(ArticleListVo::getId)
+                .collect(Collectors.toList());
+
+        //查询这些文章的标签关联
+        LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
+        articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
+        List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
+
+        //如果没有标签关联，直接返回
+        if (articleTagList.isEmpty()) {
+            return;
+        }
+
+        //收集所有标签ID
+        List<Long> tagIds = articleTagList.stream()
+                .map(ArticleTag::getTagId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        //查询标签详情
+        LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
+        tagWrapper.in(Tag::getId, tagIds)
+                .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        List<Tag> tags = tagMapper.selectList(tagWrapper);
+
+        //转换为TagVo的Map，key为tagId
+        Map<Long, TagVo> tagVoMap = tags.stream()
+                .collect(Collectors.toMap(
+                        Tag::getId,
+                        tag -> BeanCopyUtils.copyBean(tag, TagVo.class)
+                ));
+
+        //构建文章ID到标签列表的映射
+        Map<Long, List<TagVo>> articleTagMap = articleTagList.stream()
+                .filter(at -> tagVoMap.containsKey(at.getTagId()))
+                .collect(Collectors.groupingBy(
+                        ArticleTag::getArticleId,
+                        Collectors.mapping(
+                                at -> tagVoMap.get(at.getTagId()),
+                                Collectors.toList()
+                        )
+                ));
+
+        //为每篇文章设置标签列表
+        articleListVos.forEach(article ->
+                article.setTags(articleTagMap.getOrDefault(article.getId(), List.of()))
+        );
+    }
+
+    /**
+     * 为文章详情添加标签数据
+     * @param articleDetailVo 文章详情VO
+     */
+    private void fillArticleDetailTags(ArticleDetailVo articleDetailVo)
+    {
+        if (articleDetailVo == null || articleDetailVo.getId() == null) {
+            return;
+        }
+
+        //查询该文章的标签关联
+        LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
+        articleTagWrapper.eq(ArticleTag::getArticleId, articleDetailVo.getId());
+        List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
+
+        //如果没有标签关联，设置空列表
+        if (articleTagList.isEmpty()) {
+            articleDetailVo.setTags(List.of());
+            return;
+        }
+
+        //收集标签ID
+        List<Long> tagIds = articleTagList.stream()
+                .map(ArticleTag::getTagId)
+                .collect(Collectors.toList());
+
+        //查询标签详情
+        LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
+        tagWrapper.in(Tag::getId, tagIds)
+                .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        List<Tag> tags = tagMapper.selectList(tagWrapper);
+
+        //转换为TagVo列表
+        List<TagVo> tagVos = BeanCopyUtils.copyBeanList(tags, TagVo.class);
+        articleDetailVo.setTags(tagVos);
     }
 }
 
