@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-//分类列表接口
+//分类相关接口
 @RestController
 @RequestMapping("/category")
 @Api(tags = "分类", description = "文章分类相关接口")

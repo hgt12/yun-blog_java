@@ -20,7 +20,7 @@ public class LinkController
     @Autowired
     private LinkService linkService;
 
-    @GetMapping("getAllLink")
+    @GetMapping("/getAllLink")
     @SystemLog(businessName = "查询友链列表")
     @ApiOperation(value = "友链列表", notes = "获取所有友情链接列表", response = LinkVo.class, responseContainer = "List")
     public ResponseResult getAllLink()
