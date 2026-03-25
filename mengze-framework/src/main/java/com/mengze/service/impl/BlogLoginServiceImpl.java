@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.dto.ResetPasswordDto;
+import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.domain.vo.UserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
+import com.mengze.exception.SystemException;
 import com.mengze.mapper.UserMapper;
 import com.mengze.service.BlogLoginService;
 import com.mengze.utils.BeanCopyUtils;
@@ -46,8 +48,16 @@ public class BlogLoginServiceImpl implements BlogLoginService
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public ResponseResult login(User user)
+    public ResponseResult login(UserLoginDto dto)
     {
+        // 预防编程，用户名是否为空
+        if (!StringUtils.hasText(dto.getUsername())) {
+            // 提示 必须要传用户名
+            throw new SystemException(AppHttpCodeEnum.REQUIRE_USERNAME);
+        }
+        
+        // 将DTO转换为User实体
+        User user = BeanCopyUtils.copyBean(dto, User.class);
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);

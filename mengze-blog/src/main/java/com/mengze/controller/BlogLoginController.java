@@ -6,17 +6,12 @@ import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.dto.ResetPasswordDto;
 import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
-import com.mengze.domain.entity.User;
 import com.mengze.domain.vo.BlogUserLoginVo;
-import com.mengze.enums.AppHttpCodeEnum;
-import com.mengze.exception.SystemException;
 import com.mengze.service.BlogLoginService;
 import com.mengze.service.UserService;
-import com.mengze.utils.BeanCopyUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,14 +33,7 @@ public class BlogLoginController
     @ApiOperation(value = "用户名密码登录", notes = "通过用户名和密码进行登录", response = BlogUserLoginVo.class)
     public ResponseResult login(@RequestBody UserLoginDto dto)
     {
-        //预防编程，用户名是否为空
-        if (!StringUtils.hasText(dto.getUsername()))
-        {
-            // 提示 必须要传用户名
-            throw new SystemException(AppHttpCodeEnum.REQUIRE_USERNAME);//需要用户名
-        }
-        User user = BeanCopyUtils.copyBean(dto, User.class);
-        return blogLoginService.login(user);
+        return blogLoginService.login(dto);
     }
 
     @PostMapping("logout")

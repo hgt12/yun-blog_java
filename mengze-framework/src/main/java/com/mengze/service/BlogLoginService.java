@@ -3,13 +3,14 @@ package com.mengze.service;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.dto.ResetPasswordDto;
+import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.entity.User;
 
 public interface BlogLoginService
 {
 
-    ResponseResult login(User user);
+    ResponseResult login(UserLoginDto dto);
 
     ResponseResult logout();
 
