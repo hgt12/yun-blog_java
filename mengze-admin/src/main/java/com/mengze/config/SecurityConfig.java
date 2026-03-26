@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问
-                .antMatchers("/login").anonymous()
+                .antMatchers("/auth/login").anonymous()
                 // 对于登出接口 需要认证后才能访问
 //                .antMatchers("/logout").authenticated()
 //                // 对于用户信息查询接口 需要认证后才能访问
@@ -49,8 +49,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .antMatchers("/upload").authenticated()
                 //测试，友链接口需要认证才能访问（后续可以开发为发表文章页面要登录之后才能访问，发表文章直接跳转到后台）
                 //.antMatchers("/links/getAllLink").authenticated()
-                // 除上面外的所有请求不需要认证就可以访问
-                .anyRequest().permitAll();
+                // 除上面外的所有请求都需要认证才可以访问
+                .anyRequest().authenticated();
 
         //配置异常处理器
         http.exceptionHandling()

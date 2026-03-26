@@ -233,9 +233,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     vo.setUserType("0");
                 }
             } else {
-                // 未登录时的评论，保持匿名性，使用评论表中保存的头像
+                // 未登录时的评论,使用评论表中保存的头像
                 vo.setAvatar(original.getAvatar());
-                // 优先通过邮箱判断是否为博主（支持匿名评论识别博主）
+                // 优先通过邮箱判断是否为博主，未登录时也可识别
                 if (StringUtils.hasText(original.getEmail()) 
                         && original.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
                     vo.setUserType("1"); //博主标识
@@ -245,11 +245,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
             
             // 设置回复目标昵称和用户类型
-            if (vo.getReplyToCommentId() != null && vo.getReplyToCommentId() > 0) {
+            if (vo.getReplyToCommentId() != null && vo.getReplyToCommentId() > 0)
+            {
                 Comment replyTo = getById(vo.getReplyToCommentId());
-                if (replyTo != null) {
+                if (replyTo != null)
+                {
                     // 如果被回复的评论是登录后发布的，获取最新昵称
-                    if (replyTo.getUserId() != null) {
+                    if (replyTo.getUserId() != null)
+                    {
                         User replyToUser = userMapper.selectById(replyTo.getUserId());
                         if (replyToUser != null) {
                             vo.setReplyToCommentNickname(replyToUser.getNickname());

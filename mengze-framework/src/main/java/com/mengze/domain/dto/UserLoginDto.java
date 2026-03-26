@@ -1,5 +1,6 @@
 package com.mengze.domain.dto;
 
+import com.mengze.domain.vo.UserInfoVo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,4 +17,10 @@ public class UserLoginDto {
     
     @ApiModelProperty(value = "密码", required = true, example = "123456")
     private String password;
+
+    @ApiModelProperty(value = "验证码ID", required = true, example = "1f43e2")
+    private String captchaId;
+
+    @ApiModelProperty(value = "验证码", required = true, example = "3")
+    private String captchaCode;
 }
