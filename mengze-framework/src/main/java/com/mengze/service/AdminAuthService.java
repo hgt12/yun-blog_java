@@ -8,4 +8,6 @@ public interface AdminAuthService
 
     ResponseResult login(UserLoginDto dto);
 
+    ResponseResult captcha(UserLoginDto dto);
+
 }
