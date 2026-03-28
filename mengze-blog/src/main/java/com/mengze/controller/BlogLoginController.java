@@ -8,7 +8,7 @@ import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.service.BlogLoginService;
-import com.mengze.service.UserService;
+import com.mengze.service.SysUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class BlogLoginController
     private BlogLoginService blogLoginService;
 
     @Autowired
-    private UserService userService;
+    private SysUserService sysUserService;
 
     //通过用户名密码登录
     @PostMapping("/login")

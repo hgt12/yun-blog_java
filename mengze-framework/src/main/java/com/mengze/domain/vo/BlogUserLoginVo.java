@@ -16,5 +16,5 @@ public class BlogUserLoginVo
     private String token;
     
     @ApiModelProperty(value = "用户信息")
-    private UserInfoVo userInfo;
+    private SysUserInfoVo userInfo;
 }

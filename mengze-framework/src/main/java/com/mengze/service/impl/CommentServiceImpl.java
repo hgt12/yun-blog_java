@@ -6,12 +6,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.User;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.CommentVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
-import com.mengze.mapper.UserMapper;
+import com.mengze.mapper.SysUserMapper;
 import com.mengze.domain.entity.Comment;
 import com.mengze.service.CommentService;
 import com.mengze.utils.BeanCopyUtils;
@@ -31,7 +31,7 @@ import java.util.List;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService
 {
     @Autowired
-    private UserMapper userMapper;
+    private SysUserMapper sysUserMapper;
 
     @Autowired
     private EmailServiceImpl emailService;
@@ -93,20 +93,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
             }
             LoginUser loginUser = SecurityUtils.getLoginUser();
-            User user = loginUser.getUser();
-            comment.setUserId(user.getId());
-            comment.setNickname(user.getNickname());
-            comment.setEmail(user.getEmail());
+            SysUser sysUser = loginUser.getSysUser();
+            comment.setUserId(sysUser.getId());
+            comment.setNickname(sysUser.getNickname());
+            comment.setEmail(sysUser.getEmail());
             comment.setPersonalWebsite(comment.getPersonalWebsite());//添加个人网址
         } else if (SystemConstants.COMMENT_TYPE_MESSAGE.equals(type)) {
             //在留言板评论则不需要登录，但需要填写昵称和邮箱
             if (SecurityUtils.isLogin()) {
                 //已登录用户使用登录信息
                 LoginUser loginUser = SecurityUtils.getLoginUser();
-                User user = loginUser.getUser();
-                comment.setUserId(user.getId());
-                comment.setNickname(user.getNickname());
-                comment.setEmail(user.getEmail());
+                SysUser sysUser = loginUser.getSysUser();
+                comment.setUserId(sysUser.getId());
+                comment.setNickname(sysUser.getNickname());
+                comment.setEmail(sysUser.getEmail());
                 comment.setPersonalWebsite(comment.getPersonalWebsite());
             } else {
                 //未登录用户需要填写昵称和邮箱
@@ -126,9 +126,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (!StringUtils.hasText(comment.getAvatar())) {
             if (comment.getUserId() != null) {
                 //已登录用户，使用用户表中的最新头像
-                User user = userMapper.selectById(comment.getUserId());
-                if (user != null && StringUtils.hasText(user.getAvatar())) {
-                    comment.setAvatar(user.getAvatar());
+                SysUser sysUser = sysUserMapper.selectById(comment.getUserId());
+                if (sysUser != null && StringUtils.hasText(sysUser.getAvatar())) {
+                    comment.setAvatar(sysUser.getAvatar());
                 } else {
                     //用户表中没有头像，根据邮箱生成（使用评论专用头像）
                     comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
@@ -157,9 +157,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             commentVo.setUserType("1"); //博主标识
         } else if (comment.getUserId() != null) {
             //已登录用户，查询用户类型
-            User user = userMapper.selectById(comment.getUserId());
-            if (user != null) {
-                commentVo.setUserType(user.getUserType());
+            SysUser sysUser = sysUserMapper.selectById(comment.getUserId());
+            if (sysUser != null) {
+                commentVo.setUserType(sysUser.getUserType());
             }
         } else {
             commentVo.setUserType("0"); //普通用户
@@ -221,12 +221,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             
             // 只有评论时已登录（有user_id）的评论才实时获取最新头像和昵称
             if (original.getUserId() != null) {
-                User user = userMapper.selectById(original.getUserId());
-                if (user != null) {
+                SysUser sysUser = sysUserMapper.selectById(original.getUserId());
+                if (sysUser != null) {
                     // 使用用户表中的最新头像和昵称
-                    vo.setAvatar(user.getAvatar());
-                    vo.setNickname(user.getNickname());
-                    vo.setUserType(user.getUserType());
+                    vo.setAvatar(sysUser.getAvatar());
+                    vo.setNickname(sysUser.getNickname());
+                    vo.setUserType(sysUser.getUserType());
                 } else {
                     // 用户不存在，使用评论表中的数据
                     vo.setAvatar(original.getAvatar());
@@ -253,10 +253,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                     // 如果被回复的评论是登录后发布的，获取最新昵称
                     if (replyTo.getUserId() != null)
                     {
-                        User replyToUser = userMapper.selectById(replyTo.getUserId());
-                        if (replyToUser != null) {
-                            vo.setReplyToCommentNickname(replyToUser.getNickname());
-                            vo.setReplyToCommentUserType(replyToUser.getUserType());
+                        SysUser replyToSysUser = sysUserMapper.selectById(replyTo.getUserId());
+                        if (replyToSysUser != null) {
+                            vo.setReplyToCommentNickname(replyToSysUser.getNickname());
+                            vo.setReplyToCommentUserType(replyToSysUser.getUserType());
                         } else {
                             vo.setReplyToCommentNickname(replyTo.getNickname());
                             vo.setReplyToCommentUserType("0");

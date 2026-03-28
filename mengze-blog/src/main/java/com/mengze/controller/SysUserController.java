@@ -4,9 +4,9 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
-import com.mengze.domain.entity.User;
-import com.mengze.domain.vo.UserInfoVo;
-import com.mengze.service.UserService;
+import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.vo.SysUserInfoVo;
+import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,18 +17,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user")
 @Api(tags = "用户", description = "用户信息相关接口")
-public class UserController
+public class SysUserController
 {
     @Autowired
-    private UserService userService;
+    private SysUserService sysUserService;
 
     //获取个人信息
     @GetMapping("/userInfo")
     @SystemLog(businessName = "查询用户信息")
-    @ApiOperation(value = "获取用户信息", notes = "获取当前登录用户的个人信息", response = UserInfoVo.class)
+    @ApiOperation(value = "获取用户信息", notes = "获取当前登录用户的个人信息", response = SysUserInfoVo.class)
     public ResponseResult userInfo()
     {
-        return userService.userInfo();
+        return sysUserService.userInfo();
     }
 
     //更新个人信息
@@ -37,8 +37,8 @@ public class UserController
     @ApiOperation(value = "更新用户信息", notes = "更新当前登录用户的个人信息")
     public ResponseResult updateUserInfo(@RequestBody UpdateUserInfoDto dto)
     {
-        User user = BeanCopyUtils.copyBean(dto, User.class);
-        return userService.updateUserInfo(user);
+        SysUser sysUser = BeanCopyUtils.copyBean(dto, SysUser.class);
+        return sysUserService.updateUserInfo(sysUser);
     }
 
     //用户注册
@@ -47,7 +47,7 @@ public class UserController
     @ApiOperation(value = "用户注册", notes = "新用户注册")
     public ResponseResult userRegister(@RequestBody UserRegisterDto dto)
     {
-        return userService.userRegister(dto);
+        return sysUserService.userRegister(dto);
     }
 
     //获取博主信息
@@ -56,7 +56,7 @@ public class UserController
     @ApiOperation(value = "获取博主信息", notes = "获取博主的昵称和头像，用于在关于页面进行展示")
     public ResponseResult getBloggerInfo()
     {
-        return userService.getBloggerInfo();
+        return sysUserService.getBloggerInfo();
     }
 
 }

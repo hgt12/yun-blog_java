@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("sys_user")
-public class User extends Model<User> {
+public class SysUser extends Model<SysUser> {
     @TableId
     //用户ID
     private Long id;

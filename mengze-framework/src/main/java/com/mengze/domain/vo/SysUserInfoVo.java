@@ -7,8 +7,8 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-@ApiModel(description = "用户信息响应对象")
-public class UserInfoVo {
+@ApiModel(description = "前台用户信息响应对象")
+public class SysUserInfoVo {
     
     @ApiModelProperty(value = "用户ID")
     private Long id;

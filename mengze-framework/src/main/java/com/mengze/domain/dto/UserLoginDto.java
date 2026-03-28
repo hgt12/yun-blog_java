@@ -1,6 +1,5 @@
 package com.mengze.domain.dto;
 
-import com.mengze.domain.vo.UserInfoVo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

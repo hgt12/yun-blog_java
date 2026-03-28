@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class LoginUser implements UserDetails
 {
-    private User user;
+    private SysUser sysUser;
 
     @JSONField(serialize = false)
     @Override
@@ -25,12 +25,12 @@ public class LoginUser implements UserDetails
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return sysUser.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return sysUser.getUsername();
     }
 
     @Override

@@ -33,7 +33,7 @@ public class SecurityUtils
      */
     public static Long getUserId() {
         LoginUser loginUser = getLoginUser();
-        return loginUser != null ? loginUser.getUser().getId() : null;
+        return loginUser != null ? loginUser.getSysUser().getId() : null;
     }
 
     /**

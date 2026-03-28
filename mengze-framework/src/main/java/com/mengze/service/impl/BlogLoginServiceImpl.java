@@ -8,12 +8,12 @@ import com.mengze.domain.dto.ResetPasswordDto;
 import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.User;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.BlogUserLoginVo;
-import com.mengze.domain.vo.UserInfoVo;
+import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
-import com.mengze.mapper.UserMapper;
+import com.mengze.mapper.SysUserMapper;
 import com.mengze.service.BlogLoginService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
@@ -42,7 +42,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
     private RedisCache redisCache;
 
     @Autowired
-    private UserMapper userMapper;
+    private SysUserMapper sysUserMapper;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -57,9 +57,9 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
         
         // 将DTO转换为User实体
-        User user = BeanCopyUtils.copyBean(dto, User.class);
+        SysUser sysUser = BeanCopyUtils.copyBean(dto, SysUser.class);
 
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(sysUser.getUsername(), sysUser.getPassword());
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
         //判断是否认证通过
         if (Objects.isNull(authenticate)) {
@@ -67,26 +67,26 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
         //获取userid生成token
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
-        String userId = loginUser.getUser().getId().toString();
+        String userId = loginUser.getSysUser().getId().toString();
         String jwt = JwtUtil.createJWT(userId);//传数据进去jwt加密,最终生成一个字符串类型的jwt
         //把用户信息存入Redis (格式为 bloglogin：id)
         redisCache.setCacheObject("bloglogin:" + userId, loginUser);
 
         //把token和userInfo封装，返回
         //把User转化成UserInfoVo
-        User user1 = loginUser.getUser();
-        UserInfoVo userInfoVo = BeanCopyUtils.copyBean(user1, UserInfoVo.class);
+        SysUser sysUser1 = loginUser.getSysUser();
+        SysUserInfoVo sysUserInfoVo = BeanCopyUtils.copyBean(sysUser1, SysUserInfoVo.class);
         
         // 如果昵称为空，使用用户名代替
-        if (!StringUtils.hasText(userInfoVo.getNickname())) {
-            userInfoVo.setNickname(user1.getUsername());
+        if (!StringUtils.hasText(sysUserInfoVo.getNickname())) {
+            sysUserInfoVo.setNickname(sysUser1.getUsername());
         }
         // 如果头像为空，根据邮箱生成头像
-        if (!StringUtils.hasText(userInfoVo.getAvatar())) {
-            userInfoVo.setAvatar(GravatarUtils.getGravatarUrl(user1.getEmail()));
+        if (!StringUtils.hasText(sysUserInfoVo.getAvatar())) {
+            sysUserInfoVo.setAvatar(GravatarUtils.getGravatarUrl(sysUser1.getEmail()));
         }
         
-        BlogUserLoginVo vo = new BlogUserLoginVo(jwt, userInfoVo);
+        BlogUserLoginVo vo = new BlogUserLoginVo(jwt, sysUserInfoVo);
         return ResponseResult.okResult(vo);
     }
 
@@ -97,7 +97,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         //获取uesrid
-        Long userId = loginUser.getUser().getId();
+        Long userId = loginUser.getSysUser().getId();
         //删除redis中的用户信息
         redisCache.deleteObject("bloglogin:" + userId);
         return ResponseResult.okResult();
@@ -136,16 +136,16 @@ public class BlogLoginServiceImpl implements BlogLoginService
         redisCache.deleteObject(redisKey);
         
         // 查询用户信息
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getEmail, email);
-        User user = userMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getEmail, email);
+        SysUser sysUser = sysUserMapper.selectOne(queryWrapper);
         
-        if (user == null) {
+        if (sysUser == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
         }
         
         // 生成token并返回用户信息
-        return generateLoginResponse(user);
+        return generateLoginResponse(sysUser);
     }
     
     //通过手机登录
@@ -186,44 +186,44 @@ public class BlogLoginServiceImpl implements BlogLoginService
         redisCache.deleteObject(redisKey);
         
         // 查询用户信息
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getPhone, phone);
-        User user = userMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getPhone, phone);
+        SysUser sysUser = sysUserMapper.selectOne(queryWrapper);
         
-        if (user == null) {
+        if (sysUser == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
         }
         
         // 生成token并返回用户信息
-        return generateLoginResponse(user);
+        return generateLoginResponse(sysUser);
     }
     
     //生成登录响应（token和用户信息）
-    private ResponseResult generateLoginResponse(User user)
+    private ResponseResult generateLoginResponse(SysUser sysUser)
     {
         // 创建LoginUser对象
-        LoginUser loginUser = new LoginUser(user);
+        LoginUser loginUser = new LoginUser(sysUser);
         
         // 生成JWT token
-        String userId = user.getId().toString();
+        String userId = sysUser.getId().toString();
         String jwt = JwtUtil.createJWT(userId);
         
         // 把用户信息存入Redis
         redisCache.setCacheObject("bloglogin:" + userId, loginUser);
         
         // 封装返回数据
-        UserInfoVo userInfoVo = BeanCopyUtils.copyBean(user, UserInfoVo.class);
+        SysUserInfoVo sysUserInfoVo = BeanCopyUtils.copyBean(sysUser, SysUserInfoVo.class);
         
         // 如果昵称为空，使用用户名代替
-        if (!StringUtils.hasText(userInfoVo.getNickname())) {
-            userInfoVo.setNickname(user.getUsername());
+        if (!StringUtils.hasText(sysUserInfoVo.getNickname())) {
+            sysUserInfoVo.setNickname(sysUser.getUsername());
         }
         // 如果头像为空，根据邮箱生成头像
-        if (!StringUtils.hasText(userInfoVo.getAvatar())) {
-            userInfoVo.setAvatar(GravatarUtils.getGravatarUrl(user.getEmail()));
+        if (!StringUtils.hasText(sysUserInfoVo.getAvatar())) {
+            sysUserInfoVo.setAvatar(GravatarUtils.getGravatarUrl(sysUser.getEmail()));
         }
         
-        BlogUserLoginVo vo = new BlogUserLoginVo(jwt, userInfoVo);
+        BlogUserLoginVo vo = new BlogUserLoginVo(jwt, sysUserInfoVo);
         return ResponseResult.okResult(vo);
     }
 
@@ -297,16 +297,16 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
 
         //查询用户是否存在
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getEmail, dto.getEmail());
-        User user = userMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getEmail, dto.getEmail());
+        SysUser sysUser = sysUserMapper.selectOne(queryWrapper);
 
-        if (user == null) {
+        if (sysUser == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该邮箱未注册");
         }
 
         //验证新密码不能与旧密码相同
-        if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(dto.getNewPassword(), sysUser.getPassword())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新密码不能与旧密码相同");
         }
 
@@ -314,11 +314,11 @@ public class BlogLoginServiceImpl implements BlogLoginService
         String encodePassword = passwordEncoder.encode(dto.getNewPassword());
 
         //更新密码
-        LambdaUpdateWrapper<User> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(User::getId, user.getId())
-                .set(User::getPassword, encodePassword);
+        LambdaUpdateWrapper<SysUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysUser::getId, sysUser.getId())
+                .set(SysUser::getPassword, encodePassword);
 
-        int result = userMapper.update(null, updateWrapper);
+        int result = sysUserMapper.update(null, updateWrapper);
 
         if (result == 0) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码重置失败");

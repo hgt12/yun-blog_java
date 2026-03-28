@@ -5,22 +5,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.entity.ArticleTag;
-import com.mengze.domain.entity.Category;
-import com.mengze.domain.entity.Tag;
-import com.mengze.domain.entity.User;
+import com.mengze.domain.entity.*;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.ArticleDetailVo;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.HotArticleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleMapper;
-import com.mengze.domain.entity.Article;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.mapper.TagMapper;
 import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
-import com.mengze.service.UserService;
+import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +44,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     @Lazy
-    private UserService userService;
+    private SysUserService sysUserService;
 
     @Autowired
     private RedisCache redisCache;
@@ -181,9 +178,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         Long createBy = article.getCreateBy();
         String author = "云梦泽"; // 默认作者名
         if (createBy != null) {
-            User user = userService.getById(createBy);
-            if (user != null && user.getNickname() != null) {
-                author = user.getNickname();
+            SysUser sysUser = sysUserService.getById(createBy);
+            if (sysUser != null && sysUser.getNickname() != null) {
+                author = sysUser.getNickname();
             }
         }
         articleDetailVo.setAuthor(author);

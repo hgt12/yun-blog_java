@@ -21,7 +21,7 @@ spring:
 
   # Spring Security配置
   security:
-    user:
+    sysUser:
       name: root                            # 默认用户名
       password: YOUR_SECURITY_PASSWORD      # 【请修改】默认密码
 
