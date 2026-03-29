@@ -20,6 +20,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
+        <spring-dotenv.version>4.0.0</spring-dotenv.version>
     </properties>
 
     <dependencyManagement>
@@ -72,6 +73,19 @@
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-swagger-ui</artifactId>
                 <version>2.9.2</version>
+            </dependency>
+            <!-- Spring Dotenv: 用于加载.env文件 -->
+<!--            <dependency>-->
+<!--                <groupId>me.paulschwarz</groupId>-->
+<!--                <artifactId>spring-dotenv</artifactId>-->
+<!--                <version>${spring-dotenv.version}</version>-->
+<!--            </dependency>-->
+
+            <!--ip2region离线库，通过解析IP实现定位服务-->
+            <dependency>
+                <groupId>org.lionsoul</groupId>
+                <artifactId>ip2region</artifactId>
+                <version>3.3.6</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -7,7 +7,9 @@ import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -52,6 +54,22 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(fastJsonHttpMessageConverters());
+    }
+
+    /**
+     * RestTemplate Bean配置
+     * 用于调用第三方HTTP接口，支持Gzip自动解压
+     * 使用Apache HttpClient作为底层实现
+     */
+    @Bean
+    public RestTemplate restTemplate() {
+        // 使用HttpComponentsClientHttpRequestFactory，自动支持Gzip解压
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectTimeout(5000); // 连接超时5秒
+        factory.setReadTimeout(10000);   // 读取超时10秒
+        
+        RestTemplate restTemplate = new RestTemplate(factory);
+        return restTemplate;
     }
 
 }

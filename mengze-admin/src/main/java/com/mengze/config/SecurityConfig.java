@@ -47,6 +47,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/auth/login").anonymous()
                 // 对于获取图形验证码接口不需要认证就能访问
                 .antMatchers("/auth/captcha").anonymous()
+                // 对于获取获取天气接口不需要认证就能访问
+                .antMatchers("/weather/now").anonymous()
                 // 除上面外的所有请求都需要认证才可以访问
                 .anyRequest().authenticated();
 
