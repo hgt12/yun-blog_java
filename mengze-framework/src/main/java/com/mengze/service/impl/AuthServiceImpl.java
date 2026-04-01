@@ -3,9 +3,9 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.SendCodeDto;
-import com.mengze.domain.entity.User;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.enums.AppHttpCodeEnum;
-import com.mengze.mapper.UserMapper;
+import com.mengze.mapper.SysUserMapper;
 import com.mengze.service.AuthService;
 import com.mengze.utils.IpUtils;
 import com.mengze.utils.RedisCache;
@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService
     private AliyunSmsServiceImpl aliyunSmsService;
 
     @Autowired
-    UserMapper userMapper;
+    SysUserMapper sysUserMapper;
 
     @Autowired
     private RedisCache redisCache;
@@ -172,25 +172,25 @@ public class AuthServiceImpl implements AuthService
     //根据场景检查账号
     private ResponseResult checkAccountForScene(String account, String type, String scene, boolean needAccountExists)
     {
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
         if ("email".equals(type)) {
-            queryWrapper.eq(User::getEmail, account);
+            queryWrapper.eq(SysUser::getEmail, account);
         } else {
-            queryWrapper.eq(User::getPhone, account);
+            queryWrapper.eq(SysUser::getPhone, account);
         }
         
-        User user = userMapper.selectOne(queryWrapper);
+        SysUser sysUser = sysUserMapper.selectOne(queryWrapper);
         String accountTypeName = type.equals("email") ? "邮箱" : "手机号";
         
         if (needAccountExists) {
             // 登录和忘记密码场景：需要账号已存在
-            if (user == null) {
+            if (sysUser == null) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, 
                     String.format("该%s未注册", accountTypeName));
             }
         } else {
             // 注册场景：需要账号不存在
-            if (user != null) {
+            if (sysUser != null) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, 
                     String.format("该%s已被注册", accountTypeName));
             }

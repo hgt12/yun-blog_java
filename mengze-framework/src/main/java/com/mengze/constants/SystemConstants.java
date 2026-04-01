@@ -76,4 +76,12 @@ public class SystemConstants
      *  访问日志队列 key
      */
     public static final String VISIT_LOG_QUEUE = "site:visitLog:queue";
+    /**
+     *  菜单类型为菜单
+     */
+    public static final String MENU_TYPE_M = "M";
+    /**
+     *  菜单类型为按钮
+     */
+    public static final String MENU_TYPE_B = "B";
 }

@@ -3,7 +3,7 @@ package com.mengze.service.impl;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.User;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminAuthVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
@@ -62,10 +62,10 @@ public class AdminAuthServiceImpl implements AdminAuthService
         }
         
         // 将DTO转换为User实体
-        User user = BeanCopyUtils.copyBean(dto, User.class);
+        SysUser sysUser = BeanCopyUtils.copyBean(dto, SysUser.class);
 
         UsernamePasswordAuthenticationToken authenticationToken = 
-            new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
+            new UsernamePasswordAuthenticationToken(sysUser.getUsername(), sysUser.getPassword());
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
         
         //判断是否认证通过
@@ -75,8 +75,8 @@ public class AdminAuthServiceImpl implements AdminAuthService
         
         //获取userid生成token
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
-        User userInfo = loginUser.getUser();
-        String userId = userInfo.getId().toString();
+        SysUser sysUserInfo = loginUser.getSysUser();
+        String userId = sysUserInfo.getId().toString();
         
         // 生成访问令牌
         String token = JwtUtil.createJWT(userId);
