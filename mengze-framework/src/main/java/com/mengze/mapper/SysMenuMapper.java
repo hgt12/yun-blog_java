@@ -2,7 +2,9 @@ package com.mengze.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.mengze.domain.entity.SysMenu;
+import com.mengze.domain.vo.MenuVo;
 
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -14,5 +16,9 @@ import java.util.List;
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
     List<String> selectPermByUserId(Long userId);
+
+    List<MenuVo> selectAllRouterMenu();
+
+    List<MenuVo> selectRouterMenuTreeByUserId(Long userId);
 }
 

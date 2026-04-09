@@ -49,6 +49,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/auth/captcha").anonymous()
                 // 对于获取获取天气接口不需要认证就能访问
                 .antMatchers("/weather/now").anonymous()
+                // 对于swagger-ui相关页面不需要认证就能访问
+                .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs", "/v3/api-docs", "/webjars/**").anonymous()
                 // 除上面外的所有请求都需要认证才可以访问
                 .anyRequest().authenticated();
 

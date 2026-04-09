@@ -43,4 +43,12 @@ public class SecurityUtils
     public static boolean isLogin() {
         return getLoginUser() != null;
     }
+
+    /**
+     *  用户是管理员
+     */
+    public static boolean isAdmin() {
+        Long userId = getLoginUser().getSysUser().getId();
+        return userId != null && userId.equals(1L);
+    }
 }

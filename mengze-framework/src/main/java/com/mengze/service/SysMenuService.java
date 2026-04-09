@@ -1,6 +1,7 @@
 package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.SysMenu;
 
 import java.util.List;
@@ -14,5 +15,8 @@ import java.util.List;
 public interface SysMenuService extends IService<SysMenu> {
 
     List<String> selectPermByUserId(Long id);
+
+    ResponseResult getRoutes();
+
 }
 
