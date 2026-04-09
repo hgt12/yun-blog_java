@@ -28,12 +28,21 @@ public class AdminAuthController
         return adminAuthService.login(dto);
     }
 
+    //用户登出
+    @PostMapping("/logout")
+    @SystemLog(businessName = "登出")
+    @ApiOperation(value = "用户登出", notes = "用户登出接口")
+    public ResponseResult logout()
+    {
+        return adminAuthService.logout();
+    }
+
     //获取图形验证码
     @GetMapping("/captcha")
     @SystemLog(businessName = "获取图形验证码")
-    @ApiOperation(value = "图形验证码", notes = "获取图形验证码", response = AdminAuthVo.class)
+    @ApiOperation(value = "图形验证码", notes = "获取图形验证码")
     public ResponseResult captcha()
     {
-        return adminAuthService.captcha(null);
+        return adminAuthService.captcha();
     }
 }

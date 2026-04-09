@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -92,9 +93,23 @@ public class AdminAuthServiceImpl implements AdminAuthService
         return ResponseResult.okResult(vo);
     }
 
+    //登出接口
+    @Override
+    public ResponseResult logout()
+    {
+        //获取token
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        //获取uesrid
+        Long userId = loginUser.getSysUser().getId();
+        //删除redis中的用户信息
+        redisCache.deleteObject("adminLogin:" + userId);
+        return ResponseResult.okResult();
+    }
+
     //获取图形验证码
     @Override
-    public ResponseResult captcha(UserLoginDto dto)
+    public ResponseResult captcha()
     {
         try {
             // 生成验证码ID

@@ -69,8 +69,8 @@ public class BlogLoginServiceImpl implements BlogLoginService
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
         String userId = loginUser.getSysUser().getId().toString();
         String jwt = JwtUtil.createJWT(userId);//传数据进去jwt加密,最终生成一个字符串类型的jwt
-        //把用户信息存入Redis (格式为 bloglogin：id)
-        redisCache.setCacheObject("bloglogin:" + userId, loginUser);
+        //把用户信息存入Redis (格式为 blogLogin：id)
+        redisCache.setCacheObject("blogLogin:" + userId, loginUser);
 
         //把token和userInfo封装，返回
         //把User转化成UserInfoVo
