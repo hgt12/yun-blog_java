@@ -79,11 +79,11 @@ public class AdminAuthServiceImpl implements AdminAuthService
         SysUser sysUserInfo = loginUser.getSysUser();
         String userId = sysUserInfo.getId().toString();
         
-        // 生成访问令牌
+        // 生成访问令牌（1小时）
         String token = JwtUtil.createJWT(userId);
         
-        // 生成刷新令牌（令牌有效时间为七天）
-        String refreshToken = JwtUtil.createJWT(userId, 7 * 24 * 60 * 60 * 1000L);
+        // 生成刷新令牌（7天）
+        String refreshToken = JwtUtil.createJWT(userId, JwtUtil.JWT_REFRESH_TTL);
         
         //把用户信息存入Redis (格式为 adminLogin:id，用于后台管理系统)
         redisCache.setCacheObject("adminLogin:" + userId, loginUser);
@@ -138,6 +138,39 @@ public class AdminAuthServiceImpl implements AdminAuthService
             return ResponseResult.okResult(result);
         } catch (Exception e) {
             throw new SystemException(AppHttpCodeEnum.SYSTEM_ERROR);
+        }
+    }
+
+    //刷新Token
+    @Override
+    public ResponseResult refreshToken(String refreshToken)
+    {
+        // 校验refreshToken是否为空
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+        }
+        
+        try {
+            // 解析refreshToken获取userId
+            String userId = JwtUtil.parseJWT(refreshToken).getSubject();
+            
+            // 从Redis中获取用户信息，验证用户是否仍然登录
+            LoginUser loginUser = redisCache.getCacheObject("adminLogin:" + userId);
+            if (Objects.isNull(loginUser)) {
+                throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+            }
+            
+            // 生成新的访问令牌（1小时）
+            String newToken = JwtUtil.createJWT(userId);
+            
+            // 生成新的刷新令牌（7天）
+            String newRefreshToken = JwtUtil.createJWT(userId, JwtUtil.JWT_REFRESH_TTL);
+            
+            // 封装成Vo
+            AdminAuthVo vo = new AdminAuthVo(newToken, newRefreshToken, JwtUtil.JWT_TTL / 1000);
+            return ResponseResult.okResult(vo);
+        } catch (Exception e) {
+            throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
         }
     }
 }

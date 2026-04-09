@@ -12,5 +12,6 @@ public interface AdminAuthService
 
     ResponseResult captcha();
 
+    ResponseResult refreshToken(String refreshToken);
 
 }

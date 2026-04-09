@@ -45,4 +45,13 @@ public class AdminAuthController
     {
         return adminAuthService.captcha();
     }
+
+    //刷新Token
+    @PostMapping("/refreshToken")
+    @SystemLog(businessName = "刷新Token")
+    @ApiOperation(value = "刷新Token", notes = "使用刷新令牌换取新访问令牌", response = AdminAuthVo.class)
+    public ResponseResult refreshToken(@RequestParam String refreshToken)
+    {
+        return adminAuthService.refreshToken(refreshToken);
+    }
 }

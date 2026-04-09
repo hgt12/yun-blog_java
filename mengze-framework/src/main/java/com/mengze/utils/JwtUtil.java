@@ -16,8 +16,10 @@ import java.util.UUID;
  */
 public class JwtUtil {
 
-    //有效期为3小时
-    public static final Long JWT_TTL = 3 * 60 * 60 *1000L;// 60 * 60 *1000 = 一个小时
+    //访问token有效期为1小时
+    public static final Long JWT_TTL = 60 * 60 *1000L;// 60 * 60 *1000 = 一个小时
+    //刷新token有效期为7天
+    public static final Long JWT_REFRESH_TTL = 7 * 24 * 60 * 60 * 1000L; // 7天
     //public static final Long JWT_TTL = 60 *1000L; //测试用token持续一分钟
     //设置秘钥明文
     public static final String JWT_KEY = "mengze";
