@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,18 +36,21 @@ public class EmailServiceImpl
     private String frontendUrl;
 
     //发送登录验证码邮件
+    @Async("asyncExecutor")
     public void sendVerificationCodeByLogin(String to, String code)
     {
         sendVerificationEmail(to, code, "登录", "您正在进行登录操作，请使用以下验证码完成登录。");
     }
     
     //发送注册验证码邮件
+    @Async("asyncExecutor")
     public void sendVerificationCodeByRegister(String to, String code)
     {
         sendVerificationEmail(to, code, "注册", "欢迎注册云梦泽的个人博客！请使用以下验证码完成注册。");
     }
     
     //发送忘记密码验证码邮件
+    @Async("asyncExecutor")
     public void sendVerificationCodeByForgotPassword(String to, String code)
     {
         sendVerificationEmail(to, code, "重置密码", "您正在进行密码重置操作，请使用以下验证码完成密码重置。");
@@ -185,6 +189,7 @@ public class EmailServiceImpl
     }
 
     //处理评论邮件通知（统一入口）
+    @Async("asyncExecutor")
     public void sendCommentNotificationByEmail(Comment comment)
     {
         try {
@@ -259,6 +264,7 @@ public class EmailServiceImpl
     }
 
     //发送新评论通知邮件（有人评论了你的文章）
+    @Async("asyncExecutor")
     public void sendNewCommentNotification(String articleTitle, String commenterNickname, String commentContent, String articleUrl)
     {
         try {
@@ -280,6 +286,7 @@ public class EmailServiceImpl
     }
 
     //发送评论回复通知邮件（有人回复了你的评论）
+    @Async("asyncExecutor")
     public void sendCommentReplyNotificationByEmail(String toEmail, String articleTitle, String replierNickname, String replyContent, String originalComment, String articleUrl)
     {
         try {

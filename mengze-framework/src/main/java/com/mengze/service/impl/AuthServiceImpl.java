@@ -128,7 +128,7 @@ public class AuthServiceImpl implements AuthService
                     case "register":
                         emailService.sendVerificationCodeByRegister(account, code);
                         break;
-                    case "forgot":
+                    case "forgot_password":
                         emailService.sendVerificationCodeByForgotPassword(account, code);
                         break;
                     default:
