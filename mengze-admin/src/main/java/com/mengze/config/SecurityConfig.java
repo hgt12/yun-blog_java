@@ -47,6 +47,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/auth/login").anonymous()
                 // 对于获取图形验证码接口不需要认证就能访问
                 .antMatchers("/auth/captcha").anonymous()
+                // 对于获取忘记密码的验证码接口不需要认证就能访问
+                .antMatchers("/auth/sendCode").anonymous()
                 // 对于获取获取天气接口不需要认证就能访问
                 .antMatchers("/weather/now").anonymous()
                 // 对于swagger-ui相关页面不需要认证就能访问

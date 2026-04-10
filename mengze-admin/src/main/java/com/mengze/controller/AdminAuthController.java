@@ -2,9 +2,11 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.SendCodeDto;
 import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.vo.AdminAuthVo;
 import com.mengze.service.AdminAuthService;
+import com.mengze.service.AuthService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class AdminAuthController
 {
     @Autowired
     private AdminAuthService adminAuthService;
+
+    @Autowired
+    private AuthService authService;
 
     //通过用户名密码登录
     @PostMapping("/login")
@@ -53,5 +58,14 @@ public class AdminAuthController
     public ResponseResult refreshToken(@RequestParam String refreshToken)
     {
         return adminAuthService.refreshToken(refreshToken);
+    }
+
+    //发送重置密码验证码
+    @PostMapping("/sendCode")
+    @SystemLog(businessName = "发送重置密码验证码")
+    @ApiOperation(value = "重置密码验证码", notes = "获取重置密码验证码")
+    public ResponseResult sendCode(@RequestBody SendCodeDto dto)
+    {
+        return authService.sendCode(dto);
     }
 }
