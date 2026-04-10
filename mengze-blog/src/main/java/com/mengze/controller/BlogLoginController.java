@@ -8,7 +8,7 @@ import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.service.BlogLoginService;
-import com.mengze.service.SysUserService;
+import com.mengze.service.ResetPasswordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class BlogLoginController
     private BlogLoginService blogLoginService;
 
     @Autowired
-    private SysUserService sysUserService;
+    private ResetPasswordService resetPasswordService;
 
     //通过用户名密码登录
     @PostMapping("/login")
@@ -68,7 +68,7 @@ public class BlogLoginController
     @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确")
     public ResponseResult verifyResetCode(@RequestBody VerifyResetCodeDto dto)
     {
-        return blogLoginService.verifyResetCode(dto);
+        return resetPasswordService.verifyResetCode(dto);
     }
 
     //重置密码
@@ -77,7 +77,7 @@ public class BlogLoginController
     @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码")
     public ResponseResult resetPassword(@RequestBody ResetPasswordDto dto)
     {
-        return blogLoginService.resetPassword(dto);
+        return resetPasswordService.resetPassword(dto);
     }
 
 }

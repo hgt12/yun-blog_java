@@ -17,7 +17,4 @@ public interface BlogLoginService
     
     ResponseResult loginByPhone(LoginDto dto);
 
-    ResponseResult verifyResetCode(VerifyResetCodeDto dto);
-
-    ResponseResult resetPassword(ResetPasswordDto dto);
 }
