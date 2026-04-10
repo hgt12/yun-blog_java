@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,9 +20,9 @@ public class TagVo
     @ApiModelProperty(value = "标签名")
     private String name;
 
-    @ApiModelProperty(value = "标签描述")
-    private String description;
-
     @ApiModelProperty(value = "文章数量")
     private Integer articleCount;
+
+    @ApiModelProperty(value = "创建日期")
+    private Date createTime;
 }

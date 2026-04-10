@@ -1,11 +1,14 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.TagDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
+import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.mapper.TagMapper;
@@ -15,6 +18,7 @@ import com.mengze.service.TagService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Autowired
     private ArticleTagMapper articleTagMapper;
 
+    //前台获取标签列表
     @Override
     public ResponseResult getTagList()
     {
@@ -91,5 +96,55 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
         return ResponseResult.okResult(tagVoList);
     }
+
+    //后台获取标签列表
+    @Override
+    public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagDto tagDto)
+    {
+        //分页查询
+        LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
+        //通过keywords进行模糊搜索标签名称
+        tagWrapper.like(StringUtils.hasText(tagDto.getKeywords()), Tag::getName, tagDto.getKeywords());
+        tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        //根据创建时间倒序排序
+        tagWrapper.orderByDesc(Tag::getCreateTime);
+
+        Page<Tag> page = new Page<>();
+        page.setCurrent(pageNum);
+        page.setSize(pageSize);
+        page(page, tagWrapper);
+
+        //获取所有标签ID
+        List<Long> tagIds = page.getRecords().stream()
+                .map(Tag::getId)
+                .collect(Collectors.toList());
+
+        //统计每个标签关联的文章数量
+        Map<Long, Long> tagArticleCountMap;
+        if (!tagIds.isEmpty()) {
+            LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
+            articleTagWrapper.in(ArticleTag::getTagId, tagIds);
+            List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
+            
+            tagArticleCountMap = articleTagList.stream()
+                    .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
+        } else {
+            tagArticleCountMap = Map.of();
+        }
+
+        //转换为TagVo并设置文章数量
+        List<TagVo> tagVoList = page.getRecords().stream()
+                .map(tag -> {
+                    TagVo tagVo = BeanCopyUtils.copyBean(tag, TagVo.class);
+                    tagVo.setArticleCount(tagArticleCountMap.getOrDefault(tag.getId(), 0L).intValue());
+                    return tagVo;
+                })
+                .collect(Collectors.toList());
+
+        //封装成PageVo返回
+        PageVo pageVo = new PageVo(tagVoList, page.getTotal());
+        return ResponseResult.okResult(pageVo);
+    }
+
 }
 
