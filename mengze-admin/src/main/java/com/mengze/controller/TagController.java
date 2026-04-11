@@ -5,30 +5,36 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagVo;
-import com.mengze.service.TagService;
+import com.mengze.service.AdminTagService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * 标签相关接口
+ * 后台标签管理接口
  */
 @RestController
 @RequestMapping("/tags")
-@Api(tags = "标签", description = "文章标签相关接口")
+@Api(tags = "后台标签管理", description = "后台标签管理相关接口")
 public class TagController
 {
     @Autowired
-    private TagService tagService;
+    private AdminTagService adminTagService;
 
     @GetMapping
-    @SystemLog(businessName = "分页查询标签列表")
-    @ApiOperation(value = "分页查询标签列表", notes = "获取标签列表", response = TagVo.class, responseContainer = "List")
+    @SystemLog(businessName = "后台分页查询标签列表")
+    @ApiOperation(value = "标签列表", notes = "分页查询标签列表", response = TagVo.class, responseContainer = "List")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "name", value = "标签名称", dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "remark", value = "备注", dataType = "string", paramType = "query")
+    })
     public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
-        return tagService.tagList(pageNum, pageSize, tagListDto);
+        return adminTagService.tagList(pageNum, pageSize, tagListDto);
     }
 }

@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +35,8 @@ import java.util.stream.Collectors;
  * @since 2025-11-22 15:43:53
  */
 @Service("articleService")
-public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService
+{
 
     @Autowired
     @Lazy

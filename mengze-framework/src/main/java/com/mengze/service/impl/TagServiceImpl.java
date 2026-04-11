@@ -97,54 +97,5 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         return ResponseResult.okResult(tagVoList);
     }
 
-    //后台获取标签列表
-    @Override
-    public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
-    {
-        //分页查询
-        LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-        //通过keywords进行模糊搜索标签名称
-        tagWrapper.like(StringUtils.hasText(tagListDto.getKeywords()), Tag::getName, tagListDto.getKeywords());
-        tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
-        //根据创建时间倒序排序
-        tagWrapper.orderByDesc(Tag::getCreateTime);
-
-        Page<Tag> page = new Page<>();
-        page.setCurrent(pageNum);
-        page.setSize(pageSize);
-        page(page, tagWrapper);
-
-        //获取所有标签ID
-        List<Long> tagIds = page.getRecords().stream()
-                .map(Tag::getId)
-                .collect(Collectors.toList());
-
-        //统计每个标签关联的文章数量
-        Map<Long, Long> tagArticleCountMap;
-        if (!tagIds.isEmpty()) {
-            LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
-            articleTagWrapper.in(ArticleTag::getTagId, tagIds);
-            List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
-            
-            tagArticleCountMap = articleTagList.stream()
-                    .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
-        } else {
-            tagArticleCountMap = Map.of();
-        }
-
-        //转换为TagVo并设置文章数量
-        List<TagVo> tagVoList = page.getRecords().stream()
-                .map(tag -> {
-                    TagVo tagVo = BeanCopyUtils.copyBean(tag, TagVo.class);
-                    tagVo.setArticleCount(tagArticleCountMap.getOrDefault(tag.getId(), 0L).intValue());
-                    return tagVo;
-                })
-                .collect(Collectors.toList());
-
-        //封装成PageVo返回
-        PageVo pageVo = new PageVo(tagVoList, page.getTotal());
-        return ResponseResult.okResult(pageVo);
-    }
-
 }
 

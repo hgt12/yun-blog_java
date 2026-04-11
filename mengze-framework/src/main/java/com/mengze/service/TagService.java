@@ -14,7 +14,5 @@ import com.mengze.domain.vo.PageVo;
  */
 public interface TagService extends IService<Tag> {
     ResponseResult getTagList();
-
-    ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto);
 }
 
