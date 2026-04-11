@@ -97,13 +97,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     //分页查询文章列表
     @Override
-    public ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId)
+    public ResponseResult articleList(Integer pageNum, Integer pageSize)
     {
         //查询条件
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        //如果有categoryId，就要求查询时要和从传入的categoryId相同，如果没有则不需要进行判断
-        lambdaQueryWrapper.eq(Objects.nonNull(categoryId) && categoryId > 0, Article::getCategoryId, categoryId);
-
         //状态是正式发布的
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //置顶的文章要放在前面，isTop进行降序排序

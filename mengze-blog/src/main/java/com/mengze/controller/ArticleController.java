@@ -34,18 +34,17 @@ public class ArticleController {
         return result;
     }
 
-    //分页查询文章列表（要有分类id，页码，每页大小参数）
+    //分页查询文章列表（页码，每页大小参数）
     @GetMapping("/articleList")
     @SystemLog(businessName = "分页查询文章列表")
     @ApiOperation(value = "文章列表", notes = "分页查询文章列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量"),
-            @ApiImplicitParam(name = "categoryId", value = "分类id")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量")
     })
-    public  ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId)
+    public  ResponseResult articleList(Integer pageNum, Integer pageSize)
     {
-        return articleService.articleList(pageNum, pageSize, categoryId);
+        return articleService.articleList(pageNum, pageSize);
     }
 
     //文章详情接口
