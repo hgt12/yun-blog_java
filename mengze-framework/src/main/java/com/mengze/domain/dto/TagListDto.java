@@ -11,7 +11,7 @@ import java.util.List;
  */
 @Data
 @ApiModel(description = "标签操作请求对象")
-public class TagDto {
+public class TagListDto {
     
     @ApiModelProperty(value = "标签ID（更新时必填）", example = "1")
     private Long id;

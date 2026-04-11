@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.TagDto;
+import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.vo.PageVo;
@@ -99,12 +99,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     //后台获取标签列表
     @Override
-    public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagDto tagDto)
+    public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
         //分页查询
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
         //通过keywords进行模糊搜索标签名称
-        tagWrapper.like(StringUtils.hasText(tagDto.getKeywords()), Tag::getName, tagDto.getKeywords());
+        tagWrapper.like(StringUtils.hasText(tagListDto.getKeywords()), Tag::getName, tagListDto.getKeywords());
         tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
         //根据创建时间倒序排序
         tagWrapper.orderByDesc(Tag::getCreateTime);
