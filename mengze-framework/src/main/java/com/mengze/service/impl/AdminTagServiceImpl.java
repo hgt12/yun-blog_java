@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
@@ -8,6 +9,7 @@ import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.TagOptionVo;
 import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminTagService;
@@ -36,6 +38,7 @@ public class AdminTagServiceImpl implements AdminTagService
     @Autowired
     private ArticleTagMapper articleTagMapper;
 
+    //获取标签列表
     @Override
     public ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
@@ -80,5 +83,23 @@ public class AdminTagServiceImpl implements AdminTagService
 
         PageVo pageVo = new PageVo(tagVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取标签下拉选择列表
+    @Override
+    public ResponseResult getTagOptions()
+    {
+        //获取标签id
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+
+        queryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED)
+                    .orderByDesc(Tag::getId);
+
+        List<Tag> tags = tagService.list(queryWrapper);
+
+        //封装成Vo
+        List<TagOptionVo> tagOptionVos = BeanCopyUtils.copyBeanList(tags, TagOptionVo.class);
+
+        return ResponseResult.okResult(tagOptionVos);
     }
 }

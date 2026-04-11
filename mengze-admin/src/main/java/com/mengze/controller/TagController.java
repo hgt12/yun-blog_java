@@ -37,4 +37,12 @@ public class TagController
     {
         return adminTagService.tagList(pageNum, pageSize, tagListDto);
     }
+
+    @GetMapping("/options")
+    @SystemLog(businessName = "标签下拉选项")
+    @ApiOperation(value = "标签下拉选项", notes = "标签分类下拉数据")
+    public ResponseResult getTagOptions()
+    {
+        return adminTagService.getTagOptions();
+    }
 }

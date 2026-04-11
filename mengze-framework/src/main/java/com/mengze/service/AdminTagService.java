@@ -12,4 +12,5 @@ public interface AdminTagService {
 
     ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto);
 
+    ResponseResult getTagOptions();
 }
