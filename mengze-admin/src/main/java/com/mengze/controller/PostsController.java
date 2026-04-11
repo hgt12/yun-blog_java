@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.vo.ArticleListVo;
+import com.mengze.domain.vo.PostsFormDetailVo;
 import com.mengze.service.AdminPostsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -11,6 +12,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,4 +42,14 @@ public class PostsController
         return adminPostsService.postsList(pageNum, pageSize, postsListDto);
     }
 
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取文章表单数据")
+    @ApiOperation(value = "获取文章表单数据", notes = "获取文章表单详情数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "文章id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<PostsFormDetailVo> postsFormDetail(@PathVariable Long id)
+    {
+        return adminPostsService.postsDetail(id);
+    }
 }

@@ -6,11 +6,9 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.entity.Article;
-import com.mengze.domain.vo.AdminPostsListVo;
-import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.*;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
-import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminPostsService;
 import com.mengze.service.ArticleService;
@@ -105,6 +103,25 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         PageVo pageVo = new PageVo(postsListVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
+    }
+
+    @Override
+    public ResponseResult<PostsFormDetailVo> postsDetail(Long id)
+    {
+        //先查询文章id
+        Article article = articleService.getById(id);
+
+        //转化成Vo
+        PostsFormDetailVo postsFormDetailVo = BeanCopyUtils.copyBean(article, PostsFormDetailVo.class);
+
+        //填充分类名称
+        postsFormDetailVo.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
+
+        //填充标签列表
+        List<TagVo> tags = getTagsByArticleId(id);
+        postsFormDetailVo.setTags(tags);
+
+        return ResponseResult.okResult(postsFormDetailVo);
     }
 
     /**
