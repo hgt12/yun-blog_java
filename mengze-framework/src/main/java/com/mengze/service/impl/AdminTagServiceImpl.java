@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagVo;
+import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminTagService;
 import com.mengze.service.TagService;
 import com.mengze.utils.BeanCopyUtils;
@@ -16,7 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 后台标签管理服务实现类
@@ -30,8 +33,12 @@ public class AdminTagServiceImpl implements AdminTagService
     @Autowired
     private TagService tagService;
 
+    @Autowired
+    private ArticleTagMapper articleTagMapper;
+
     @Override
-    public ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto) {
+    public ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
+    {
         //构建查询条件
         LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
 
@@ -55,8 +62,21 @@ public class AdminTagServiceImpl implements AdminTagService
         Page<Tag> page = new Page<>(pageNum, pageSize);
         tagService.page(page, queryWrapper);
 
-        //封装查询结果为Vo
-        List<TagVo> tagVos = BeanCopyUtils.copyBeanList(page.getRecords(), TagVo.class);
+        //查询所有文章标签关联关系
+        List<ArticleTag> articleTagList = articleTagMapper.selectList(null);
+
+        //统计每个标签关联的文章数量
+        Map<Long, Long> tagArticleCountMap = articleTagList.stream()
+                .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
+
+        //封装查询结果为Vo并设置文章数量
+        List<TagVo> tagVos = page.getRecords().stream()
+                .map(tag -> {
+                    TagVo tagVo = BeanCopyUtils.copyBean(tag, TagVo.class);
+                    tagVo.setArticleCount(tagArticleCountMap.getOrDefault(tag.getId(), 0L).intValue());
+                    return tagVo;
+                })
+                .collect(Collectors.toList());
 
         PageVo pageVo = new PageVo(tagVos, page.getTotal());
         return ResponseResult.okResult(pageVo);

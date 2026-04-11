@@ -43,7 +43,7 @@ public class Article extends Model<Article> {
     private Long viewCount;
     //是否置顶（0-否，1-是）
     private String isTop;
-    //状态（0-已发布，1-草稿，2-待审核）
+    //状态（0-已发布，1-草稿）
     private String status;
     //是否允许评论（0-否，1-是）
     private String isComment;
