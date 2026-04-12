@@ -13,12 +13,15 @@ import com.mengze.domain.entity.Tag;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.ImageUrlUtils;
 import com.mengze.utils.RedisCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ import static com.baomidou.mybatisplus.extension.toolkit.Db.save;
  * @author mengze
  */
 @Service
+@Slf4j
 public class AdminPostsServiceImpl implements AdminPostsService
 {
 
@@ -51,6 +55,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
     @Autowired
     private TagService tagService;
+    
+    @Autowired
+    private OssFileService ossFileService;
 
     //获取文章列表
     @Override
@@ -122,9 +129,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
         //填充分类名称
         postsFormDetailVo.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
 
-        //填充标签列表
-        List<TagVo> tags = getTagsByArticleId(id);
-        postsFormDetailVo.setTags(tags);
+        //填充标签ID列表
+        List<Long> tagIds = getTagIdsByArticleId(id);
+        postsFormDetailVo.setTags(tagIds);
 
         return ResponseResult.okResult(postsFormDetailVo);
     }
@@ -149,7 +156,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
         articleTagService.saveBatch(articleTags);
         return ResponseResult.okResult();
     }
+    
 
+    
     /**
      * 根据文章ID查询标签列表
      * @param articleId 文章ID
@@ -184,6 +193,24 @@ public class AdminPostsServiceImpl implements AdminPostsService
                     tagVo.setCreateTime(tag.getCreateTime());
                     return tagVo;
                 })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据文章ID查询标签ID列表
+     * @param articleId 文章ID
+     * @return 标签ID列表
+     */
+    private List<Long> getTagIdsByArticleId(Long articleId)
+    {
+        //查询文章标签关联表
+        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArticleTag::getArticleId, articleId);
+        List<ArticleTag> articleTags = articleTagMapper.selectList(queryWrapper);
+
+        //返回标签ID列表
+        return articleTags.stream()
+                .map(ArticleTag::getTagId)
                 .collect(Collectors.toList());
     }
 }

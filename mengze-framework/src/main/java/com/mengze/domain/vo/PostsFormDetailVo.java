@@ -35,8 +35,8 @@ public class PostsFormDetailVo
     @ApiModelProperty(value = "文章内容")
     private String content;
 
-    @ApiModelProperty(value = "标签列表")
-    private List<TagVo> tags;
+    @ApiModelProperty(value = "标签ID列表")
+    private List<Long> tags;
 
     @ApiModelProperty(value = "状态（0-已发布，1-草稿）")
     private String status;
