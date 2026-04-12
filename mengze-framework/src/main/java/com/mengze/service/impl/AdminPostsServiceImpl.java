@@ -4,25 +4,26 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.vo.*;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
 import com.mengze.mapper.ArticleTagMapper;
-import com.mengze.service.AdminPostsService;
-import com.mengze.service.ArticleService;
-import com.mengze.service.CategoryService;
-import com.mengze.service.TagService;
+import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.baomidou.mybatisplus.extension.toolkit.Db.save;
 
 /**
  * 后台文章管理服务实现类
@@ -44,6 +45,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
     @Autowired
     private ArticleTagMapper articleTagMapper;
+
+    @Autowired
+    private ArticleTagService articleTagService;
 
     @Autowired
     private TagService tagService;
@@ -105,6 +109,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         return ResponseResult.okResult(pageVo);
     }
 
+    //获取文章详情信息
     @Override
     public ResponseResult<PostsFormDetailVo> postsDetail(Long id)
     {
@@ -122,6 +127,27 @@ public class AdminPostsServiceImpl implements AdminPostsService
         postsFormDetailVo.setTags(tags);
 
         return ResponseResult.okResult(postsFormDetailVo);
+    }
+
+    //添加文章/写博客
+    @Override
+    @Transactional
+    public ResponseResult addPosts(AddPostsDto postsDto)
+    {
+        //添加文章
+        Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
+        save(article);
+
+        //初始化Redis中的浏览量为0
+        redisCache.setCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString(), 0);
+
+        List<ArticleTag> articleTags = postsDto.getTags().stream()
+                .map(tagId -> new ArticleTag(article.getId(), tagId))
+                .collect(Collectors.toList());
+
+        //添加博客和标签的关联关系
+        articleTagService.saveBatch(articleTags);
+        return ResponseResult.okResult();
     }
 
     /**

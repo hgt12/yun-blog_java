@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.PostsFormDetailVo;
@@ -11,10 +12,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 后台文章管理接口
@@ -51,5 +49,13 @@ public class PostsController
     public ResponseResult<PostsFormDetailVo> postsFormDetail(@PathVariable Long id)
     {
         return adminPostsService.postsDetail(id);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增文章")
+    @ApiOperation(value = "新增文章接口", notes = "新增文章")
+    public ResponseResult addPosts(@RequestBody AddPostsDto postsDto)
+    {
+        return adminPostsService.addPosts(postsDto);
     }
 }
