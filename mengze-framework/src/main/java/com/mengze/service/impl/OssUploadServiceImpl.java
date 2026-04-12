@@ -47,7 +47,7 @@ public class OssUploadServiceImpl implements UploadService
         //判断文件类型
         //获取原始文件名
         String originalFilename = img.getOriginalFilename();
-        //判断文件名是否为png，jpg，gif
+        //判断文件名是否为png，jpg，gif，jpeg
         if (!originalFilename.endsWith(".png") && !originalFilename.endsWith(".jpg") && !originalFilename.endsWith(".gif") && !originalFilename.endsWith(".jpeg")) {
             throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
         }
