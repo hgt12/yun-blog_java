@@ -1,6 +1,8 @@
 package com.mengze.domain.entity;
 
 import java.util.Date;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -36,9 +38,17 @@ public class Category extends Model<Category> {
     private String status;
     //删除标志（0-未删除，1-已删除）
     private String delFlag;
+    //创建者ID
+    @TableField(fill = FieldFill.INSERT)
+    private Long createBy;
     //创建时间
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
+    //更新者ID
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateBy;
     //更新时间
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
 }
