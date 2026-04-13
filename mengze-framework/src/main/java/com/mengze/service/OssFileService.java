@@ -1,0 +1,52 @@
+package com.mengze.service;
+
+import java.util.List;
+
+/**
+ * OSS文件管理服务接口
+ * 
+ * @author mengze
+ */
+public interface OssFileService
+{
+    /**
+     * 将临时文件转为正式文件
+     * @param tempFileUrl 临时文件URL
+     * @return 正式文件URL
+     */
+    String moveTempToFormal(String tempFileUrl);
+    
+    /**
+     * 批量将临时文件转为正式文件
+     * @param tempFileUrls 临时文件URL列表
+     * @return 正式文件URL列表
+     */
+    List<String> batchMoveTempToFormal(List<String> tempFileUrls);
+    
+    /**
+     * 删除OSS上的文件
+     * @param fileKey 文件key（路径）
+     * @return 是否删除成功
+     */
+    boolean deleteFile(String fileKey);
+    
+    /**
+     * 根据完整URL删除OSS上的文件
+     * @param fileUrl 文件完整URL
+     * @return 是否删除成功
+     */
+    boolean deleteFileByUrl(String fileUrl);
+    
+    /**
+     * 处理内容中的临时图片，将其转为正式文件
+     * @param content 包含图片URL的内容（HTML、Markdown等）
+     * @return 处理后的内容
+     */
+    String processContentImages(String content);
+    
+    /**
+     * 清理过期的临时文件
+     * @return 清理的文件数量
+     */
+    int cleanExpiredTempFiles();
+}

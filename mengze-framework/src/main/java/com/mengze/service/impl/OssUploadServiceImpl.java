@@ -6,6 +6,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
 import com.mengze.service.UploadService;
 import com.mengze.utils.PathUtils;
+import com.mengze.utils.RedisCache;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;
@@ -14,11 +15,13 @@ import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 //Oss上传图片实现类
 @Service
@@ -29,6 +32,13 @@ public class OssUploadServiceImpl implements UploadService
     private String accessKey;
     private String secretKey;
     private String bucket;
+    private String domain; // OSS访问域名
+    
+    @Autowired
+    private RedisCache redisCache;
+    
+    // Redis key前缀，用于存储临时文件信息
+    private static final String TEMP_FILE_KEY_PREFIX = "temp:file:";
 
     @Override
     public ResponseResult uploadImg(MultipartFile img)
@@ -51,9 +61,15 @@ public class OssUploadServiceImpl implements UploadService
         if (!originalFilename.endsWith(".png") && !originalFilename.endsWith(".jpg") && !originalFilename.endsWith(".gif") && !originalFilename.endsWith(".jpeg")) {
             throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
         }
-        //如果判断通过就上传到Oss
-        String filePath = PathUtils.generateFilePath(originalFilename);
-        String url = uploadOss(img, filePath); //文件储存方式为：yyyy/MM/dd/文件名.后缀
+        
+        //上传到临时目录，文件路径格式：temp/yyyy/MM/dd/文件名.后缀
+        String filePath = "temp/" + PathUtils.generateFilePath(originalFilename);
+        String url = uploadOss(img, filePath);
+        
+        //将临时文件信息存入Redis，设置24小时过期时间
+        //存储格式：key=temp:file:文件路径, value=上传时间戳
+        redisCache.setCacheObject(TEMP_FILE_KEY_PREFIX + filePath, System.currentTimeMillis(), 24, TimeUnit.HOURS);
+        
         return ResponseResult.okResult(url);
     }
 
@@ -79,8 +95,8 @@ public class OssUploadServiceImpl implements UploadService
                         Gson().fromJson(response.bodyString(), DefaultPutRet.class);
                 System.out.println(putRet.key);
                 System.out.println(putRet.hash);
-                //图片的外链不建议写死，现在为了测试方便先写死，到时候换成别的，注意这个外链链接试用30天
-                return "http://t8ul2nlc8.hn-bkt.clouddn.com/" + key;
+                //返回图片的完整URL
+                return domain + key;
             } catch (QiniuException ex) {
                 Response r = ex.response;
                 System.err.println(r.toString());
