@@ -176,7 +176,90 @@ public class AdminPostsServiceImpl implements AdminPostsService
         return ResponseResult.okResult();
     }
 
+    //编辑/更新文章
+    @Override
+    @Transactional
+    public ResponseResult updatePosts(Long id, AddPostsDto postsDto)
+    {
+        if (id == null) {
+            throw new RuntimeException("更新文章时ID不能为空");
+        }
 
+        // 确保使用路径参数的ID
+        postsDto.setId(id);
+
+        // 获取旧文章信息
+        Article oldArticle = articleService.getById(id);
+        if (oldArticle == null) {
+            throw new RuntimeException("文章不存在");
+        }
+
+        // 处理文章内容中的图片
+        String content = postsDto.getContent();
+        List<String> oldContentImages = new ArrayList<>();
+        List<String> newContentImages = new ArrayList<>();
+
+        // 提取旧内容中的图片URL
+        if (StringUtils.hasText(oldArticle.getContent())) {
+            oldContentImages = ImageUrlUtils.extractImageUrls(oldArticle.getContent());
+        }
+
+        // 处理新内容中的临时图片
+        if (ImageUrlUtils.containsTempImages(content)) {
+            content = ossFileService.processContentImages(content);
+            postsDto.setContent(content);
+        }
+
+        // 提取新内容中的图片URL
+        if (StringUtils.hasText(content)) {
+            newContentImages = ImageUrlUtils.extractImageUrls(content);
+        }
+
+        // 删除不再使用的内容图片
+        for (String oldImageUrl : oldContentImages) {
+            if (!newContentImages.contains(oldImageUrl)) {
+                ossFileService.deleteFileByUrl(oldImageUrl);
+                log.info("删除旧的内容图片: {}", oldImageUrl);
+            }
+        }
+
+        // 处理缩略图
+        String newThumbnail = postsDto.getThumbnail();
+        String oldThumbnail = oldArticle.getThumbnail();
+
+        if (StringUtils.hasText(newThumbnail) && newThumbnail.contains("temp/")) {
+            newThumbnail = ossFileService.moveTempToFormal(newThumbnail);
+            postsDto.setThumbnail(newThumbnail);
+        }
+
+        // 如果缩略图发生变化，删除旧缩略图
+        if (StringUtils.hasText(oldThumbnail) &&
+            StringUtils.hasText(newThumbnail) &&
+            !oldThumbnail.equals(newThumbnail)) {
+            ossFileService.deleteFileByUrl(oldThumbnail);
+            log.info("删除旧的缩略图: {}", oldThumbnail);
+        }
+
+        // 更新文章基本信息
+        Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
+        articleService.updateById(article);
+
+        // 更新标签关联关系
+        // 先删除旧的关联关系
+        LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(ArticleTag::getArticleId, postsDto.getId());
+        articleTagMapper.delete(deleteWrapper);
+
+        // 添加新的关联关系
+        if (postsDto.getTags() != null && !postsDto.getTags().isEmpty()) {
+            List<ArticleTag> articleTags = postsDto.getTags().stream()
+                    .map(tagId -> new ArticleTag(article.getId(), tagId))
+                    .collect(Collectors.toList());
+            articleTagService.saveBatch(articleTags);
+        }
+
+        return ResponseResult.okResult();
+    }
 
     /**
      * 根据文章ID查询标签列表

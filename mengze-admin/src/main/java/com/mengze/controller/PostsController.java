@@ -58,4 +58,13 @@ public class PostsController
     {
         return adminPostsService.addPosts(postsDto);
     }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "编辑/更新文章")
+    @ApiOperation(value = "编辑/更新文章接口", notes = "更新文章，会自动删除旧的图片文件")
+    @ApiImplicitParam(name = "id", value = "文章ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updatePosts(@PathVariable Long id, @RequestBody AddPostsDto postsDto)
+    {
+        return adminPostsService.updatePosts(id, postsDto);
+    }
 }

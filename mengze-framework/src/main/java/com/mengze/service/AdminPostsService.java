@@ -17,4 +17,6 @@ public interface AdminPostsService {
     ResponseResult<PostsFormDetailVo> postsDetail(Long id);
 
     ResponseResult addPosts(AddPostsDto postsDto);
+    
+    ResponseResult updatePosts(Long id, AddPostsDto postsDto);
 }
