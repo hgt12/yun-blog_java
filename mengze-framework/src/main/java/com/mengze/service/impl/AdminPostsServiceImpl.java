@@ -130,8 +130,8 @@ public class AdminPostsServiceImpl implements AdminPostsService
         postsFormDetailVo.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
 
         //填充标签ID列表
-        List<Long> tagIds = getTagIdsByArticleId(id);
-        postsFormDetailVo.setTags(tagIds);
+        List<Long> tags = getTagIdsByArticleId(id);
+        postsFormDetailVo.setTags(tags);
 
         return ResponseResult.okResult(postsFormDetailVo);
     }
@@ -141,6 +141,25 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Transactional
     public ResponseResult addPosts(AddPostsDto postsDto)
     {
+        // 如果有ID，说明是更新操作，抛出异常
+        if (postsDto.getId() != null) {
+            throw new RuntimeException("新增文章时不应该包含ID");
+        }
+
+        //处理文章内容中的临时图片，将其转为正式文件
+        String content = postsDto.getContent();
+        if (ImageUrlUtils.containsTempImages(content)) {
+            content = ossFileService.processContentImages(content);
+            postsDto.setContent(content);
+        }
+
+        //处理缩略图
+        String thumbnail = postsDto.getThumbnail();
+        if (StringUtils.hasText(thumbnail) && thumbnail.contains("temp/")) {
+            thumbnail = ossFileService.moveTempToFormal(thumbnail);
+            postsDto.setThumbnail(thumbnail);
+        }
+
         //添加文章
         Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
         save(article);
@@ -156,9 +175,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
         articleTagService.saveBatch(articleTags);
         return ResponseResult.okResult();
     }
-    
 
-    
+
+
     /**
      * 根据文章ID查询标签列表
      * @param articleId 文章ID

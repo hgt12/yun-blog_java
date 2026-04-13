@@ -10,10 +10,12 @@ import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.service.OssFileService;
 import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
 import com.mengze.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,8 +28,21 @@ import org.springframework.util.StringUtils;
  * @since 2026-01-14 15:21:53
  */
 @Service("userService")
+@Slf4j
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService
 {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RedisCache redisCache;
+
+    @Autowired
+    private CommentMapper commentMapper;
+
+    @Autowired
+    private OssFileService ossFileService;
 
     //查询用户信息
     @Override
@@ -105,6 +120,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //获取更新前的用户信息，用于判断头像和昵称是否变化
         SysUser oldSysUser = getById(currentUserId);
         
+        //处理头像：如果是临时文件，转为正式文件
+        String avatar = sysUser.getAvatar();
+        if (StringUtils.hasText(avatar) && avatar.contains("temp/")) {
+            avatar = ossFileService.moveTempToFormal(avatar);
+            sysUser.setAvatar(avatar);
+        }
+        
+        //如果头像发生变化，删除OSS上的旧头像
+        String oldAvatar = oldSysUser.getAvatar();
+        if (StringUtils.hasText(avatar) && StringUtils.hasText(oldAvatar) 
+                && !avatar.equals(oldAvatar)) {
+            try {
+                ossFileService.deleteFileByUrl(oldAvatar);
+                log.info("从oss中删除旧头像成功: {}", oldAvatar);
+            } catch (Exception e) {
+                log.warn("从oss中删除旧头像失败: {}, 错误: {}", oldAvatar, e.getMessage()); //删除失败不影响更新流程，只记录日志
+            }
+        }
+        
         //使用LambdaUpdateWrapper条件更新
         LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<SysUser>()
                 .eq(SysUser::getId, currentUserId)
@@ -112,7 +146,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .set(SysUser::getSex, sysUser.getSex())
                 .set(SysUser::getPhone, StringUtils.hasText(sysUser.getPhone()) ? sysUser.getPhone() : null)
                 .set(SysUser::getEmail, StringUtils.hasText(sysUser.getEmail()) ? sysUser.getEmail() : null)
-                .set(SysUser::getAvatar, sysUser.getAvatar());
+                .set(SysUser::getAvatar, avatar);
 
         boolean success = update(null, wrapper);
         if (!success) {
@@ -120,7 +154,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         
         //如果头像或昵称发生变化，同步更新评论表中该用户的所有评论
-        boolean avatarChanged = !sysUser.getAvatar().equals(oldSysUser.getAvatar());
+        boolean avatarChanged = !avatar.equals(oldSysUser.getAvatar());
         boolean nicknameChanged = !sysUser.getNickname().equals(oldSysUser.getNickname());
         
         if (avatarChanged || nicknameChanged) {
@@ -129,7 +163,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     .eq(com.mengze.domain.entity.Comment::getUserId, currentUserId);
             
             if (avatarChanged) {
-                commentWrapper.set(com.mengze.domain.entity.Comment::getAvatar, sysUser.getAvatar());
+                commentWrapper.set(com.mengze.domain.entity.Comment::getAvatar, avatar);
             }
             if (nicknameChanged) {
                 commentWrapper.set(com.mengze.domain.entity.Comment::getNickname, sysUser.getNickname());
@@ -140,15 +174,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         
         return ResponseResult.okResult();
     }
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private RedisCache redisCache;
-    
-    @Autowired
-    private CommentMapper commentMapper;
 
     //用户注册
     @Override
@@ -315,4 +340,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return ResponseResult.okResult(vo);
     }
 }
+
+
 
