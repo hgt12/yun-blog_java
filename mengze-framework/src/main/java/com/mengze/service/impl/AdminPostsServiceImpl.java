@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.baomidou.mybatisplus.extension.toolkit.Db.save;
+
 
 /**
  * 后台文章管理服务实现类
@@ -162,7 +162,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         //添加文章
         Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
-        save(article);
+        articleService.save(article);
 
         //初始化Redis中的浏览量为0
         redisCache.setCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString(), 0);
