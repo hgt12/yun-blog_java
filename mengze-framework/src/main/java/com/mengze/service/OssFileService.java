@@ -49,4 +49,32 @@ public interface OssFileService
      * @return 清理的文件数量
      */
     int cleanExpiredTempFiles();
+    
+    /**
+     * 将文件移动到deleted文件夹
+     * @param fileUrl 文件URL
+     * @return 是否移动成功
+     */
+    boolean moveFileToDeleted(String fileUrl);
+    
+    /**
+     * 批量将文件移动到deleted文件夹
+     * @param fileUrls 文件URL列表
+     * @return 成功移动的文件数量
+     */
+    int batchMoveFilesToDeleted(List<String> fileUrls);
+    
+    /**
+     * 从deleted文件夹恢复文件到正式文件夹
+     * @param deletedFileUrl deleted文件夹中的文件URL
+     * @return 恢复后的正式文件URL，失败返回null
+     */
+    String restoreFileFromDeleted(String deletedFileUrl);
+    
+    /**
+     * 批量从deleted文件夹恢复文件到正式文件夹
+     * @param deletedFileUrls deleted文件夹中的文件URL列表
+     * @return 恢复后的正式文件URL列表
+     */
+    List<String> batchRestoreFilesFromDeleted(List<String> deletedFileUrls);
 }
