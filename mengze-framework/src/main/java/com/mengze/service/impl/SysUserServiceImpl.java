@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.SysUserInfoVo;
@@ -62,7 +63,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     //更新用户信息
     @Override
-    public ResponseResult updateUserInfo(SysUser sysUser)
+    public ResponseResult updateUserInfo(UpdateUserInfoDto updateUserInfoDto)
     {
         Long currentUserId = SecurityUtils.getUserId();
         if (currentUserId == null) {
@@ -70,24 +71,24 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         //昵称不能为空
-        if (!StringUtils.hasText(sysUser.getNickname())) {
+        if (!StringUtils.hasText(updateUserInfoDto.getNickname())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_NOT_NULL, "昵称不能为空");
         }
 
         //邮箱和电话号码不能同时为空
-        if (!StringUtils.hasText(sysUser.getEmail()) && !StringUtils.hasText(sysUser.getPhone())) {
+        if (!StringUtils.hasText(updateUserInfoDto.getEmail()) && !StringUtils.hasText(updateUserInfoDto.getPhone())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱和电话号码不能同时为空");
         }
 
         //校验手机号格式
-        if (StringUtils.hasText(sysUser.getPhone()) && !sysUser.getPhone().matches(PHONE_REGEX)) {
+        if (StringUtils.hasText(updateUserInfoDto.getPhone()) && !updateUserInfoDto.getPhone().matches(PHONE_REGEX)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR, "请输入正确的手机号码");
         }
 
         //检查手机号是否被其他用户使用
-        if (StringUtils.hasText(sysUser.getPhone())) {
+        if (StringUtils.hasText(updateUserInfoDto.getPhone())) {
             LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(SysUser::getPhone, sysUser.getPhone())
+            queryWrapper.eq(SysUser::getPhone, updateUserInfoDto.getPhone())
                     .ne(SysUser::getId, currentUserId);
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
@@ -96,9 +97,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         //检查邮箱是否被其他用户使用
-        if (StringUtils.hasText(sysUser.getEmail())) {
+        if (StringUtils.hasText(updateUserInfoDto.getEmail())) {
             LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(SysUser::getEmail, sysUser.getEmail())
+            queryWrapper.eq(SysUser::getEmail, updateUserInfoDto.getEmail())
                     .ne(SysUser::getId, currentUserId);
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
@@ -107,9 +108,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         //检查昵称是否被其他用户使用
-        if (StringUtils.hasText(sysUser.getNickname())) {
+        if (StringUtils.hasText(updateUserInfoDto.getNickname())) {
             LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(SysUser::getNickname, sysUser.getNickname())
+            queryWrapper.eq(SysUser::getNickname, updateUserInfoDto.getNickname())
                     .ne(SysUser::getId, currentUserId);
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
@@ -121,10 +122,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser oldSysUser = getById(currentUserId);
         
         //处理头像：如果是临时文件，转为正式文件
-        String avatar = sysUser.getAvatar();
+        String avatar = updateUserInfoDto.getAvatar();
         if (StringUtils.hasText(avatar) && avatar.contains("temp/")) {
             avatar = ossFileService.moveTempToFormal(avatar);
-            sysUser.setAvatar(avatar);
         }
         
         //如果头像发生变化，删除OSS上的旧头像
@@ -142,10 +142,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //使用LambdaUpdateWrapper条件更新
         LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<SysUser>()
                 .eq(SysUser::getId, currentUserId)
-                .set(SysUser::getNickname, sysUser.getNickname())
-                .set(SysUser::getSex, sysUser.getSex())
-                .set(SysUser::getPhone, StringUtils.hasText(sysUser.getPhone()) ? sysUser.getPhone() : null)
-                .set(SysUser::getEmail, StringUtils.hasText(sysUser.getEmail()) ? sysUser.getEmail() : null)
+                .set(SysUser::getNickname, updateUserInfoDto.getNickname())
+                .set(SysUser::getSex, updateUserInfoDto.getSex())
+                .set(SysUser::getPhone, StringUtils.hasText(updateUserInfoDto.getPhone()) ? updateUserInfoDto.getPhone() : null)
+                .set(SysUser::getEmail, StringUtils.hasText(updateUserInfoDto.getEmail()) ? updateUserInfoDto.getEmail() : null)
                 .set(SysUser::getAvatar, avatar);
 
         boolean success = update(null, wrapper);
@@ -155,7 +155,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         
         //如果头像或昵称发生变化，同步更新评论表中该用户的所有评论
         boolean avatarChanged = !avatar.equals(oldSysUser.getAvatar());
-        boolean nicknameChanged = !sysUser.getNickname().equals(oldSysUser.getNickname());
+        boolean nicknameChanged = !updateUserInfoDto.getNickname().equals(oldSysUser.getNickname());
         
         if (avatarChanged || nicknameChanged) {
             LambdaUpdateWrapper<com.mengze.domain.entity.Comment> commentWrapper = 
@@ -166,7 +166,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 commentWrapper.set(com.mengze.domain.entity.Comment::getAvatar, avatar);
             }
             if (nicknameChanged) {
-                commentWrapper.set(com.mengze.domain.entity.Comment::getNickname, sysUser.getNickname());
+                commentWrapper.set(com.mengze.domain.entity.Comment::getNickname, updateUserInfoDto.getNickname());
             }
             
             commentMapper.update(null, commentWrapper);

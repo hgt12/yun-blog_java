@@ -4,10 +4,8 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
-import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.service.SysUserService;
-import com.mengze.utils.BeanCopyUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +35,7 @@ public class SysUserController
     @ApiOperation(value = "更新用户信息", notes = "更新当前登录用户的个人信息")
     public ResponseResult updateUserInfo(@RequestBody UpdateUserInfoDto dto)
     {
-        SysUser sysUser = BeanCopyUtils.copyBean(dto, SysUser.class);
-        return sysUserService.updateUserInfo(sysUser);
+        return sysUserService.updateUserInfo(dto);
     }
 
     //用户注册

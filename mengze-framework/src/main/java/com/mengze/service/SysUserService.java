@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.entity.SysUser;
 
@@ -15,7 +16,7 @@ public interface SysUserService extends IService<SysUser> {
 
     ResponseResult userInfo();
 
-    ResponseResult updateUserInfo(SysUser sysUser);
+    ResponseResult updateUserInfo(UpdateUserInfoDto updateUserInfoDto);
 
     ResponseResult userRegister(UserRegisterDto dto);
 
