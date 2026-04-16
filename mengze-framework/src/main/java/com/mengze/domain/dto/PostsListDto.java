@@ -16,9 +16,6 @@ public class PostsListDto
     @ApiModelProperty(value = "文章ID（更新时必填）", example = "1")
     private Long id;
 
-    @ApiModelProperty(value = "文章标题", required = true, example = "测试标题")
-    private String title;
-
     @ApiModelProperty(value = "分类id", example = "1")
     private Long categoryId;
 

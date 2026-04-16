@@ -21,6 +21,9 @@ public class AdminPostsListVo
     @ApiModelProperty(value = "文章标题")
     private String title;
 
+    @ApiModelProperty(value = "文章摘要")
+    private String summary;
+
     @ApiModelProperty(value = "文章状态（0-已发布，1-草稿）")
     private String status;
 
