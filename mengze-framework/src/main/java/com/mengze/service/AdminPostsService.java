@@ -3,6 +3,7 @@ package com.mengze.service;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
+import com.mengze.domain.dto.UpdatePostsDto;
 import com.mengze.domain.vo.PostsFormDetailVo;
 
 /**
@@ -18,7 +19,7 @@ public interface AdminPostsService {
 
     ResponseResult addPosts(AddPostsDto postsDto);
     
-    ResponseResult updatePosts(Long id, AddPostsDto postsDto);
+    ResponseResult updatePosts(Long id, UpdatePostsDto updatePostsDto);
 
     ResponseResult deletePosts(Long[] ids);
 

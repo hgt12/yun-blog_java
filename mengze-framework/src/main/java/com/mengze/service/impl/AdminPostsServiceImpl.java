@@ -6,6 +6,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
+import com.mengze.domain.dto.UpdatePostsDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.vo.*;
 import com.mengze.domain.entity.ArticleTag;
@@ -179,14 +180,14 @@ public class AdminPostsServiceImpl implements AdminPostsService
     //编辑/更新文章
     @Override
     @Transactional
-    public ResponseResult updatePosts(Long id, AddPostsDto postsDto)
+    public ResponseResult updatePosts(Long id, UpdatePostsDto updatePostsDto)
     {
         if (id == null) {
             throw new RuntimeException("更新文章时ID不能为空");
         }
 
         // 确保使用路径参数的ID
-        postsDto.setId(id);
+        updatePostsDto.setId(id);
 
         // 获取旧文章信息
         Article oldArticle = articleService.getById(id);
@@ -195,7 +196,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         }
 
         // 处理文章内容中的图片
-        String content = postsDto.getContent();
+        String content = updatePostsDto.getContent();
         List<String> oldContentImages = new ArrayList<>();
         List<String> newContentImages = new ArrayList<>();
 
@@ -207,7 +208,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         // 处理新内容中的临时图片
         if (ImageUrlUtils.containsTempImages(content)) {
             content = ossFileService.processContentImages(content);
-            postsDto.setContent(content);
+            updatePostsDto.setContent(content);
         }
 
         // 提取新内容中的图片URL
@@ -224,12 +225,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
         }
 
         // 处理缩略图
-        String newThumbnail = postsDto.getThumbnail();
+        String newThumbnail = updatePostsDto.getThumbnail();
         String oldThumbnail = oldArticle.getThumbnail();
 
         if (StringUtils.hasText(newThumbnail) && newThumbnail.contains("temp/")) {
             newThumbnail = ossFileService.moveTempToFormal(newThumbnail);
-            postsDto.setThumbnail(newThumbnail);
+            updatePostsDto.setThumbnail(newThumbnail);
         }
 
         // 如果缩略图发生变化，删除旧缩略图
@@ -241,18 +242,18 @@ public class AdminPostsServiceImpl implements AdminPostsService
         }
 
         // 更新文章基本信息
-        Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
+        Article article = BeanCopyUtils.copyBean(updatePostsDto, Article.class);
         articleService.updateById(article);
 
         // 更新标签关联关系
         // 先删除旧的关联关系
         LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
-        deleteWrapper.eq(ArticleTag::getArticleId, postsDto.getId());
+        deleteWrapper.eq(ArticleTag::getArticleId, updatePostsDto.getId());
         articleTagMapper.delete(deleteWrapper);
 
         // 添加新的关联关系
-        if (postsDto.getTags() != null && !postsDto.getTags().isEmpty()) {
-            List<ArticleTag> articleTags = postsDto.getTags().stream()
+        if (updatePostsDto.getTags() != null && !updatePostsDto.getTags().isEmpty()) {
+            List<ArticleTag> articleTags = updatePostsDto.getTags().stream()
                     .map(tagId -> new ArticleTag(article.getId(), tagId))
                     .collect(Collectors.toList());
             articleTagService.saveBatch(articleTags);

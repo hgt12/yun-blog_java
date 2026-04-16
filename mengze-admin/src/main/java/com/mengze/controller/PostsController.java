@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
+import com.mengze.domain.dto.UpdatePostsDto;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.PostsFormDetailVo;
 import com.mengze.service.AdminPostsService;
@@ -63,9 +64,9 @@ public class PostsController
     @SystemLog(businessName = "编辑/更新文章")
     @ApiOperation(value = "编辑/更新文章接口", notes = "更新文章，会自动删除旧的图片文件")
     @ApiImplicitParam(name = "id", value = "文章ID", dataType = "long", paramType = "path", required = true)
-    public ResponseResult updatePosts(@PathVariable Long id, @RequestBody AddPostsDto postsDto)
+    public ResponseResult updatePosts(@PathVariable Long id, @RequestBody UpdatePostsDto updatePostsDto)
     {
-        return adminPostsService.updatePosts(id, postsDto);
+        return adminPostsService.updatePosts(id, updatePostsDto);
     }
 
     @DeleteMapping("/{ids}")
