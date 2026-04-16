@@ -30,8 +30,7 @@ public class TagController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "name", value = "标签名称", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "remark", value = "备注", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "keywords", value = "关键字（标签名称）", dataType = "string", paramType = "query")
     })
     public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {

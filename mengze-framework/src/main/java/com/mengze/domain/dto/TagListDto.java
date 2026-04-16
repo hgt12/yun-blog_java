@@ -15,12 +15,6 @@ public class TagListDto {
     
     @ApiModelProperty(value = "标签ID（更新时必填）", example = "1")
     private Long id;
-    
-    @ApiModelProperty(value = "标签名称", required = true, example = "Java")
-    private String name;
-    
-    @ApiModelProperty(value = "备注", example = "Java相关技术文章")
-    private String remark;
 
     @ApiModelProperty(value = "标签ID列表", required = true, example = "[1,2,3]")
     private List<Long> ids;

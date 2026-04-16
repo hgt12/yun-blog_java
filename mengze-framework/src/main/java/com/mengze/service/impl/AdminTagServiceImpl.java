@@ -1,13 +1,13 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
+import com.mengze.domain.vo.AdminTagListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagOptionVo;
 import com.mengze.domain.vo.TagVo;
@@ -45,14 +45,13 @@ public class AdminTagServiceImpl implements AdminTagService
         //构建查询条件
         LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
 
-        //根据标签名称模糊查询
-        if (StringUtils.hasText(tagListDto.getName())) {
-            queryWrapper.like(Tag::getName, tagListDto.getName());
-        }
-
-        //根据备注模糊查询
-        if (StringUtils.hasText(tagListDto.getRemark())) {
-            queryWrapper.like(Tag::getRemark, tagListDto.getRemark());
+        //根据关键字模糊查询标签名称或 备注（已去除）
+        if (StringUtils.hasText(tagListDto.getKeywords())) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(Tag::getName, tagListDto.getKeywords())
+//                    .or()
+//                    .like(Tag::getRemark, tagListDto.getKeywords())
+            );
         }
 
         //只查询未删除的标签
@@ -73,15 +72,15 @@ public class AdminTagServiceImpl implements AdminTagService
                 .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
 
         //封装查询结果为Vo并设置文章数量
-        List<TagVo> tagVos = page.getRecords().stream()
+        List<AdminTagListVo> tagListVos = page.getRecords().stream()
                 .map(tag -> {
-                    TagVo tagVo = BeanCopyUtils.copyBean(tag, TagVo.class);
-                    tagVo.setArticleCount(tagArticleCountMap.getOrDefault(tag.getId(), 0L).intValue());
-                    return tagVo;
+                    AdminTagListVo tagListVo = BeanCopyUtils.copyBean(tag, AdminTagListVo.class);
+                    tagListVo.setArticleCount(tagArticleCountMap.getOrDefault(tag.getId(), 0L).intValue());
+                    return tagListVo;
                 })
                 .collect(Collectors.toList());
 
-        PageVo pageVo = new PageVo(tagVos, page.getTotal());
+        PageVo pageVo = new PageVo(tagListVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
     }
 
