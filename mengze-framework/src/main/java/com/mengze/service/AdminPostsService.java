@@ -19,4 +19,7 @@ public interface AdminPostsService {
     ResponseResult addPosts(AddPostsDto postsDto);
     
     ResponseResult updatePosts(Long id, AddPostsDto postsDto);
+
+    ResponseResult deletePosts(Long[] ids);
+
 }

@@ -261,6 +261,52 @@ public class AdminPostsServiceImpl implements AdminPostsService
         return ResponseResult.okResult();
     }
 
+    // 批量删除文章（逻辑删除），将文章中的图片有的图片从oss里的正式文件夹转移到 deleted 文件夹中
+    // 如果后续需要有恢复文章的功能，则可以利用逻辑删除这个特性，将文章恢复并且将图片或文件从 deleted 文件夹移动到正式文件夹中
+    @Override
+    public ResponseResult deletePosts(Long[] ids)
+    {
+        List<Long> idList = List.of(ids);
+
+        // 遍历每个文章ID，将相关图片移动到deleted文件夹
+        for (Long articleId : idList)
+        {
+            Article article = articleService.getById(articleId);
+            
+            if (article == null) {
+                log.warn("文章不存在，ID: {}", articleId);
+                continue;
+            }
+
+            // 查找需要移动的图片URL
+            List<String> imageUrls = new ArrayList<>();
+            
+            // 查找文章内容中的图片
+            if (StringUtils.hasText(article.getContent())) {
+                List<String> contentImages = ImageUrlUtils.extractImageUrls(article.getContent());
+                imageUrls.addAll(contentImages);
+            }
+
+            // 查找缩略图
+            if (StringUtils.hasText(article.getThumbnail())) {
+                imageUrls.add(article.getThumbnail());
+            }
+            
+            // 批量移动图片到 deleted 文件夹
+            if (!imageUrls.isEmpty()) {
+                int movedCount = ossFileService.batchMoveFilesToDeleted(imageUrls);
+                log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}", 
+                    articleId, movedCount, imageUrls.size());
+            }
+        }
+
+        // 逻辑删除文章（将 del_flag 从 0 > 1）
+        articleService.removeByIds(idList);
+        log.info("批量逻辑删除文章成功，ID列表: {}", idList);
+
+        return ResponseResult.okResult();
+    }
+
     /**
      * 根据文章ID查询标签列表
      * @param articleId 文章ID

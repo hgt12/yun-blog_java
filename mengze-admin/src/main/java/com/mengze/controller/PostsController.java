@@ -67,4 +67,13 @@ public class PostsController
     {
         return adminPostsService.updatePosts(id, postsDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除文章(逻辑删除)")
+    @ApiOperation(value = "删除文章接口（批量逻辑删除）", notes = "删除文章，支持批量删除，会自动删除相关的图片文件和标签关联")
+    @ApiImplicitParam(name = "ids", value = "文章id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deletePosts(@PathVariable Long[] ids)
+    {
+        return adminPostsService.deletePosts(ids);
+    }
 }
