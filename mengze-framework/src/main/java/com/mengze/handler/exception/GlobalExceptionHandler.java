@@ -6,6 +6,7 @@ import com.mengze.exception.SystemException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 //全局异常处理类
 @RestControllerAdvice
@@ -19,6 +20,15 @@ public class GlobalExceptionHandler
         log.error("出现异常！！！ {}", exception);
         //从异常对象中获取异常提示信息并封装返回
         return ResponseResult.errorResult(exception.getCode(), exception.getMsg());
+    }
+
+    //处理文件上传大小超限异常
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseResult maxUploadSizeExceededExceptionHandler(MaxUploadSizeExceededException exception)
+    {
+        //打印异常信息
+        log.error("文件上传大小超限！异常详情：{}", exception.getMessage());
+        return ResponseResult.errorResult(AppHttpCodeEnum.FILE_SIZE_ERROR);
     }
 
     //对其他异常进行处理
