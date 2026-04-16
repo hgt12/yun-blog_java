@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddCommentDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.CommentVo;
@@ -69,26 +70,27 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     //添加评论
     @Override
-    public ResponseResult addComment(Comment comment)
+    public ResponseResult addComment(AddCommentDto addCommentDto)
     {
-        String type = comment.getType();
-        
         //校验评论内容
-        if (!StringUtils.hasText(comment.getContent())) {
+        if (!StringUtils.hasText(addCommentDto.getContent())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.CONTENT_NOT_NULL);
         }
 
-        comment.setType(type);
-        comment.setArticleId(comment.getArticleId());
-        comment.setContent(comment.getContent());
-        comment.setRootId(comment.getRootId() != null ? comment.getRootId() : -1L);
-        comment.setReplyToCommentId(comment.getReplyToCommentId());
-        comment.setReplyToUserId(comment.getReplyToUserId());
+        //使用 BeanCopyUtils 进行基础字段转换（自动复制 type, articleId, content, rootId, parentId, replyToCommentId, replyToUserId, nickname, email, personalWebsite）
+        Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
         
-        //根据评论类型进行权限校验
+        //处理 rootId 默认值
+        if (comment.getRootId() == null) {
+            comment.setRootId(-1L);
+        }
+        
+        String type = addCommentDto.getType();
+        
+        //根据评论类型进行权限校验和用户信息设置
         if (SystemConstants.COMMENT_TYPE_ARTICLE.equals(type) || SystemConstants.COMMENT_TYPE_LINK.equals(type))
         {
-            //在文章评论和友链评论需要登录
+            //文章评论和友链评论需要登录
             if (!SecurityUtils.isLogin()) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
             }
@@ -97,9 +99,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             comment.setUserId(sysUser.getId());
             comment.setNickname(sysUser.getNickname());
             comment.setEmail(sysUser.getEmail());
-            comment.setPersonalWebsite(comment.getPersonalWebsite());//添加个人网址
+            //personalWebsite 已通过 BeanCopyUtils 复制
         } else if (SystemConstants.COMMENT_TYPE_MESSAGE.equals(type)) {
-            //在留言板评论则不需要登录，但需要填写昵称和邮箱
+            //留言板评论可以不登录
             if (SecurityUtils.isLogin()) {
                 //已登录用户使用登录信息
                 LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -107,36 +109,32 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 comment.setUserId(sysUser.getId());
                 comment.setNickname(sysUser.getNickname());
                 comment.setEmail(sysUser.getEmail());
-                comment.setPersonalWebsite(comment.getPersonalWebsite());
+                //personalWebsite 已通过 BeanCopyUtils 复制
             } else {
                 //未登录用户需要填写昵称和邮箱
-                if (!StringUtils.hasText(comment.getNickname())) {
+                if (!StringUtils.hasText(addCommentDto.getNickname())) {
                     return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_NOT_NULL);
                 }
-                if (!StringUtils.hasText(comment.getEmail())) {
+                if (!StringUtils.hasText(addCommentDto.getEmail())) {
                     return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
                 }
-                comment.setNickname(comment.getNickname());
-                comment.setEmail(comment.getEmail());
-                comment.setPersonalWebsite(comment.getPersonalWebsite());
+                //nickname, email, personalWebsite 已通过 BeanCopyUtils 复制，无需再设置
             }
         }
 
-        //如果前端没有传头像，则根据用户信息获取
-        if (!StringUtils.hasText(comment.getAvatar())) {
-            if (comment.getUserId() != null) {
-                //已登录用户，使用用户表中的最新头像
-                SysUser sysUser = sysUserMapper.selectById(comment.getUserId());
-                if (sysUser != null && StringUtils.hasText(sysUser.getAvatar())) {
-                    comment.setAvatar(sysUser.getAvatar());
-                } else {
-                    //用户表中没有头像，根据邮箱生成（使用评论专用头像）
-                    comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
-                }
+        //根据用户信息获取头像
+        if (comment.getUserId() != null) {
+            //已登录用户，使用用户表中的最新头像
+            SysUser sysUser = sysUserMapper.selectById(comment.getUserId());
+            if (sysUser != null && StringUtils.hasText(sysUser.getAvatar())) {
+                comment.setAvatar(sysUser.getAvatar());
             } else {
-                //未登录用户，根据邮箱生成（使用评论专用头像）
+                //用户表中没有头像，根据邮箱生成（使用评论专用头像）
                 comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
             }
+        } else {
+            //未登录用户，根据邮箱生成（使用评论专用头像）
+            comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
         }
         
         //设置默认值
@@ -149,21 +147,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         
         //发送邮件通知
         emailService.sendCommentNotificationByEmail(comment);
-        
-        //封装成Vo返回，判断是否为博主（通过邮箱匹配）
-        CommentVo commentVo = BeanCopyUtils.copyBean(comment, CommentVo.class);
-        if (StringUtils.hasText(comment.getEmail()) 
-                && comment.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
-            commentVo.setUserType("1"); //博主标识
-        } else if (comment.getUserId() != null) {
-            //已登录用户，查询用户类型
-            SysUser sysUser = sysUserMapper.selectById(comment.getUserId());
-            if (sysUser != null) {
-                commentVo.setUserType(sysUser.getUserType());
-            }
-        } else {
-            commentVo.setUserType("0"); //普通用户
-        }
 
         return ResponseResult.okResult();
     }

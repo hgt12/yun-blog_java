@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddCommentDto;
 import com.mengze.domain.entity.Comment;
 
 /**
@@ -22,10 +23,10 @@ public interface CommentService extends IService<Comment>
 
     /**
      * 添加评论
-     * @param comment 评论信息
+     * @param addCommentDto 评论信息
      * @return 评论结果
      */
-    ResponseResult addComment(Comment comment);
+    ResponseResult addComment(AddCommentDto addCommentDto);
 
     /**
      * 点赞评论

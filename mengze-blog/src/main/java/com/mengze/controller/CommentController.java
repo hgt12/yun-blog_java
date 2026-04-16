@@ -3,11 +3,8 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddCommentDto;
-import com.mengze.domain.entity.Comment;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.CommentService;
-import com.mengze.utils.BeanCopyUtils;
-import com.mengze.utils.GravatarUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -74,8 +71,7 @@ public class CommentController
     @ApiOperation(value = "添加评论", notes = "添加文章评论、友链评论或留言板评论")
     public ResponseResult addComment(@RequestBody AddCommentDto addCommentDto)
     {
-        Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
-        return commentService.addComment(comment);
+        return commentService.addComment(addCommentDto);
     }
 
     /**
