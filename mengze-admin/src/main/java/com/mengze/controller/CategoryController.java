@@ -2,10 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AddCategoryDto;
-import com.mengze.domain.dto.AddPostsDto;
-import com.mengze.domain.dto.CategoryListDto;
-import com.mengze.domain.vo.ArticleListVo;
+import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.CategoryFormDetailVo;
 import com.mengze.domain.vo.CategoryVo;
 import com.mengze.service.AdminCategoryService;
@@ -65,5 +62,14 @@ public class CategoryController
     public ResponseResult addCategory(@RequestBody AddCategoryDto addCategoryDto)
     {
         return adminCategoryService.addCategory(addCategoryDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "编辑分类")
+    @ApiOperation(value = "编辑分类接口", notes = "编辑分类")
+    @ApiImplicitParam(name = "id", value = "分类ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateCategory(@PathVariable Long id, @RequestBody UpdateCategoryDto updateCategoryDto)
+    {
+        return adminCategoryService.updateCategory(id, updateCategoryDto);
     }
 }

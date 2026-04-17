@@ -6,6 +6,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddCategoryDto;
 import com.mengze.domain.dto.CategoryListDto;
+import com.mengze.domain.dto.UpdateCategoryDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
 import com.mengze.domain.vo.*;
@@ -124,6 +125,31 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //添加分类
         Category category = BeanCopyUtils.copyBean(addCategoryDto, Category.class);
         categoryService.save(category);
+
+        return ResponseResult.okResult();
+    }
+
+    //编辑分类
+    @Override
+    public ResponseResult updateCategory(Long id, UpdateCategoryDto updateCategoryDto)
+    {
+        //判断id是否为空
+        if (id == null) {
+            throw new RuntimeException("更新文章时ID不能为空");
+        }
+
+        //获取分类id
+        updateCategoryDto.setId(id);
+
+        //获取旧的分类信息
+        Category oldCategory = categoryService.getById(id);
+        if (oldCategory == null) {
+            throw new RuntimeException("该分类不存在");
+        }
+
+        //更新分类信息
+        Category category = BeanCopyUtils.copyBean(updateCategoryDto, Category.class);
+        categoryService.updateById(category);
 
         return ResponseResult.okResult();
     }
