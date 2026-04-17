@@ -154,4 +154,17 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         return ResponseResult.okResult();
     }
 
+    //批量删除分类（逻辑删除）
+    @Override
+    public ResponseResult deleteCategory(Long[] ids)
+    {
+        //获取分类id列表
+        List<Long> idList = List.of(ids);
+
+        //根据分类id列表删除分类
+        categoryService.removeByIds(idList);
+
+        return ResponseResult.okResult();
+    }
+
 }

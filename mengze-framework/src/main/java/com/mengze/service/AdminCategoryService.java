@@ -23,4 +23,6 @@ public interface AdminCategoryService {
     ResponseResult addCategory(AddCategoryDto addCategoryDto);
 
     ResponseResult updateCategory(Long id, UpdateCategoryDto updateCategoryDto);
+
+    ResponseResult deleteCategory(Long[] ids);
 }

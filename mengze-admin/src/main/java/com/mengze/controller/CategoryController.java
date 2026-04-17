@@ -72,4 +72,13 @@ public class CategoryController
     {
         return adminCategoryService.updateCategory(id, updateCategoryDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除分类(逻辑删除)")
+    @ApiOperation(value = "删除分类接口（批量逻辑删除）", notes = "删除分类，支持批量删除")
+    @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteCategory(@PathVariable Long[] ids)
+    {
+        return adminCategoryService.deleteCategory(ids);
+    }
 }
