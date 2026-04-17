@@ -5,14 +5,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.AdminTagListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagOptionVo;
-import com.mengze.domain.vo.TagVo;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminTagService;
+import com.mengze.service.ArticleService;
 import com.mengze.service.TagService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,37 +40,47 @@ public class AdminTagServiceImpl implements AdminTagService
     @Autowired
     private ArticleTagMapper articleTagMapper;
 
+    @Autowired
+    private ArticleService articleService;
+
     //获取标签列表
     @Override
     public ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
-        //构建查询条件
-        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        //构建标签查询条件
+        LambdaQueryWrapper<Tag> tagQueryWrapper = new LambdaQueryWrapper<>();
 
-        //根据关键字模糊查询标签名称或 备注（已去除）
+        //根据关键字模糊查询标签名称
         if (StringUtils.hasText(tagListDto.getKeywords())) {
-            queryWrapper.and(wrapper -> wrapper
-                    .like(Tag::getName, tagListDto.getKeywords())
-//                    .or()
-//                    .like(Tag::getRemark, tagListDto.getKeywords())
-            );
+            tagQueryWrapper.like(Tag::getName, tagListDto.getKeywords());
         }
 
         //只查询未删除的标签
-        queryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        tagQueryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
 
         //按创建时间降序排序
-        queryWrapper.orderByDesc(Tag::getCreateTime);
+        tagQueryWrapper.orderByDesc(Tag::getCreateTime);
 
         //分页查询
         Page<Tag> page = new Page<>(pageNum, pageSize);
-        tagService.page(page, queryWrapper);
+        tagService.page(page, tagQueryWrapper);
+
+        //查询所有未删除且已发布的文章ID
+        LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
+        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
+                          .eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL)
+                          .select(Article::getId);
+        List<Article> validArticles = articleService.list(articleQueryWrapper);
+        Set<Long> validArticleIds = validArticles.stream()
+                .map(Article::getId)
+                .collect(Collectors.toSet());
 
         //查询所有文章标签关联关系
         List<ArticleTag> articleTagList = articleTagMapper.selectList(null);
 
-        //统计每个标签关联的文章数量
+        //统计每个标签关联的未删除且已发布的文章数量
         Map<Long, Long> tagArticleCountMap = articleTagList.stream()
+                .filter(articleTag -> validArticleIds.contains(articleTag.getArticleId()))
                 .collect(Collectors.groupingBy(ArticleTag::getTagId, Collectors.counting()));
 
         //封装查询结果为Vo并设置文章数量
