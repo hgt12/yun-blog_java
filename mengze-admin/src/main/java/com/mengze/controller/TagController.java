@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.TagFormDetailVo;
 import com.mengze.domain.vo.TagVo;
 import com.mengze.service.AdminTagService;
 import io.swagger.annotations.Api;
@@ -43,5 +44,16 @@ public class TagController
     public ResponseResult getTagOptions()
     {
         return adminTagService.getTagOptions();
+    }
+
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取标签表单数据")
+    @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑分类详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "标签id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<TagFormDetailVo> tagFormDetail(@PathVariable Long id)
+    {
+        return adminTagService.tagFormDetail(id);
     }
 }

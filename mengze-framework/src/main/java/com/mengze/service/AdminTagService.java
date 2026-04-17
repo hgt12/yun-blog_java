@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.vo.TagFormDetailVo;
 
 /**
  * 后台标签管理服务接口
@@ -13,4 +14,6 @@ public interface AdminTagService {
     ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto);
 
     ResponseResult getTagOptions();
+
+    ResponseResult<TagFormDetailVo> tagFormDetail(Long id);
 }

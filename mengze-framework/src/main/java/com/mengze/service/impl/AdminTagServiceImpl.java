@@ -10,6 +10,7 @@ import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.AdminTagListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.TagFormDetailVo;
 import com.mengze.domain.vo.TagOptionVo;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminTagService;
@@ -112,5 +113,18 @@ public class AdminTagServiceImpl implements AdminTagService
         List<TagOptionVo> tagOptionVos = BeanCopyUtils.copyBeanList(tags, TagOptionVo.class);
 
         return ResponseResult.okResult(tagOptionVos);
+    }
+
+    //获取标签表单数据，用于编辑标签信息
+    @Override
+    public ResponseResult<TagFormDetailVo> tagFormDetail(Long id)
+    {
+        //获取标签id，查询标签
+        Tag tag = tagService.getById(id);
+
+        //封装成vo
+        TagFormDetailVo tagFormDetailVo = BeanCopyUtils.copyBean(tag, TagFormDetailVo.class);
+
+        return ResponseResult.okResult(tagFormDetailVo);
     }
 }
