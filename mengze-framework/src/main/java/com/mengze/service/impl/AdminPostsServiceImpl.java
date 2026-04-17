@@ -265,6 +265,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
     // 批量删除文章（逻辑删除），将文章中的图片有的图片从oss里的正式文件夹转移到 deleted 文件夹中
     // 如果后续需要有恢复文章的功能，则可以利用逻辑删除这个特性，将文章恢复并且将图片或文件从 deleted 文件夹移动到正式文件夹中
     @Override
+    @Transactional
     public ResponseResult deletePosts(Long[] ids)
     {
         List<Long> idList = List.of(ids);
@@ -299,6 +300,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
                 log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}", 
                     articleId, movedCount, imageUrls.size());
             }
+
+            // 删除文章标签关联关系
+            LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
+            deleteWrapper.eq(ArticleTag::getArticleId, articleId);
+            int deletedCount = articleTagMapper.delete(deleteWrapper);
+            log.info("删除文章ID: {} 的标签关联记录，共 {} 条", articleId, deletedCount);
         }
 
         // 逻辑删除文章（将 del_flag 从 0 > 1）
