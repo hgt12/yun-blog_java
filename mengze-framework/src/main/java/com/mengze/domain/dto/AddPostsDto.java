@@ -17,9 +17,6 @@ import java.util.List;
 @ApiModel(description = "添加文章请求对象")
 public class AddPostsDto
 {
-    @ApiModelProperty(value = "文章ID", example = "1")
-    private Long id;
-
     @ApiModelProperty(value = "文章标题", required = true, example = "测试文章标题")
     private String title;
 

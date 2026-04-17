@@ -142,10 +142,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Transactional
     public ResponseResult addPosts(AddPostsDto postsDto)
     {
-        // 如果有ID，说明是更新操作，抛出异常
-        if (postsDto.getId() != null) {
-            throw new RuntimeException("新增文章时不应该包含ID");
-        }
 
         //处理文章内容中的临时图片，将其转为正式文件
         String content = postsDto.getContent();
