@@ -2,9 +2,13 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.vo.CategoryOptionVo;
+import com.mengze.domain.dto.CategoryListDto;
+import com.mengze.domain.vo.ArticleListVo;
+import com.mengze.domain.vo.CategoryVo;
 import com.mengze.service.AdminCategoryService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +25,19 @@ public class CategoryController
 {
     @Autowired
     private AdminCategoryService adminCategoryService;
+
+    @GetMapping
+    @SystemLog(businessName = "分页查询分类列表")
+    @ApiOperation(value = "分类列表", notes = "分页查询分类列表", response = CategoryVo.class, responseContainer = "List")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
+    })
+    public ResponseResult categoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
+    {
+        return adminCategoryService.categoryList(pageNum, pageSize, categoryListDto);
+    }
 
     @GetMapping("/options")
     @SystemLog(businessName = "分类下拉选项")

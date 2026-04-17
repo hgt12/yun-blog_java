@@ -1,0 +1,30 @@
+package com.mengze.domain.dto;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * 分类列表请求DTO
+ */
+@Data
+@ApiModel(description = "分类列表请求对象")
+public class CategoryListDto {
+    
+    @ApiModelProperty(value = "分类ID（更新时必填）", example = "1")
+    private Long id;
+    
+    @ApiModelProperty(value = "分类名称", required = true, example = "Java")
+    private String name;
+
+    @ApiModelProperty(value = "状态", example = "0")
+    private String status;
+
+    @ApiModelProperty(value = "分类ID列表", required = true, example = "[1,2,3]")
+    private List<Long> ids;
+
+    @ApiModelProperty(value = "关键字（用于模糊搜索分类名称）", example = "Vue")
+    private String keywords;
+}
