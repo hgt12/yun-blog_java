@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.vo.ArticleListVo;
+import com.mengze.domain.vo.CategoryFormDetailVo;
 import com.mengze.domain.vo.CategoryVo;
 import com.mengze.service.AdminCategoryService;
 import io.swagger.annotations.Api;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,5 +47,16 @@ public class CategoryController
     public ResponseResult getCategoryOptions()
     {
         return adminCategoryService.getCategoryOptions();
+    }
+
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取分类表单数据")
+    @ApiOperation(value = "获取分类表单数据", notes = "获取分类表单数据，用于编辑分类详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "分类id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<CategoryFormDetailVo> categoryFormDetail(@PathVariable Long id)
+    {
+        return adminCategoryService.categoryFormDetail(id);
     }
 }

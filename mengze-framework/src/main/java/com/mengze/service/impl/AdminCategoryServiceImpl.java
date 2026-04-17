@@ -7,7 +7,6 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
-import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.*;
 import com.mengze.service.AdminCategoryService;
 import com.mengze.service.ArticleService;
@@ -102,4 +101,19 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         return ResponseResult.okResult(categoryOptionVoList);
     }
+
+    // 获取分类表单数据
+    @Override
+    public ResponseResult<CategoryFormDetailVo> categoryFormDetail(Long id)
+    {
+        //根据分类id 查询分类
+        Category category = categoryService.getById(id);
+
+        //转换成Vo
+        CategoryFormDetailVo categoryFormDetailVo = BeanCopyUtils.copyBean(category, CategoryFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(categoryFormDetailVo);
+    }
+
 }
