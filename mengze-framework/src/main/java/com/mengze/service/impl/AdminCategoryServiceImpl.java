@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddCategoryDto;
 import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
@@ -114,6 +115,17 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         //返回
         return ResponseResult.okResult(categoryFormDetailVo);
+    }
+
+    //新增分类
+    @Override
+    public ResponseResult addCategory(AddCategoryDto addCategoryDto)
+    {
+        //添加分类
+        Category category = BeanCopyUtils.copyBean(addCategoryDto, Category.class);
+        categoryService.save(category);
+
+        return ResponseResult.okResult();
     }
 
 }

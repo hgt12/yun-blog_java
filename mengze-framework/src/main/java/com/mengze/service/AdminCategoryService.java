@@ -1,6 +1,7 @@
 package com.mengze.service;
 
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddCategoryDto;
 import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.vo.CategoryFormDetailVo;
 import com.mengze.domain.vo.CategoryOptionVo;
@@ -17,4 +18,6 @@ public interface AdminCategoryService {
     ResponseResult categoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto);
 
     ResponseResult<CategoryFormDetailVo> categoryFormDetail(Long id);
+
+    ResponseResult addCategory(AddCategoryDto addCategoryDto);
 }

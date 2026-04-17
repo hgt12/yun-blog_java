@@ -2,6 +2,8 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddCategoryDto;
+import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.CategoryFormDetailVo;
@@ -12,10 +14,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 分类管理接口
@@ -58,5 +57,13 @@ public class CategoryController
     public ResponseResult<CategoryFormDetailVo> categoryFormDetail(@PathVariable Long id)
     {
         return adminCategoryService.categoryFormDetail(id);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增分类")
+    @ApiOperation(value = "新增分类接口", notes = "新增分类")
+    public ResponseResult addCategory(@RequestBody AddCategoryDto addCategoryDto)
+    {
+        return adminCategoryService.addCategory(addCategoryDto);
     }
 }
