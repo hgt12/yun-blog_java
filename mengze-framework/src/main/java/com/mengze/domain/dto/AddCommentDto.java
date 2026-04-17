@@ -2,12 +2,16 @@ package com.mengze.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 添加评论请求DTO
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "添加评论请求对象")
 public class AddCommentDto {
     

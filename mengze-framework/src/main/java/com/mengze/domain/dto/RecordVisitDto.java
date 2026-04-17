@@ -2,12 +2,16 @@ package com.mengze.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 记录访问请求DTO
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "记录访问请求对象")
 public class RecordVisitDto {
 

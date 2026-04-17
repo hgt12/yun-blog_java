@@ -2,10 +2,14 @@ package com.mengze.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 //发送验证码请求DTO
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "发送验证码请求对象")
 public class SendCodeDto {
     

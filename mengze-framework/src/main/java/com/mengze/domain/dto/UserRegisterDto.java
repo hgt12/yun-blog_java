@@ -2,10 +2,14 @@ package com.mengze.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 //用户注册DTO
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "用户注册请求对象")
 public class UserRegisterDto {
     

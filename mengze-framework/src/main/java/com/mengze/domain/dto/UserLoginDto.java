@@ -2,12 +2,16 @@ package com.mengze.domain.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户名密码登录DTO
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "用户名密码登录请求对象")
 public class UserLoginDto {
     
