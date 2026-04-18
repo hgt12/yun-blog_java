@@ -10,10 +10,12 @@ import com.mengze.domain.dto.UpdateCategoryDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
 import com.mengze.domain.vo.*;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminCategoryService;
 import com.mengze.service.ArticleService;
 import com.mengze.service.CategoryService;
 import com.mengze.utils.BeanCopyUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -26,6 +28,7 @@ import java.util.List;
  * @author mengze
  */
 @Service
+@Slf4j
 public class AdminCategoryServiceImpl implements AdminCategoryService
 {
     @Autowired
@@ -67,10 +70,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //封装查询结果为Vo返回
         final List<AdminCategoryListVo> categoryListVos = BeanCopyUtils.copyBeanList(categoryList, AdminCategoryListVo.class);
 
-        // 构建文章查询条件（只查询未删除且已发布的文章）
+        // 构建文章查询条件（查询未删除的文章）
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
-                          .eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
         List<Article> articleList = articleService.list(articleQueryWrapper);
 
         //统计每个分类下的文章数量
@@ -133,23 +135,34 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     @Override
     public ResponseResult updateCategory(Long id, UpdateCategoryDto updateCategoryDto)
     {
-        //判断id是否为空
-        if (id == null) {
-            throw new RuntimeException("更新文章时ID不能为空");
-        }
-
         //获取分类id
         updateCategoryDto.setId(id);
 
         //获取旧的分类信息
         Category oldCategory = categoryService.getById(id);
-        if (oldCategory == null) {
-            throw new RuntimeException("该分类不存在");
+
+        String msg = null;
+
+        //检查是否将分类状态从正常改为禁用
+        if (SystemConstants.STATUS_NORMAL.equals(oldCategory.getStatus())
+            && !"0".equals(updateCategoryDto.getStatus())) {
+            //统计该分类下的文章数量
+            LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
+            articleQueryWrapper.eq(Article::getCategoryId, id)
+                              .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+            long articleCount = articleService.count(articleQueryWrapper);
+
+            msg = String.format("分类【%s】已被禁用，该分类下有 %d 篇文章将不会在 前台和文章列表 中显示", oldCategory.getName(), articleCount);
+            log.info("警告：{}", msg);
         }
 
         //更新分类信息
         Category category = BeanCopyUtils.copyBean(updateCategoryDto, Category.class);
         categoryService.updateById(category);
+
+        if (msg != null) {
+            return ResponseResult.okResult(msg);
+        }
 
         return ResponseResult.okResult();
     }
@@ -160,6 +173,22 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     {
         //获取分类id列表
         List<Long> idList = List.of(ids);
+
+        //检查每个分类下是否有文章
+        for (Long categoryId : idList) {
+            LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
+            articleQueryWrapper.eq(Article::getCategoryId, categoryId)
+                              .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+
+            long articleCount = articleService.count(articleQueryWrapper);
+
+            if (articleCount > 0) {
+                //如果该分类下有文章，返回错误信息
+                Category category = categoryService.getById(categoryId);
+                String categoryName = category != null ? category.getName() : "ID:" + categoryId;
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类【" + categoryName + "】下存在 " + articleCount + " 篇文章，无法删除");
+            }
+        }
 
         //根据分类id列表删除分类
         categoryService.removeByIds(idList);
