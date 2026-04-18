@@ -301,12 +301,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 ));
 
         //构建文章ID到标签列表的映射
+        //为每篇文章创建独立的TagVo对象，避免FastJson的循环引用检测
         Map<Long, List<TagVo>> articleTagMap = articleTagList.stream()
                 .filter(at -> tagVoMap.containsKey(at.getTagId()))
                 .collect(Collectors.groupingBy(
                         ArticleTag::getArticleId,
                         Collectors.mapping(
-                                at -> tagVoMap.get(at.getTagId()),
+                                at -> BeanCopyUtils.copyBean(tagVoMap.get(at.getTagId()), TagVo.class),
                                 Collectors.toList()
                         )
                 ));
