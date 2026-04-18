@@ -66,11 +66,13 @@ public class AdminTagServiceImpl implements AdminTagService
         Page<Tag> page = new Page<>(pageNum, pageSize);
         tagService.page(page, tagQueryWrapper);
 
-        //查询所有未删除且已发布的文章ID
+        //查询所有未删除且已发布和分类状态正常的文章
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
         articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
                           .eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL)
-                          .select(Article::getId);
+                          .select(Article::getId)
+                .inSql(Article::getCategoryId,
+                        "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");
         List<Article> validArticles = articleService.list(articleQueryWrapper);
         Set<Long> validArticleIds = validArticles.stream()
                 .map(Article::getId)
