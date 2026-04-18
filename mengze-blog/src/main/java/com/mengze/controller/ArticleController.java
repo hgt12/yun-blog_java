@@ -24,16 +24,6 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
-    //热门文档查询接口
-    @GetMapping("/hotArticleList")
-    @SystemLog(businessName = "查询热门文章列表")
-    @ApiOperation(value = "热门文章列表", notes = "查询热门文章列表", response = HotArticleListVo.class, responseContainer = "List")
-    public ResponseResult hotArticleList()
-    {
-        ResponseResult result = articleService.hotArticleList();
-        return result;
-    }
-
     //分页查询文章列表（页码，每页大小参数）
     @GetMapping("/articleList")
     @SystemLog(businessName = "分页查询文章列表")

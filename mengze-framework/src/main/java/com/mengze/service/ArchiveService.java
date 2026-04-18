@@ -11,9 +11,4 @@ public interface ArchiveService
      * @return 文章列表（按创建时间倒序）
      */
     ResponseResult getArchiveList(Integer pageNum, Integer pageSize);
-
-    /**
-     * 根据年月获取文章列表
-     */
-    ResponseResult getArticlesByYearMonth(Integer year, Integer month, Integer pageNum, Integer pageSize);
 }

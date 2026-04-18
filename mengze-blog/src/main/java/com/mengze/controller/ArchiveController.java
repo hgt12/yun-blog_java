@@ -34,24 +34,4 @@ public class ArchiveController
             @RequestParam(defaultValue = "10") Integer pageSize) {
         return archiveService.getArchiveList(pageNum, pageSize);
     }
-
-    /**
-     * 按年份、月份获取文章
-     */
-    @SystemLog(businessName = "根据年月查询文章列表")
-    @GetMapping("/{year}/{month}")
-    @ApiOperation(value = "根据年月获取文章列表", notes = "根据年月获取该月的文章列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "year",value = "年份"),
-            @ApiImplicitParam(name = "month",value = "月份"),
-            @ApiImplicitParam(name = "pageNum",value = "页号"),
-            @ApiImplicitParam(name = "pageSize",value = "每页数量")
-    })
-    public ResponseResult getArticlesByYearMonth(
-            @PathVariable("year") Integer year,
-            @PathVariable("month") Integer month,
-            @RequestParam Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return archiveService.getArticlesByYearMonth(year, month, pageNum, pageSize);
-    }
 }

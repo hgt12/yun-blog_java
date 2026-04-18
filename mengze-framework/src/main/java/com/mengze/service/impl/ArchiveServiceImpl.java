@@ -51,35 +51,4 @@ public class ArchiveServiceImpl implements ArchiveService
         PageVo pageVo = new PageVo(articleVos, page.getTotal());
         return ResponseResult.okResult(pageVo);
     }
-
-    @Override
-    public ResponseResult getArticlesByYearMonth(Integer year, Integer month, Integer pageNum, Integer pageSize)
-    {
-        // 构建查询条件
-        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL)
-                .eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
-                .apply("YEAR(create_time) = {0}", year)
-                .apply("MONTH(create_time) = {0}", month)
-                .orderByDesc(Article::getCreateTime);
-
-        // 分页查询
-        Page<Article> page = new Page<>(pageNum, pageSize);
-        articleMapper.selectPage(page, queryWrapper);
-
-        // 转换为 VO
-        List<ArchiveArticleVo> articleVos = page.getRecords().stream()
-                .map(article -> {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    return new ArchiveArticleVo(
-                            article.getId(),
-                            article.getTitle(),
-                            sdf.format(article.getCreateTime())
-                    );
-                })
-                .collect(Collectors.toList());
-
-        PageVo pageVo = new PageVo(articleVos, page.getTotal());
-        return ResponseResult.okResult(pageVo);
-    }
 }

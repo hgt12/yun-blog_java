@@ -13,8 +13,6 @@ import com.mengze.domain.entity.Article;
 
 public interface ArticleService extends IService<Article> {
 
-    ResponseResult hotArticleList();
-
     ResponseResult articleList(Integer pageNum, Integer pageSize);
 
     ResponseResult getArticleDetail(Long id);
