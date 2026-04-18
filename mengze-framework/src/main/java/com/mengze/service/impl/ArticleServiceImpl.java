@@ -61,6 +61,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     {
         //查询条件
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //只查询分类状态正常的文章（使用子查询）
+        lambdaQueryWrapper.inSql(Article::getCategoryId, 
+                "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");
         //状态是正式发布的
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //置顶的文章要放在前面，isTop进行降序排序
@@ -229,6 +232,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             //没有文章时返回空结果
             lambdaQueryWrapper.eq(Article::getId, -1L);
         }
+        //只查询分类状态正常的文章（使用子查询）
+        lambdaQueryWrapper.inSql(Article::getCategoryId, 
+                "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");
         //状态是正式发布的
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //置顶的文章要放在前面

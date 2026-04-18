@@ -47,7 +47,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     {
         //先去查询文章表状态为已发布的
         LambdaQueryWrapper<Article> articleWrapper = new LambdaQueryWrapper<>();
-        articleWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //查询分类状态正常的文章（使用子查询）
+        articleWrapper.inSql(Article::getCategoryId,
+                "SELECT id FROM category WHERE status = '0' AND del_flag = '0'")
+                .eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         List<Article> articleList = articleService.list(articleWrapper);
 
         //获取已发布文章的ID集合
