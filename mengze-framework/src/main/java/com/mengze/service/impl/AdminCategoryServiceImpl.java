@@ -72,7 +72,8 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         // 构建文章查询条件（查询未删除的文章）
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
+                            .select(Article::getCategoryId);
         List<Article> articleList = articleService.list(articleQueryWrapper);
 
         //统计每个分类下的文章数量
