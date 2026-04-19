@@ -20,4 +20,10 @@ public class TagFormDetailVo
 
     @ApiModelProperty(value = "备注")
     private String remark;
+
+    @ApiModelProperty(value = "状态（0-正常，1-禁用）")
+    private String status;
+
+    @ApiModelProperty(value = "排序")
+    private String sort;
 }

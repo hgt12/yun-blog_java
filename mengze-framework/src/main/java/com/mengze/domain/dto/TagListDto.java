@@ -16,12 +16,12 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "标签操作请求对象")
 public class TagListDto {
-    
-    @ApiModelProperty(value = "标签ID（更新时必填）", example = "1")
-    private Long id;
 
     @ApiModelProperty(value = "标签ID列表", required = true, example = "[1,2,3]")
     private List<Long> ids;
+
+    @ApiModelProperty(value = "状态", example = "0")
+    private String status;
 
     @ApiModelProperty(value = "关键字（用于模糊搜索标签名称）", example = "Vue")
     private String keywords;

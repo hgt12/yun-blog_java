@@ -85,7 +85,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             //没有标签时返回空结果
             tagWrapper.eq(Tag::getId, -1L);
         }
-        tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        tagWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED)
+                .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL);
         List<Tag> tagList = list(tagWrapper);
 
         //转换为TagVo并设置文章数量

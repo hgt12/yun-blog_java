@@ -84,27 +84,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             article.setViewCount(viewCount.longValue());
         });
 
-        //stream流方式查询(方法1)
-//        articles.stream()
-//                .map(new Function<Article, Article>() {
-//                    @Override
-//                    public Article apply(Article article) {
-//                        //获取分类id，查询分类信息，获取分类名称
-//                        Category category = categoryService.getById(article.getCategoryId());
-//                        String name = category.getName();
-//                        //把分类名称设置给articles
-//                        article.setCategoryName(name);
-//                        return article;
-//                    }
-//                });
-
-        //for循环方式查询
-//        //再通过articleId去查询articleName
-//        for (Article article : articles) {
-//            Category category = categoryService.getById(article.getCategoryId());
-//            article.setCategoryName(category.getName());
-//        }
-
         //封装查询结果为Vo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(page.getRecords(), ArticleListVo.class);
         
@@ -262,10 +241,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     private void fillArticleListTags(List<ArticleListVo> articleListVos)
     {
-        if (articleListVos == null || articleListVos.isEmpty()) {
-            return;
-        }
-
         //收集所有文章ID
         List<Long> articleIds = articleListVos.stream()
                 .map(ArticleListVo::getId)
@@ -276,11 +251,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
         List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
 
-        //如果没有标签关联，直接返回
-        if (articleTagList.isEmpty()) {
-            return;
-        }
-
         //收集所有标签ID
         List<Long> tagIds = articleTagList.stream()
                 .map(ArticleTag::getTagId)
@@ -290,6 +260,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //查询标签详情
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
         tagWrapper.in(Tag::getId, tagIds)
+                .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
                 .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 
@@ -324,20 +295,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     private void fillArticleDetailTags(ArticleDetailVo articleDetailVo)
     {
-        if (articleDetailVo == null || articleDetailVo.getId() == null) {
-            return;
-        }
-
         //查询该文章的标签关联
         LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
         articleTagWrapper.eq(ArticleTag::getArticleId, articleDetailVo.getId());
         List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
-
-        //如果没有标签关联，设置空列表
-        if (articleTagList.isEmpty()) {
-            articleDetailVo.setTags(List.of());
-            return;
-        }
 
         //收集标签ID
         List<Long> tagIds = articleTagList.stream()
@@ -347,6 +308,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //查询标签详情
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
         tagWrapper.in(Tag::getId, tagIds)
+                .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
                 .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 

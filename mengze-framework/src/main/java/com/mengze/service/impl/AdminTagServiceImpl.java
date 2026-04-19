@@ -63,6 +63,11 @@ public class AdminTagServiceImpl implements AdminTagService
         //只查询未删除的标签
         tagQueryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
 
+        //根据状态筛选
+        if (StringUtils.hasText(tagListDto.getStatus())) {
+            tagQueryWrapper.eq(Tag::getStatus, tagListDto.getStatus());
+        }
+
         //按创建时间降序排序
         tagQueryWrapper.orderByDesc(Tag::getCreateTime);
 
@@ -70,12 +75,10 @@ public class AdminTagServiceImpl implements AdminTagService
         Page<Tag> page = new Page<>(pageNum, pageSize);
         tagService.page(page, tagQueryWrapper);
 
-        //查询所有未删除和分类状态正常的文章
+        //查询所有未删除的文章
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
         articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
-                          .select(Article::getId)
-                .inSql(Article::getCategoryId,
-                        "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");
+                          .select(Article::getId);
         List<Article> validArticles = articleService.list(articleQueryWrapper);
         Set<Long> validArticleIds = validArticles.stream()
                 .map(Article::getId)
@@ -109,7 +112,9 @@ public class AdminTagServiceImpl implements AdminTagService
         //获取标签id
         LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
 
+        //查询未删除且状态正常的标签
         queryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED)
+                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
                     .orderByDesc(Tag::getId);
 
         List<Tag> tags = tagService.list(queryWrapper);

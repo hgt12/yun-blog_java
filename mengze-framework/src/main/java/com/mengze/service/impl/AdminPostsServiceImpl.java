@@ -8,6 +8,7 @@ import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.dto.UpdatePostsDto;
 import com.mengze.domain.entity.Article;
+import com.mengze.domain.entity.Category;
 import com.mengze.domain.vo.*;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
@@ -95,10 +96,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
         Page<Article> page = new Page<>(pageNum, pageSize);
         articleService.page(page, queryWrapper);
 
-        //填充分类名称和浏览量
+        //填充分类名称、分类状态和文章浏览量
         List<Article> articles = page.getRecords();
         articles.forEach(article -> {
-            article.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
+            Category category = categoryService.getById(article.getCategoryId());
+            article.setCategoryName(category.getName());
+            article.setCategoryStatus(category.getStatus());
             //从redis中获取viewCount
             Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
             article.setViewCount(viewCount.longValue());
@@ -330,7 +333,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
                     TagVo tagVo = new TagVo();
                     tagVo.setId(tag.getId());
                     tagVo.setName(tag.getName());
+                    tagVo.setStatus(tag.getStatus());
                     tagVo.setCreateTime(tag.getCreateTime());
+                    LambdaQueryWrapper<ArticleTag> countWrapper = new LambdaQueryWrapper<>();
+                    countWrapper.eq(ArticleTag::getTagId, tag.getId());
+                    Long count = articleTagMapper.selectCount(countWrapper);
+                    tagVo.setArticleCount(count.intValue());
                     return tagVo;
                 })
                 .collect(Collectors.toList());

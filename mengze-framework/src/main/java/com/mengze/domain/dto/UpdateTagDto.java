@@ -23,4 +23,10 @@ public class UpdateTagDto {
     
     @ApiModelProperty(value = "备注", example = "Java相关标签")
     private String remark;
+
+    @ApiModelProperty(value = "排序", example = "1")
+    private Integer sort;
+
+    @ApiModelProperty(value = "状态（0-正常，1-禁用）", example = "0")
+    private String status;
 }

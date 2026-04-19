@@ -28,6 +28,10 @@ public class Tag extends Model<Tag> {
     private Long id;
     //标签名称
     private String name;
+    //排序
+    private Integer sort;
+    //状态（0-正常，1-禁用）
+    private String status;
     //删除标志（0-未删除，1-已删除）
     private String delFlag;
     //创建者
