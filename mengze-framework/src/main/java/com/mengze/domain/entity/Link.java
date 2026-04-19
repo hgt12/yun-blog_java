@@ -34,7 +34,9 @@ public class Link extends Model<Link> {
     private String description;
     //网站地址
     private String address;
-    //审核状态 (0代表审核通过，1代表审核未通过，2代表未审核)
+    //排序
+    private Integer sort;
+    //状态 (0代表启用，1代表弃用)
     private String status;
     //创建者
     @TableField(fill = FieldFill.INSERT)

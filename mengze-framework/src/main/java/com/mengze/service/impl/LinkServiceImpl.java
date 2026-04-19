@@ -20,10 +20,12 @@ import java.util.List;
  * @since 2025-12-28 16:49:16
  */
 @Service("linkService")
-public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements LinkService {
+public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements LinkService
+{
 
     @Override
-    public ResponseResult getAllLink() {
+    public ResponseResult getAllLink()
+    {
         //查询所有审核通过的友链
         LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Link::getStatus, SystemConstants.LINK_STATUS_NORMAL);

@@ -19,6 +19,9 @@ public class LinkVo
     
     @ApiModelProperty(value = "友链名字")
     private String name;
+
+    @ApiModelProperty(value = "友链状态")
+    private String status;
     
     @ApiModelProperty(value = "友链Logo")
     private String logo;
