@@ -181,18 +181,11 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Transactional
     public ResponseResult updatePosts(Long id, UpdatePostsDto updatePostsDto)
     {
-        if (id == null) {
-            throw new RuntimeException("更新文章时ID不能为空");
-        }
-
-        // 确保使用路径参数的ID
+        // 获取ID
         updatePostsDto.setId(id);
 
         // 获取旧文章信息
         Article oldArticle = articleService.getById(id);
-        if (oldArticle == null) {
-            throw new RuntimeException("文章不存在");
-        }
 
         // 处理文章内容中的图片
         String content = updatePostsDto.getContent();
@@ -273,11 +266,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
         for (Long articleId : idList)
         {
             Article article = articleService.getById(articleId);
-            
-            if (article == null) {
-                log.warn("文章不存在，ID: {}", articleId);
-                continue;
-            }
 
             // 查找需要移动的图片URL
             List<String> imageUrls = new ArrayList<>();
