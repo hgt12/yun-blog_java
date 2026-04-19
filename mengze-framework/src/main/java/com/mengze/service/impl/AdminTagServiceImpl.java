@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddTagDto;
 import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
@@ -128,5 +129,16 @@ public class AdminTagServiceImpl implements AdminTagService
         TagFormDetailVo tagFormDetailVo = BeanCopyUtils.copyBean(tag, TagFormDetailVo.class);
 
         return ResponseResult.okResult(tagFormDetailVo);
+    }
+
+    //添加标签
+    @Override
+    public ResponseResult addTag(AddTagDto addTagDto)
+    {
+        //将标签拷贝到Bean再保存标签
+        Tag tag = BeanCopyUtils.copyBean(addTagDto, Tag.class);
+        tagService.save(tag);
+
+        return ResponseResult.okResult();
     }
 }

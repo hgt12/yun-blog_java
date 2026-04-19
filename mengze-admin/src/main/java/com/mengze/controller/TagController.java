@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddTagDto;
 import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagFormDetailVo;
@@ -55,5 +56,13 @@ public class TagController
     public ResponseResult<TagFormDetailVo> tagFormDetail(@PathVariable Long id)
     {
         return adminTagService.tagFormDetail(id);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增标签")
+    @ApiOperation(value = "新增标签接口", notes = "新增标签")
+    public ResponseResult addTag(@RequestBody AddTagDto addTagDto)
+    {
+        return adminTagService.addTag(addTagDto);
     }
 }
