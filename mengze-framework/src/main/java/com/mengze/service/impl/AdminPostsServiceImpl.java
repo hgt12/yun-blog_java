@@ -66,9 +66,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
     {
         //构建查询条件
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
-        //查询正常分类下的文章（使用子查询）
-        queryWrapper.inSql(Article::getCategoryId,
-                "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");
 
         //根据分类id筛选
         if (Objects.nonNull(postsListDto.getCategoryId()) && postsListDto.getCategoryId() > 0) {

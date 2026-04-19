@@ -96,7 +96,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //根据分类id查询出所有分类选项
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
 
+        //查询状态正常且未删除的分类
         queryWrapper.eq(Category::getStatus, SystemConstants.STATUS_NORMAL)
+                    .eq(Category::getDelFlag, SystemConstants.NOT_DELETED)
                     .orderByDesc(Category::getId);
         //封装成一个集合
         List<Category> categoryList = categoryService.list(queryWrapper);
@@ -153,7 +155,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
                               .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
             long articleCount = articleService.count(articleQueryWrapper);
 
-            msg = String.format("分类【%s】已被禁用，该分类下有 %d 篇文章将不会在 前台和文章列表 中显示", oldCategory.getName(), articleCount);
+            msg = String.format("分类【%s】已被禁用，该分类下有 %d 篇文章将不会在 前台 中显示", oldCategory.getName(), articleCount);
             log.info("警告：{}", msg);
         }
 
