@@ -3,6 +3,7 @@ package com.mengze.service;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddTagDto;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.dto.UpdateTagDto;
 import com.mengze.domain.vo.TagFormDetailVo;
 
 /**
@@ -19,4 +20,6 @@ public interface AdminTagService {
     ResponseResult<TagFormDetailVo> tagFormDetail(Long id);
 
     ResponseResult addTag(AddTagDto addTagDto);
+
+    ResponseResult updateTag(Long id, UpdateTagDto updateTagDto);
 }

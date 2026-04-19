@@ -6,6 +6,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddTagDto;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.dto.UpdateTagDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
@@ -138,6 +139,20 @@ public class AdminTagServiceImpl implements AdminTagService
         //将标签拷贝到Bean再保存标签
         Tag tag = BeanCopyUtils.copyBean(addTagDto, Tag.class);
         tagService.save(tag);
+
+        return ResponseResult.okResult();
+    }
+
+    //更新标签
+    @Override
+    public ResponseResult updateTag(Long id, UpdateTagDto updateTagDto)
+    {
+        //获取标签id
+        updateTagDto.setId(id);
+
+        //更新标签信息
+        Tag tag = BeanCopyUtils.copyBean(updateTagDto, Tag.class);
+        tagService.updateById(tag);
 
         return ResponseResult.okResult();
     }

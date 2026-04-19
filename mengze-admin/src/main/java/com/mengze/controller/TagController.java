@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddTagDto;
 import com.mengze.domain.dto.TagListDto;
+import com.mengze.domain.dto.UpdateTagDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagFormDetailVo;
 import com.mengze.domain.vo.TagVo;
@@ -64,5 +65,14 @@ public class TagController
     public ResponseResult addTag(@RequestBody AddTagDto addTagDto)
     {
         return adminTagService.addTag(addTagDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "修改标签")
+    @ApiOperation(value = "修改标签接口", notes = "修改标签")
+    @ApiImplicitParam(name = "id", value = "标签ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateTag(@PathVariable Long id,@RequestBody UpdateTagDto updateTagDto)
+    {
+        return adminTagService.updateTag(id, updateTagDto);
     }
 }
