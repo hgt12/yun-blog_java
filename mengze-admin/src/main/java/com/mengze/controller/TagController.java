@@ -75,4 +75,13 @@ public class TagController
     {
         return adminTagService.updateTag(id, updateTagDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除标签(逻辑删除)")
+    @ApiOperation(value = "删除标签接口（批量逻辑删除）", notes = "删除标签，支持批量删除")
+    @ApiImplicitParam(name = "ids", value = "标签id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteTag(@PathVariable Long[] ids)
+    {
+        return adminTagService.deleteTag(ids);
+    }
 }

@@ -9,11 +9,13 @@ import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.dto.UpdateTagDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.ArticleTag;
+import com.mengze.domain.entity.Category;
 import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.AdminTagListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagFormDetailVo;
 import com.mengze.domain.vo.TagOptionVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.AdminTagService;
 import com.mengze.service.ArticleService;
@@ -153,6 +155,61 @@ public class AdminTagServiceImpl implements AdminTagService
         //更新标签信息
         Tag tag = BeanCopyUtils.copyBean(updateTagDto, Tag.class);
         tagService.updateById(tag);
+
+        return ResponseResult.okResult();
+    }
+
+    //批量删除标签 （逻辑删除）
+    @Override
+    public ResponseResult deleteTag(Long[] ids)
+    {
+        //获取标签id
+        List<Long> tagIdList =List.of(ids);
+
+        //收集所有有文章的标签信息
+        StringBuilder errorMsg = new StringBuilder();
+
+        //检查每个标签下是否有文章
+        for (Long tagId : tagIdList)
+        {
+            // 通过article_tag关联表查询该标签关联的文章ID列表
+            LambdaQueryWrapper<ArticleTag> articleTagQueryWrapper = new LambdaQueryWrapper<>();
+            articleTagQueryWrapper.eq(ArticleTag::getTagId, tagId);
+            List<ArticleTag> articleTags = articleTagMapper.selectList(articleTagQueryWrapper);
+
+            if (!articleTags.isEmpty())
+            {
+                // 获取关联的文章ID列表
+                List<Long> articleIds = articleTags.stream()
+                        .map(ArticleTag::getArticleId)
+                        .collect(Collectors.toList());
+
+                // 查询这些文章中未删除的数量
+                LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
+                articleQueryWrapper.in(Article::getId, articleIds)
+                        .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+                long articleCount = articleService.count(articleQueryWrapper);
+
+                if (articleCount > 0)
+                {
+                    //如果该标签下有文章，收集错误信息
+                    Tag tag = tagService.getById(tagId);
+                    String tagName = tag != null ? tag.getName() : "ID:" + tagId;
+                    if (!errorMsg.isEmpty()) {
+                        errorMsg.append("; ");
+                    }
+                    errorMsg.append("【").append(tagName).append("】下存在 ").append(articleCount).append(" 篇文章");
+                }
+            }
+        }
+
+        //返回错误信息
+        if (!errorMsg.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg.toString() + "，无法删除");
+        }
+
+        //根据标签id列表删除标签
+        tagService.removeByIds(tagIdList);
 
         return ResponseResult.okResult();
     }

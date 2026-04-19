@@ -22,4 +22,6 @@ public interface AdminTagService {
     ResponseResult addTag(AddTagDto addTagDto);
 
     ResponseResult updateTag(Long id, UpdateTagDto updateTagDto);
+
+    ResponseResult deleteTag(Long[] ids);
 }
