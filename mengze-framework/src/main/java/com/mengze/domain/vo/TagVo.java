@@ -20,6 +20,9 @@ public class TagVo
     @ApiModelProperty(value = "标签名")
     private String name;
 
+    @ApiModelProperty(value = "标签状态")
+    private String status;
+
     @ApiModelProperty(value = "文章数量")
     private Integer articleCount;
 

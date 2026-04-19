@@ -16,12 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "分类列表请求对象")
 public class CategoryListDto {
-    
-    @ApiModelProperty(value = "分类ID（更新时必填）", example = "1")
-    private Long id;
-    
-    @ApiModelProperty(value = "分类名称", required = true, example = "Java")
-    private String name;
 
     @ApiModelProperty(value = "状态", example = "0")
     private String status;

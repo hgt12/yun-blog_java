@@ -30,6 +30,9 @@ public class AdminPostsListVo
     @ApiModelProperty(value = "所属分类名")
     private String categoryName;
 
+    @ApiModelProperty(value = "所属分类状态")
+    private String categoryStatus;
+
     @ApiModelProperty(value = "访问量")
     private Long viewCount;
 

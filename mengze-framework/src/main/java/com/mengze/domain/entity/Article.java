@@ -40,6 +40,9 @@ public class Article extends Model<Article> {
     //分类名(因为这个字段在数据库中不存在，使用 @TableField(exist = false) 来标注出来)
     @TableField(exist = false)
     private String categoryName;
+    //分类状态(非数据库字段)
+    @TableField(exist = false)
+    private String categoryStatus;
     //浏览量
     private Long viewCount;
     //是否置顶（0-否，1-是）
