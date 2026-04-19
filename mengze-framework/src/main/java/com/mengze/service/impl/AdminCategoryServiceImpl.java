@@ -174,6 +174,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //获取分类id列表
         List<Long> idList = List.of(ids);
 
+        //收集所有有文章的分类信息
+        StringBuilder errorMsg = new StringBuilder();
+
         //检查每个分类下是否有文章
         for (Long categoryId : idList) {
             LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
@@ -183,11 +186,19 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
             long articleCount = articleService.count(articleQueryWrapper);
 
             if (articleCount > 0) {
-                //如果该分类下有文章，返回错误信息
+                //如果该分类下有文章，收集错误信息
                 Category category = categoryService.getById(categoryId);
                 String categoryName = category != null ? category.getName() : "ID:" + categoryId;
-                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类【" + categoryName + "】下存在 " + articleCount + " 篇文章，无法删除");
+                if (!errorMsg.isEmpty()) {
+                    errorMsg.append("; ");
+                }
+                errorMsg.append("【").append(categoryName).append("】下存在 ").append(articleCount).append(" 篇文章");
             }
+        }
+
+        //如果有分类下存在文章，返回所有错误信息
+        if (!errorMsg.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg.toString() + "，无法删除");
         }
 
         //根据分类id列表删除分类
