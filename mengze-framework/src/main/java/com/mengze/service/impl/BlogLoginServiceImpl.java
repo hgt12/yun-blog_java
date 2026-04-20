@@ -29,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 // 登录认证
 @Service
@@ -66,8 +67,8 @@ public class BlogLoginServiceImpl implements BlogLoginService
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
         String userId = loginUser.getSysUser().getId().toString();
         String jwt = JwtUtil.createJWT(userId);//传数据进去jwt加密,最终生成一个字符串类型的jwt
-        //把用户信息存入Redis (格式为 blogLogin：id)
-        redisCache.setCacheObject("blogLogin:" + userId, loginUser);
+        //把用户信息存入Redis (格式为 blogLogin：id)，设置过期时间与JWT一致
+        redisCache.setCacheObject("blogLogin:" + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
 
         //把token和userInfo封装，返回
         //把User转化成UserInfoVo
@@ -205,8 +206,8 @@ public class BlogLoginServiceImpl implements BlogLoginService
         String userId = sysUser.getId().toString();
         String jwt = JwtUtil.createJWT(userId);
         
-        // 把用户信息存入Redis
-        redisCache.setCacheObject("bloglogin:" + userId, loginUser);
+        // 把用户信息存入Redis，设置过期时间与JWT一致
+        redisCache.setCacheObject("blogLogin:" + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
         
         // 封装返回数据
         SysUserInfoVo sysUserInfoVo = BeanCopyUtils.copyBean(sysUser, SysUserInfoVo.class);

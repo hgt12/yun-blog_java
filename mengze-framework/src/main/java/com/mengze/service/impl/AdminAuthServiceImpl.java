@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 // 后台管理系统登录认证
 @Service
@@ -85,8 +86,8 @@ public class AdminAuthServiceImpl implements AdminAuthService
         // 生成刷新令牌（7天）
         String refreshToken = JwtUtil.createJWT(userId, JwtUtil.JWT_REFRESH_TTL);
         
-        //把用户信息存入Redis (格式为 adminLogin:id，用于后台管理系统)
-        redisCache.setCacheObject("adminLogin:" + userId, loginUser);
+        //把用户信息存入Redis (格式为 adminLogin:id，用于后台管理系统)，设置过期时间与刷新Token一致
+        redisCache.setCacheObject("adminLogin:" + userId, loginUser, JwtUtil.JWT_REFRESH_TTL.intValue(), TimeUnit.MILLISECONDS);
         
         // 构建响应对象
         AdminAuthVo vo = new AdminAuthVo(token, refreshToken, JwtUtil.JWT_TTL / 1000);
@@ -122,7 +123,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
             String base64Img = CaptchaUtil.generateImageBase64(code);
             
             // 将验证码存入Redis，有效期2分钟
-            redisCache.setCacheObject("captcha:" + captchaId, code, 2, java.util.concurrent.TimeUnit.MINUTES);
+            redisCache.setCacheObject("captcha:" + captchaId, code, 2, TimeUnit.MINUTES);
             
             // 在控制台输出验证码（方便开发调试）
             System.out.println("========================================");
