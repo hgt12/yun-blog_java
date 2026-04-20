@@ -45,6 +45,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问
                 .antMatchers("/auth/login").anonymous()
+                // 对于刷新Token接口不需要认证就能访问
+                .antMatchers("/auth/refreshToken").anonymous()
                 // 对于获取图形验证码接口不需要认证就能访问
                 .antMatchers("/auth/captcha").anonymous()
                 // 对于获取忘记密码的验证码接口不需要认证就能访问
