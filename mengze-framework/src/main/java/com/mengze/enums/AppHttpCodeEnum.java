@@ -9,6 +9,7 @@ public enum AppHttpCodeEnum {
     SUCCESS(200, "操作成功"),
     // 登录
     NEED_LOGIN(401, "需要登录后操作"),
+    REFRESH_TOKEN_INVALID(402, "刷新令牌无效或过期"),
     NO_OPERATOR_AUTH(403, "无权限操作"),
     SYSTEM_ERROR(500, "出现错误"),
     USERNAME_EXIST(1001, "用户名已存在"),
@@ -34,7 +35,7 @@ public enum AppHttpCodeEnum {
     VERIFICATION_CODE_ERROR(1021, "验证码错误或已过期"),
     SELECT_ERROR(1022, "未查到信息"),
     CAPTCHA_ERROR(1023, "图形验证码错误"),
-    CAPTCHA_EXPIRED(1024, "图形验证码已过期")
+    CAPTCHA_EXPIRED(1024, "图形验证码已过期"),
     ;
     int code;
     String msg;

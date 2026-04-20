@@ -147,7 +147,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
     {
         // 校验refreshToken是否为空
         if (!StringUtils.hasText(refreshToken)) {
-            throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+            throw new SystemException(AppHttpCodeEnum.REFRESH_TOKEN_INVALID);
         }
         
         try {
@@ -157,7 +157,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
             // 从Redis中获取用户信息，验证用户是否仍然登录
             LoginUser loginUser = redisCache.getCacheObject("adminLogin:" + userId);
             if (Objects.isNull(loginUser)) {
-                throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+                throw new SystemException(AppHttpCodeEnum.REFRESH_TOKEN_INVALID);
             }
             
             // 生成新的访问令牌（1小时）
@@ -170,7 +170,8 @@ public class AdminAuthServiceImpl implements AdminAuthService
             AdminAuthVo vo = new AdminAuthVo(newToken, newRefreshToken, JwtUtil.JWT_TTL / 1000);
             return ResponseResult.okResult(vo);
         } catch (Exception e) {
-            throw new SystemException(AppHttpCodeEnum.NEED_LOGIN);
+            // refreshToken解析失败（过期或非法）
+            throw new SystemException(AppHttpCodeEnum.REFRESH_TOKEN_INVALID);
         }
     }
 }
