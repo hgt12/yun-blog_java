@@ -248,7 +248,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //查询这些文章的标签关联
         LambdaQueryWrapper<ArticleTag> articleTagWrapper = new LambdaQueryWrapper<>();
-        articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
+        if (!articleIds.isEmpty()) {
+            articleTagWrapper.in(ArticleTag::getArticleId, articleIds);
+        }
         List<ArticleTag> articleTagList = articleTagMapper.selectList(articleTagWrapper);
 
         //收集所有标签ID
@@ -259,9 +261,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //查询标签详情
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-        tagWrapper.in(Tag::getId, tagIds)
-                .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
-                .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        if (!tagIds.isEmpty()) {
+            tagWrapper.in(Tag::getId, tagIds)
+                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
+                    .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        }
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 
         //转换为TagVo的Map，key为tagId
@@ -307,9 +311,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         //查询标签详情
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
-        tagWrapper.in(Tag::getId, tagIds)
-                .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
-                .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        if (!tagIds.isEmpty()) {
+            tagWrapper.in(Tag::getId, tagIds)
+                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
+                    .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+        }
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 
         //转换为TagVo列表

@@ -190,8 +190,10 @@ public class AdminTagServiceImpl implements AdminTagService
 
                 // 查询这些文章中未删除的数量
                 LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-                articleQueryWrapper.in(Article::getId, articleIds)
-                        .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+                if (!articleIds.isEmpty()) {
+                    articleQueryWrapper.in(Article::getId, articleIds)
+                            .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+                }
                 long articleCount = articleService.count(articleQueryWrapper);
 
                 if (articleCount > 0)
