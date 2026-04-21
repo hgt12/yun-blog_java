@@ -73,6 +73,27 @@ public class AdminPostsServiceImpl implements AdminPostsService
             queryWrapper.eq(Article::getCategoryId, postsListDto.getCategoryId());
         }
 
+        //根据标签id筛选
+        if (Objects.nonNull(postsListDto.getTagId()) && postsListDto.getTagId() > 0) {
+            //先查询该标签下的所有文章ID
+            LambdaQueryWrapper<ArticleTag> articleTagQueryWrapper = new LambdaQueryWrapper<>();
+            articleTagQueryWrapper.eq(ArticleTag::getTagId, postsListDto.getTagId());
+            List<ArticleTag> articleTags = articleTagMapper.selectList(articleTagQueryWrapper);
+            
+            //提取文章ID列表
+            List<Long> articleIds = articleTags.stream()
+                    .map(ArticleTag::getArticleId)
+                    .collect(Collectors.toList());
+
+            //如果该标签下没有文章，返回空结果
+            if (articleIds.isEmpty()) {
+                return ResponseResult.okResult(new PageVo(List.of(), 0L));
+            }
+
+            //根据文章ID列表筛选
+            queryWrapper.in(Article::getId, articleIds);
+        }
+
         //根据状态筛选
         if (StringUtils.hasText(postsListDto.getStatus())) {
             queryWrapper.eq(Article::getStatus, postsListDto.getStatus());

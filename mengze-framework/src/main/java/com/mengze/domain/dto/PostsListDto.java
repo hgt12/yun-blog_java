@@ -23,6 +23,9 @@ public class PostsListDto
     @ApiModelProperty(value = "分类id", example = "1")
     private Long categoryId;
 
+    @ApiModelProperty(value = "标签id", example = "1")
+    private Long tagId;
+
     @ApiModelProperty(value = "文章状态（已发布，草稿）", example = "草稿")
     private String status;
 
