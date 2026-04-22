@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -318,8 +319,20 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 
-        //转换为TagVo列表
-        List<TagVo> tagVos = BeanCopyUtils.copyBeanList(tags, TagVo.class);
+        //转换为TagVo的Map，key为tagId
+        Map<Long, TagVo> tagVoMap = tags.stream()
+                .collect(Collectors.toMap(
+                        Tag::getId,
+                        tag -> BeanCopyUtils.copyBean(tag, TagVo.class)
+                ));
+
+        //填充标签信息
+        List<TagVo> tagVos = articleTagList.stream()
+                .map(ArticleTag::getTagId)
+                .filter(tagVoMap::containsKey)
+                .map(tagVoMap::get)
+                .collect(Collectors.toList());
+
         articleDetailVo.setTags(tagVos);
     }
 }
