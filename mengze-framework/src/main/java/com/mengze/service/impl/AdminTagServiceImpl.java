@@ -60,16 +60,14 @@ public class AdminTagServiceImpl implements AdminTagService
             tagQueryWrapper.like(Tag::getName, tagListDto.getKeywords());
         }
 
-        //只查询未删除的标签
-        tagQueryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
-
         //根据状态筛选
         if (StringUtils.hasText(tagListDto.getStatus())) {
             tagQueryWrapper.eq(Tag::getStatus, tagListDto.getStatus());
         }
 
-        //按创建时间降序排序
-        tagQueryWrapper.orderByDesc(Tag::getCreateTime);
+        //先以排序序号升序排序和序号相同时按创建时间降序排序
+        tagQueryWrapper.orderByAsc(Tag::getSort)
+                       .orderByDesc(Tag::getCreateTime);
 
         //分页查询
         Page<Tag> page = new Page<>(pageNum, pageSize);

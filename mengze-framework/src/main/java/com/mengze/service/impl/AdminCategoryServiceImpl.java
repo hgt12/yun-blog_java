@@ -49,16 +49,14 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
             categoryQueryWrapper.like(Category::getName, categoryListDto.getKeywords());
         }
 
-        //只查询未删除的分类
-        categoryQueryWrapper.eq(Category::getDelFlag, SystemConstants.NOT_DELETED);
-
         //根据状态筛选
         if (StringUtils.hasText(categoryListDto.getStatus())) {
             categoryQueryWrapper.eq(Category::getStatus, categoryListDto.getStatus());
         }
 
-        //以创建时间降序
-        categoryQueryWrapper.orderByDesc(Category::getCreateTime);
+        //先以排序序号升序排序和序号相同时按创建时间降序排序
+        categoryQueryWrapper.orderByAsc(Category::getSort)
+                            .orderByDesc(Category::getCreateTime);
 
         //分页查询
         Page<Category> page = new Page<>(pageNum, pageSize);
