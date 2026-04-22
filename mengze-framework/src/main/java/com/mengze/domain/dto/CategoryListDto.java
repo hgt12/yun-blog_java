@@ -20,9 +20,6 @@ public class CategoryListDto {
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
-    @ApiModelProperty(value = "分类ID列表", required = true, example = "[1,2,3]")
-    private List<Long> ids;
-
     @ApiModelProperty(value = "关键字（用于模糊搜索分类名称）", example = "Vue")
     private String keywords;
 }

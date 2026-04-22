@@ -17,9 +17,6 @@ import java.util.List;
 @ApiModel(description = "标签操作请求对象")
 public class TagListDto {
 
-    @ApiModelProperty(value = "标签ID列表", required = true, example = "[1,2,3]")
-    private List<Long> ids;
-
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
