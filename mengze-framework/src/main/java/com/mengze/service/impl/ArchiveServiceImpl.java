@@ -31,7 +31,6 @@ public class ArchiveServiceImpl implements ArchiveService
         // 构建查询条件：查询所有已发布的文章，按创建时间倒序，查询分类状态正常的文章（使用子查询）
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL)
-                .eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
                 .orderByDesc(Article::getCreateTime)
                 .inSql(Article::getCategoryId,
                         "SELECT id FROM category WHERE status = '0' AND del_flag = '0'");

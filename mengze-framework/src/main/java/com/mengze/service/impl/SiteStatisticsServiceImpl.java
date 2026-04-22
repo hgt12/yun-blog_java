@@ -60,24 +60,21 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         Integer cachedVisitors = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
         long totalVisitors = cachedVisitors != null ? cachedVisitors.longValue() : 0L;
 
-        //查询文章总数（已发布且未删除）
+        //查询文章总数
         int articleCount = (int) articleService.count(
                 new LambdaQueryWrapper<Article>()
                         .eq(Article::getStatus, SystemConstants.STATUS_NORMAL)
-                        .eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
         );
 
-        //查询分类总数（正常状态且未删除）
+        //查询分类总数
         int categoryCount = categoryMapper.selectCount(
                 new LambdaQueryWrapper<Category>()
                         .eq(Category::getStatus, SystemConstants.STATUS_NORMAL)
-                        .eq(Category::getDelFlag, SystemConstants.NOT_DELETED)
         ).intValue();
 
-        //查询标签总数（未删除）
+        //查询标签总数
         int tagCount = tagMapper.selectCount(
                 new LambdaQueryWrapper<Tag>()
-                        .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED)
         ).intValue();
 
         SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors, articleCount, categoryCount, tagCount);

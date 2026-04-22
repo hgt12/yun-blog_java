@@ -73,10 +73,9 @@ public class AdminTagServiceImpl implements AdminTagService
         Page<Tag> page = new Page<>(pageNum, pageSize);
         tagService.page(page, tagQueryWrapper);
 
-        //查询所有未删除的文章
+        //查询所有文章
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
-                          .select(Article::getId);
+        articleQueryWrapper.select(Article::getId);
         List<Article> validArticles = articleService.list(articleQueryWrapper);
         Set<Long> validArticleIds = validArticles.stream()
                 .map(Article::getId)
@@ -110,9 +109,8 @@ public class AdminTagServiceImpl implements AdminTagService
         //获取标签id
         LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
 
-        //查询未删除且状态正常的标签
-        queryWrapper.eq(Tag::getDelFlag, SystemConstants.NOT_DELETED)
-                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
+        //查询状态正常的标签
+        queryWrapper.eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
                     .orderByDesc(Tag::getId);
 
         List<Tag> tags = tagService.list(queryWrapper);
@@ -186,11 +184,10 @@ public class AdminTagServiceImpl implements AdminTagService
                         .map(ArticleTag::getArticleId)
                         .collect(Collectors.toList());
 
-                // 查询这些文章中未删除的数量
+                // 查询文章数量
                 LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
                 if (!articleIds.isEmpty()) {
-                    articleQueryWrapper.in(Article::getId, articleIds)
-                            .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+                    articleQueryWrapper.in(Article::getId, articleIds);
                 }
                 long articleCount = articleService.count(articleQueryWrapper);
 

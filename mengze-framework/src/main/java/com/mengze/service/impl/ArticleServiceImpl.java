@@ -264,8 +264,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
         if (!tagIds.isEmpty()) {
             tagWrapper.in(Tag::getId, tagIds)
-                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
-                    .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL);
         }
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 
@@ -314,8 +313,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         LambdaQueryWrapper<Tag> tagWrapper = new LambdaQueryWrapper<>();
         if (!tagIds.isEmpty()) {
             tagWrapper.in(Tag::getId, tagIds)
-                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
-                    .eq(Tag::getDelFlag, SystemConstants.NOT_DELETED);
+                    .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL);
         }
         List<Tag> tags = tagMapper.selectList(tagWrapper);
 

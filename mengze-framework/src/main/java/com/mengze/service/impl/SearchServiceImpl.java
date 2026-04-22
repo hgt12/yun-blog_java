@@ -42,7 +42,8 @@ public class SearchServiceImpl implements SearchService
      * @return 搜索结果
      */
     @Override
-    public ResponseResult search(Integer pageNum, Integer pageSize, String keyword) {
+    public ResponseResult search(Integer pageNum, Integer pageSize, String keyword)
+    {
         // 参数校验
         if (StringUtils.isBlank(keyword)) {
             return ResponseResult.okResult(new PageVo());
@@ -55,9 +56,6 @@ public class SearchServiceImpl implements SearchService
         
         // 只搜索已发布状态的文章
         queryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-        
-        // 未删除的文章
-        queryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
         
         // 在标题和内容中进行模糊匹配
         queryWrapper.and(wrapper -> 

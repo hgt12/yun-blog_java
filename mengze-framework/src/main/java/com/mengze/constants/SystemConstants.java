@@ -45,10 +45,6 @@ public class SystemConstants
      */
     public static final String BLOGGER_EMAIL = "2962933152@qq.com";
     /**
-     *  未删除标识
-     */
-    public static final String NOT_DELETED = "0";
-    /**
      *  文章预览量
      */
     public static final String ARTICLE_VIEW_COUNT = "article:viewCount";

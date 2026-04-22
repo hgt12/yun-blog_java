@@ -68,10 +68,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //封装查询结果为Vo返回
         final List<AdminCategoryListVo> categoryListVos = BeanCopyUtils.copyBeanList(categoryList, AdminCategoryListVo.class);
 
-        // 构建文章查询条件（查询未删除的文章）
+        // 构建文章查询条件
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-        articleQueryWrapper.eq(Article::getDelFlag, SystemConstants.NOT_DELETED)
-                            .select(Article::getCategoryId);
+        articleQueryWrapper.select(Article::getCategoryId);
         List<Article> articleList = articleService.list(articleQueryWrapper);
 
         //统计每个分类下的文章数量
@@ -94,9 +93,8 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //根据分类id查询出所有分类选项
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
 
-        //查询状态正常且未删除的分类
+        //查询状态正常的分类
         queryWrapper.eq(Category::getStatus, SystemConstants.STATUS_NORMAL)
-                    .eq(Category::getDelFlag, SystemConstants.NOT_DELETED)
                     .orderByDesc(Category::getId);
         //封装成一个集合
         List<Category> categoryList = categoryService.list(queryWrapper);
@@ -149,8 +147,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
             && !"0".equals(updateCategoryDto.getStatus())) {
             //统计该分类下的文章数量
             LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-            articleQueryWrapper.eq(Article::getCategoryId, id)
-                              .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+            articleQueryWrapper.eq(Article::getCategoryId, id);
             long articleCount = articleService.count(articleQueryWrapper);
 
             msg = String.format("分类【%s】已被禁用，该分类下有 %d 篇文章将不会在 前台 中显示", oldCategory.getName(), articleCount);
@@ -181,8 +178,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //检查每个分类下是否有文章
         for (Long categoryId : idList) {
             LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
-            articleQueryWrapper.eq(Article::getCategoryId, categoryId)
-                              .eq(Article::getDelFlag, SystemConstants.NOT_DELETED);
+            articleQueryWrapper.eq(Article::getCategoryId, categoryId);
 
             long articleCount = articleService.count(articleQueryWrapper);
 
