@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LinkListDto;
+import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 
 /**
@@ -12,4 +13,6 @@ import com.mengze.domain.vo.PageVo;
 public interface AdminLinkService {
 
     ResponseResult<PageVo> linkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto);
+
+    ResponseResult<LinkFormDetailVo> linkFormDetail(Long id);
 }

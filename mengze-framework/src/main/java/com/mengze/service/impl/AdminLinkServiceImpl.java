@@ -6,6 +6,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LinkListDto;
 import com.mengze.domain.entity.Link;
 import com.mengze.domain.vo.AdminLinkListVo;
+import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminLinkService;
 import com.mengze.service.LinkService;
@@ -57,5 +58,19 @@ public class AdminLinkServiceImpl implements AdminLinkService
         PageVo pageVo = new PageVo(linkVo, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取友链表单数据
+    @Override
+    public ResponseResult<LinkFormDetailVo> linkFormDetail(Long id)
+    {
+        //获取友链id
+        Link link = linkService.getById(id);
+
+        //封装为Vo
+        LinkFormDetailVo linkFormDetailVo = BeanCopyUtils.copyBean(link, LinkFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(linkFormDetailVo);
     }
 }

@@ -50,7 +50,7 @@ public class TagController
 
     @GetMapping("/{id}/form")
     @SystemLog(businessName = "获取标签表单数据")
-    @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑分类详情")
+    @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑标签详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "标签id", dataType = "long", paramType = "path")
     })

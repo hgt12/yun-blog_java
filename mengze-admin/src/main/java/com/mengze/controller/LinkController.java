@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LinkListDto;
+import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.LinkVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminLinkService;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,5 +39,16 @@ public class LinkController
     public ResponseResult<PageVo> linkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
     {
         return adminLinkService.linkList(pageNum, pageSize, linkListDto);
+    }
+
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取友链表单数据")
+    @ApiOperation(value = "获取友链表单数据", notes = "获取友链表单数据，用于编辑友链详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "友链id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<LinkFormDetailVo> linkFormDetail(@PathVariable Long id)
+    {
+        return adminLinkService.linkFormDetail(id);
     }
 }
