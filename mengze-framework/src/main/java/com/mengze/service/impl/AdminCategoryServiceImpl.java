@@ -123,6 +123,15 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     @Override
     public ResponseResult addCategory(AddCategoryDto addCategoryDto)
     {
+        // 检查分类名称是否已存在
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Category::getName, addCategoryDto.getName());
+        long count = categoryService.count(queryWrapper);
+        
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类名称已存在，请勿重复添加！");
+        }
+        
         //添加分类
         Category category = BeanCopyUtils.copyBean(addCategoryDto, Category.class);
         categoryService.save(category);
@@ -136,6 +145,16 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     {
         //获取分类id
         updateCategoryDto.setId(id);
+
+        // 检查分类名称是否与其他分类重复（排除自己）
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Category::getName, updateCategoryDto.getName())
+                    .ne(Category::getId, id); // 排除当前分类
+        long count = categoryService.count(queryWrapper);
+        
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类名称已存在，请修改后重试！");
+        }
 
         //获取旧的分类信息
         Category oldCategory = categoryService.getById(id);

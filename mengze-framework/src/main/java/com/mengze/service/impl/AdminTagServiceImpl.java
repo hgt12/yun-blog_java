@@ -138,6 +138,15 @@ public class AdminTagServiceImpl implements AdminTagService
     @Override
     public ResponseResult addTag(AddTagDto addTagDto)
     {
+        // 检查标签名称是否已存在
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Tag::getName, addTagDto.getName());
+        Long count = tagService.count(queryWrapper);
+        
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "标签名称已存在，请勿重复添加！");
+        }
+        
         //将标签拷贝到Bean再保存标签
         Tag tag = BeanCopyUtils.copyBean(addTagDto, Tag.class);
         tagService.save(tag);
@@ -151,6 +160,16 @@ public class AdminTagServiceImpl implements AdminTagService
     {
         //获取标签id
         updateTagDto.setId(id);
+
+        // 检查标签名称是否与其他标签重复（排除自己）
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Tag::getName, updateTagDto.getName())
+                    .ne(Tag::getId, id); // 排除当前标签
+        long count = tagService.count(queryWrapper);
+        
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "标签名称已存在，请修改后重试！");
+        }
 
         //更新标签信息
         Tag tag = BeanCopyUtils.copyBean(updateTagDto, Tag.class);
