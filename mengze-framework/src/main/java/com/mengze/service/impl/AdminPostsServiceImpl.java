@@ -12,6 +12,7 @@ import com.mengze.domain.entity.Category;
 import com.mengze.domain.vo.*;
 import com.mengze.domain.entity.ArticleTag;
 import com.mengze.domain.entity.Tag;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
@@ -281,6 +282,11 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Transactional
     public ResponseResult deletePosts(Long[] ids)
     {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的文章");
+        }
+
         List<Long> idList = List.of(ids);
 
         // 遍历每个文章ID，将相关图片移动到deleted文件夹

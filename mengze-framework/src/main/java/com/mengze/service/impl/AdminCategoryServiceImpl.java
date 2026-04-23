@@ -188,6 +188,11 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     @Override
     public ResponseResult deleteCategory(Long[] ids)
     {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的分类");
+        }
+
         //获取分类id列表
         List<Long> idList = List.of(ids);
 

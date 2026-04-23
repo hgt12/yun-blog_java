@@ -182,6 +182,11 @@ public class AdminTagServiceImpl implements AdminTagService
     @Override
     public ResponseResult deleteTag(Long[] ids)
     {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的标签");
+        }
+
         //获取标签id
         List<Long> tagIdList =List.of(ids);
 
