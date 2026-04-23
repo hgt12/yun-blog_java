@@ -3,11 +3,13 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
 import com.mengze.domain.entity.Link;
 import com.mengze.domain.vo.AdminLinkListVo;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminLinkService;
 import com.mengze.service.LinkService;
 import com.mengze.utils.BeanCopyUtils;
@@ -72,5 +74,24 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
         //返回
         return ResponseResult.okResult(linkFormDetailVo);
+    }
+
+    //添加友链
+    @Override
+    public ResponseResult addLink(AddLinkDto addLinkDto)
+    {
+        // 检查站点地址是否已存在
+        LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Link::getAddress, addLinkDto.getAddress());
+        long count = linkService.count(queryWrapper);
+        
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该站点地址已存在，请勿重复添加！");
+        }
+        
+        // 添加友链
+        Link link = BeanCopyUtils.copyBean(addLinkDto, Link.class);
+        linkService.save(link);
+        return ResponseResult.okResult();
     }
 }

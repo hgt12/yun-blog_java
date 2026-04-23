@@ -35,11 +35,11 @@ public class GlobalExceptionHandler
         return ResponseResult.errorResult(AppHttpCodeEnum.FILE_SIZE_ERROR);
     }
 
-    //处理数据库唯一键值冲突
+    //处理数据库重复数据冲突
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseResult<Void> handleDuplicateKeyException(DuplicateKeyException e)
     {
-        log.error("数据库唯一键冲突", e);
+        log.error("数据库数据重复！！！", e);
 
         String errorMsg = e.getCause().getMessage();
         String message = "数据已存在，请检查后重试";
@@ -59,6 +59,11 @@ public class GlobalExceptionHandler
                     message = "名称 '" + duplicateValue + "' 已存在！";
                 } else if (keyName.contains("uk_username") || keyName.contains("username")) {
                     message = "用户名 '" + duplicateValue + "' 已存在！";
+                } else if (keyName.contains("uk_address") || keyName.contains("address")) {
+                    message = "站点地址 '" + duplicateValue + "' 已存在！";
+                } else {
+                    // 通用处理：提取字段名
+                    message = "数据 '" + duplicateValue + "' 已存在，请勿重复添加！";
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.LinkVo;
@@ -12,10 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 后台友链管理接口
@@ -50,5 +48,13 @@ public class LinkController
     public ResponseResult<LinkFormDetailVo> linkFormDetail(@PathVariable Long id)
     {
         return adminLinkService.linkFormDetail(id);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增友链")
+    @ApiOperation(value = "新增友链接口", notes = "新增友链")
+    public ResponseResult addLink(@RequestBody AddLinkDto addLinkDto)
+    {
+        return adminLinkService.addLink(addLinkDto);
     }
 }
