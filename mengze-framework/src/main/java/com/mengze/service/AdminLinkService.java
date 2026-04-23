@@ -21,4 +21,6 @@ public interface AdminLinkService {
     ResponseResult addLink(AddLinkDto addLinkDto);
 
     ResponseResult updateLink(Long id, UpdateLinkDto updateLinkDto);
+
+    ResponseResult deleteLink(Long[] ids);
 }

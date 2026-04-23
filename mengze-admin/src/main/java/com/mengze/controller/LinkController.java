@@ -67,4 +67,13 @@ public class LinkController
     {
         return adminLinkService.updateLink(id, updateLinkDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除友链(逻辑删除)")
+    @ApiOperation(value = "删除友链接口（批量逻辑删除）", notes = "删除友链，支持批量删除")
+    @ApiImplicitParam(name = "ids", value = "友链id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteLink(@PathVariable Long[] ids)
+    {
+        return adminLinkService.deleteLink(ids);
+    }
 }

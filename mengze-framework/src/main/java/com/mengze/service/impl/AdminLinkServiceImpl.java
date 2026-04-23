@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -117,6 +118,24 @@ public class AdminLinkServiceImpl implements AdminLinkService
         //更新友链信息
         Link link = BeanCopyUtils.copyBean(updateLinkDto, Link.class);
         linkService.updateById(link);
+
+        return ResponseResult.okResult();
+    }
+
+    //删除友链
+    @Override
+    public ResponseResult deleteLink(Long[] ids)
+    {
+        // 判断是否有id
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的友链");
+        }
+
+        //获取友链id列表
+        //因为友链不会与其他管理相关联
+        //所以不需要进行像分类和标签删除功能的那些繁琐的检索
+        List<Long> linkIdList = List.of(ids);
+        linkService.removeByIds(linkIdList);
 
         return ResponseResult.okResult();
     }
