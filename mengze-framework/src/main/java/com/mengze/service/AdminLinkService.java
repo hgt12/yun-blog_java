@@ -3,6 +3,7 @@ package com.mengze.service;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
+import com.mengze.domain.dto.UpdateLinkDto;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 
@@ -18,4 +19,6 @@ public interface AdminLinkService {
     ResponseResult<LinkFormDetailVo> getLinkFormDetail(Long id);
 
     ResponseResult addLink(AddLinkDto addLinkDto);
+
+    ResponseResult updateLink(Long id, UpdateLinkDto updateLinkDto);
 }

@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
+import com.mengze.domain.dto.UpdateLinkDto;
 import com.mengze.domain.entity.Link;
+import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.AdminLinkListVo;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -94,4 +96,29 @@ public class AdminLinkServiceImpl implements AdminLinkService
         linkService.save(link);
         return ResponseResult.okResult();
     }
+
+    //更新友链
+    @Override
+    public ResponseResult updateLink(Long id, UpdateLinkDto updateLinkDto)
+    {
+        //获取友链id
+        updateLinkDto.setId(id);
+
+        // 检查友链站点地址是否与其他友链重复（排除自己）
+        LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Link::getAddress, updateLinkDto.getName())
+                .ne(Link::getId, id); // 排除当前的站点地址
+        long count = linkService.count(queryWrapper);
+
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "站点地址已存在，请修改后重试！");
+        }
+
+        //更新友链信息
+        Link link = BeanCopyUtils.copyBean(updateLinkDto, Link.class);
+        linkService.updateById(link);
+
+        return ResponseResult.okResult();
+    }
+
 }

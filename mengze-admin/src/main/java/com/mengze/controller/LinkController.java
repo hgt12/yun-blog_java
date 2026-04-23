@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
+import com.mengze.domain.dto.UpdateLinkDto;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.LinkVo;
 import com.mengze.domain.vo.PageVo;
@@ -56,5 +57,14 @@ public class LinkController
     public ResponseResult addLink(@RequestBody AddLinkDto addLinkDto)
     {
         return adminLinkService.addLink(addLinkDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "修改友链")
+    @ApiOperation(value = "修改友链接口", notes = "修改友链")
+    @ApiImplicitParam(name = "id", value = "友链ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateLink(@PathVariable Long id, @RequestBody UpdateLinkDto updateLinkDto)
+    {
+        return adminLinkService.updateLink(id, updateLinkDto);
     }
 }
