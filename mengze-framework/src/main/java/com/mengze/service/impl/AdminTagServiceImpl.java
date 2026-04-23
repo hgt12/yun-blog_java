@@ -50,7 +50,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
     //获取标签列表
     @Override
-    public ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
+    public ResponseResult getTagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
         //构建标签查询条件
         LambdaQueryWrapper<Tag> tagQueryWrapper = new LambdaQueryWrapper<>();
@@ -123,7 +123,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
     //获取标签表单数据，用于编辑标签信息
     @Override
-    public ResponseResult<TagFormDetailVo> tagFormDetail(Long id)
+    public ResponseResult<TagFormDetailVo> getTagFormDetail(Long id)
     {
         //获取标签id，查询标签
         Tag tag = tagService.getById(id);
@@ -166,7 +166,7 @@ public class AdminTagServiceImpl implements AdminTagService
         queryWrapper.eq(Tag::getName, updateTagDto.getName())
                     .ne(Tag::getId, id); // 排除当前标签
         long count = tagService.count(queryWrapper);
-        
+
         if (count > 0) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "标签名称已存在，请修改后重试！");
         }

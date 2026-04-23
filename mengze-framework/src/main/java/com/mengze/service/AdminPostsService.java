@@ -13,9 +13,9 @@ import com.mengze.domain.vo.PostsFormDetailVo;
  */
 public interface AdminPostsService {
 
-    ResponseResult postsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto);
+    ResponseResult getPostsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto);
 
-    ResponseResult<PostsFormDetailVo> postsDetail(Long id);
+    ResponseResult<PostsFormDetailVo> getPostsDetail(Long id);
 
     ResponseResult addPosts(AddPostsDto postsDto);
     

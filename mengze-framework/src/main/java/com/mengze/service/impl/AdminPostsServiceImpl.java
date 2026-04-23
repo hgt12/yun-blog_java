@@ -63,7 +63,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
     //获取文章列表
     @Override
-    public ResponseResult postsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
+    public ResponseResult getPostsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
     {
         //构建查询条件
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
@@ -143,7 +143,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
     //获取文章详情信息
     @Override
-    public ResponseResult<PostsFormDetailVo> postsDetail(Long id)
+    public ResponseResult<PostsFormDetailVo> getPostsDetail(Long id)
     {
         //先查询文章id
         Article article = articleService.getById(id);

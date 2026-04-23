@@ -13,11 +13,11 @@ import com.mengze.domain.vo.TagFormDetailVo;
  */
 public interface AdminTagService {
 
-    ResponseResult tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto);
+    ResponseResult getTagList(Integer pageNum, Integer pageSize, TagListDto tagListDto);
 
     ResponseResult getTagOptions();
 
-    ResponseResult<TagFormDetailVo> tagFormDetail(Long id);
+    ResponseResult<TagFormDetailVo> getTagFormDetail(Long id);
 
     ResponseResult addTag(AddTagDto addTagDto);
 

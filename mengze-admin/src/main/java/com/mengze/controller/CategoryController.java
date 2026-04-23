@@ -32,9 +32,9 @@ public class CategoryController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult categoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
+    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
     {
-        return adminCategoryService.categoryList(pageNum, pageSize, categoryListDto);
+        return adminCategoryService.getCategoryList(pageNum, pageSize, categoryListDto);
     }
 
     @GetMapping("/options")
@@ -51,9 +51,9 @@ public class CategoryController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "分类id", dataType = "long", paramType = "path")
     })
-    public ResponseResult<CategoryFormDetailVo> categoryFormDetail(@PathVariable Long id)
+    public ResponseResult<CategoryFormDetailVo> getCategoryFormDetail(@PathVariable Long id)
     {
-        return adminCategoryService.categoryFormDetail(id);
+        return adminCategoryService.getCategoryFormDetail(id);
     }
 
     @PostMapping

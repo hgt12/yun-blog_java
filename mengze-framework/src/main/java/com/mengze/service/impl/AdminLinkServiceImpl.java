@@ -32,7 +32,7 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
     //获取友链列表
     @Override
-    public ResponseResult linkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
+    public ResponseResult getLinkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
     {
         //构建查询条件
         LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
@@ -64,7 +64,7 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
     //获取友链表单数据
     @Override
-    public ResponseResult<LinkFormDetailVo> linkFormDetail(Long id)
+    public ResponseResult<LinkFormDetailVo> getLinkFormDetail(Long id)
     {
         //获取友链id
         Link link = linkService.getById(id);

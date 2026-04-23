@@ -36,9 +36,9 @@ public class PostsController
             @ApiImplicitParam(name = "status", value = "文章状态", dataType = "string", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult<ArticleListVo> postsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
+    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
     {
-        return adminPostsService.postsList(pageNum, pageSize, postsListDto);
+        return adminPostsService.getPostsList(pageNum, pageSize, postsListDto);
     }
 
     @GetMapping("/{id}/form")
@@ -47,9 +47,9 @@ public class PostsController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "文章id", dataType = "long", paramType = "path")
     })
-    public ResponseResult<PostsFormDetailVo> postsFormDetail(@PathVariable Long id)
+    public ResponseResult<PostsFormDetailVo> getPostsFormDetail(@PathVariable Long id)
     {
-        return adminPostsService.postsDetail(id);
+        return adminPostsService.getPostsDetail(id);
     }
 
     @PostMapping

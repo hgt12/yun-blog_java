@@ -13,9 +13,9 @@ import com.mengze.domain.vo.PageVo;
  */
 public interface AdminLinkService {
 
-    ResponseResult<PageVo> linkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto);
+    ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto);
 
-    ResponseResult<LinkFormDetailVo> linkFormDetail(Long id);
+    ResponseResult<LinkFormDetailVo> getLinkFormDetail(Long id);
 
     ResponseResult addLink(AddLinkDto addLinkDto);
 }

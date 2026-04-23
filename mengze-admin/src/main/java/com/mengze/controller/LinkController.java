@@ -34,9 +34,9 @@ public class LinkController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "关键字（友链名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> linkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
+    public ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
     {
-        return adminLinkService.linkList(pageNum, pageSize, linkListDto);
+        return adminLinkService.getLinkList(pageNum, pageSize, linkListDto);
     }
 
     @GetMapping("/{id}/form")
@@ -45,9 +45,9 @@ public class LinkController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "友链id", dataType = "long", paramType = "path")
     })
-    public ResponseResult<LinkFormDetailVo> linkFormDetail(@PathVariable Long id)
+    public ResponseResult<LinkFormDetailVo> getLinkFormDetail(@PathVariable Long id)
     {
-        return adminLinkService.linkFormDetail(id);
+        return adminLinkService.getLinkFormDetail(id);
     }
 
     @PostMapping

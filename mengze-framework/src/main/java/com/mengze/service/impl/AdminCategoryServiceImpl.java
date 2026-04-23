@@ -39,7 +39,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
     //获取分类列表
     @Override
-    public ResponseResult categoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
+    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
     {
         // 构建分类查询条件
         LambdaQueryWrapper<Category> categoryQueryWrapper = new LambdaQueryWrapper<>();
@@ -107,7 +107,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
     // 获取分类表单数据
     @Override
-    public ResponseResult<CategoryFormDetailVo> categoryFormDetail(Long id)
+    public ResponseResult<CategoryFormDetailVo> getCategoryFormDetail(Long id)
     {
         //根据分类id 查询分类
         Category category = categoryService.getById(id);

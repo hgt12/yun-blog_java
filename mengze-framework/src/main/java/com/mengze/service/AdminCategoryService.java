@@ -16,9 +16,9 @@ public interface AdminCategoryService {
 
     ResponseResult<CategoryOptionVo> getCategoryOptions();
 
-    ResponseResult categoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto);
+    ResponseResult getCategoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto);
 
-    ResponseResult<CategoryFormDetailVo> categoryFormDetail(Long id);
+    ResponseResult<CategoryFormDetailVo> getCategoryFormDetail(Long id);
 
     ResponseResult addCategory(AddCategoryDto addCategoryDto);
 

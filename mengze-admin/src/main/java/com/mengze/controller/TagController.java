@@ -35,9 +35,9 @@ public class TagController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "关键字（标签名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> tagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
+    public ResponseResult<PageVo> getTagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
     {
-        return adminTagService.tagList(pageNum, pageSize, tagListDto);
+        return adminTagService.getTagList(pageNum, pageSize, tagListDto);
     }
 
     @GetMapping("/options")
@@ -54,9 +54,9 @@ public class TagController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "标签id", dataType = "long", paramType = "path")
     })
-    public ResponseResult<TagFormDetailVo> tagFormDetail(@PathVariable Long id)
+    public ResponseResult<TagFormDetailVo> getFagFormDetail(@PathVariable Long id)
     {
-        return adminTagService.tagFormDetail(id);
+        return adminTagService.getTagFormDetail(id);
     }
 
     @PostMapping
