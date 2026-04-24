@@ -66,7 +66,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         List<Category> categoryList = page.getRecords();
 
         //封装查询结果为Vo返回
-        final List<AdminCategoryListVo> categoryListVos = BeanCopyUtils.copyBeanList(categoryList, AdminCategoryListVo.class);
+        List<AdminCategoryListVo> categoryListVos = BeanCopyUtils.copyBeanList(categoryList, AdminCategoryListVo.class);
 
         // 构建文章查询条件
         LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
