@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.vo.RoutersVo;
 import com.mengze.domain.vo.SiteInfoVo;
 import com.mengze.service.SysMenuService;
 import io.swagger.annotations.Api;
@@ -27,7 +28,7 @@ public class SysMenuController
      */
     @GetMapping("/getRoutes")
     @SystemLog(businessName = "获取当前登录用户可访问的前端路由树")
-    @ApiOperation(value = "获取当前用户菜单路由树", notes = "获取当前登录用户可访问的前端路由树")
+    @ApiOperation(value = "获取当前用户菜单路由树", notes = "获取当前登录用户可访问的前端路由树", response = RoutersVo.class)
     public ResponseResult getRoutes() {
         return sysMenuService.getRoutes();
     }

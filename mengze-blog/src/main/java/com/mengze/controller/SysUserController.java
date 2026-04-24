@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
+import com.mengze.domain.vo.BloggerInfoVo;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.service.SysUserService;
 import io.swagger.annotations.Api;
@@ -52,7 +53,7 @@ public class SysUserController
     //获取博主信息
     @GetMapping("/bloggerInfo")
     @SystemLog(businessName = "查询博主信息")
-    @ApiOperation(value = "获取博主信息", notes = "获取博主的昵称和头像，用于在关于页面进行展示")
+    @ApiOperation(value = "获取博主信息", notes = "获取博主的昵称和头像，用于在关于页面进行展示", response = BloggerInfoVo.class)
     public ResponseResult getBloggerInfo()
     {
         return sysUserService.getBloggerInfo();

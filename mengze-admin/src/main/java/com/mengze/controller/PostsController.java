@@ -6,6 +6,7 @@ import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.dto.UpdatePostsDto;
 import com.mengze.domain.vo.ArticleListVo;
+import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.PostsFormDetailVo;
 import com.mengze.service.AdminPostsService;
 import io.swagger.annotations.Api;
@@ -30,7 +31,7 @@ public class PostsController
 
     @GetMapping
     @SystemLog(businessName = "后台分页查询文章列表")
-    @ApiOperation(value = "后台文章列表", notes = "分页查询文章列表，支持多条件筛选", response = ArticleListVo.class, responseContainer = "List")
+    @ApiOperation(value = "后台文章列表", notes = "分页查询文章列表，支持多条件筛选", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
@@ -45,7 +46,7 @@ public class PostsController
 
     @GetMapping("/{id}/form")
     @SystemLog(businessName = "获取文章表单数据")
-    @ApiOperation(value = "获取文章表单数据", notes = "获取文章表单详情数据")
+    @ApiOperation(value = "获取文章表单数据", notes = "获取文章表单详情数据", response = PostsFormDetailVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "文章id", dataType = "long", paramType = "path")
     })

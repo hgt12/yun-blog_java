@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.vo.WeatherNowVo;
 import com.mengze.service.WeatherService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +24,7 @@ public class WeatherController
 
     @GetMapping("/weather/now")
     @SystemLog(businessName = "获取当前天气")
-    @ApiOperation(value = "获取实时天气", notes = "根据位置获取实时天气信息，如果不传location则自动根据IP定位")
+    @ApiOperation(value = "获取实时天气", notes = "根据位置获取实时天气信息，如果不传location则自动根据IP定位", response = WeatherNowVo.class)
     public ResponseResult getWeatherNow(
             @ApiParam(value = "位置ID或经纬度，不传则自动根据IP定位")
             @RequestParam(required = false) String location,

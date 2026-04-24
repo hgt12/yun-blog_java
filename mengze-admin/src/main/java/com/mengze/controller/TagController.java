@@ -7,7 +7,7 @@ import com.mengze.domain.dto.TagListDto;
 import com.mengze.domain.dto.UpdateTagDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagFormDetailVo;
-import com.mengze.domain.vo.TagVo;
+import com.mengze.domain.vo.TagOptionVo;
 import com.mengze.service.AdminTagService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -31,7 +31,7 @@ public class TagController
 
     @GetMapping
     @SystemLog(businessName = "后台分页查询标签列表")
-    @ApiOperation(value = "标签列表", notes = "分页查询标签列表", response = TagVo.class, responseContainer = "List")
+    @ApiOperation(value = "标签列表", notes = "分页查询标签列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
@@ -44,7 +44,7 @@ public class TagController
 
     @GetMapping("/options")
     @SystemLog(businessName = "标签下拉选项")
-    @ApiOperation(value = "标签下拉选项", notes = "标签分类下拉数据")
+    @ApiOperation(value = "标签下拉选项", notes = "标签分类下拉数据", response = TagOptionVo.class, responseContainer = "List")
     public ResponseResult getTagOptions()
     {
         return adminTagService.getTagOptions();
@@ -52,7 +52,7 @@ public class TagController
 
     @GetMapping("/{id}/form")
     @SystemLog(businessName = "获取标签表单数据")
-    @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑标签详情")
+    @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑标签详情", response = TagFormDetailVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "标签id", dataType = "long", paramType = "path")
     })

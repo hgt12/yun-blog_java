@@ -4,7 +4,8 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.CategoryFormDetailVo;
-import com.mengze.domain.vo.CategoryVo;
+import com.mengze.domain.vo.CategoryOptionVo;
+import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminCategoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -28,7 +29,7 @@ public class CategoryController
 
     @GetMapping
     @SystemLog(businessName = "分页查询分类列表")
-    @ApiOperation(value = "分类列表", notes = "分页查询分类列表", response = CategoryVo.class, responseContainer = "List")
+    @ApiOperation(value = "分类列表", notes = "分页查询分类列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
@@ -41,7 +42,7 @@ public class CategoryController
 
     @GetMapping("/options")
     @SystemLog(businessName = "分类下拉选项")
-    @ApiOperation(value = "分类下拉选项", notes = "获取分类下拉数据")
+    @ApiOperation(value = "分类下拉选项", notes = "获取分类下拉数据", response = CategoryOptionVo.class, responseContainer = "List")
     public ResponseResult getCategoryOptions()
     {
         return adminCategoryService.getCategoryOptions();
@@ -49,7 +50,7 @@ public class CategoryController
 
     @GetMapping("/{id}/form")
     @SystemLog(businessName = "获取分类表单数据")
-    @ApiOperation(value = "获取分类表单数据", notes = "获取分类表单数据，用于编辑分类详情")
+    @ApiOperation(value = "获取分类表单数据", notes = "获取分类表单数据，用于编辑分类详情", response = CategoryFormDetailVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "分类id", dataType = "long", paramType = "path")
     })
