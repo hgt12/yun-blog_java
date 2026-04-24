@@ -1,7 +1,7 @@
 package com.mengze.service.impl;
 
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.UserLoginDto;
+import com.mengze.domain.dto.AdminLoginDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminAuthVo;
@@ -37,11 +37,10 @@ public class AdminAuthServiceImpl implements AdminAuthService
     private RedisCache redisCache;
 
     @Override
-    public ResponseResult login(UserLoginDto dto)
+    public ResponseResult login(AdminLoginDto dto)
     {
         // 预防编程，用户名是否为空
         if (!StringUtils.hasText(dto.getUsername())) {
-            // 提示 必须要传用户名
             throw new SystemException(AppHttpCodeEnum.REQUIRE_USERNAME);
         }
         
