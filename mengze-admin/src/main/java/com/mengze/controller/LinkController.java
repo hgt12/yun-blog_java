@@ -16,6 +16,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 /**
  * 后台友链管理接口
  */
@@ -35,7 +37,7 @@ public class LinkController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "关键字（友链名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, LinkListDto linkListDto)
+    public ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, @Valid LinkListDto linkListDto)
     {
         return adminLinkService.getLinkList(pageNum, pageSize, linkListDto);
     }
@@ -54,7 +56,7 @@ public class LinkController
     @PostMapping
     @SystemLog(businessName = "新增友链")
     @ApiOperation(value = "新增友链接口", notes = "新增友链")
-    public ResponseResult addLink(@RequestBody AddLinkDto addLinkDto)
+    public ResponseResult addLink(@Valid @RequestBody AddLinkDto addLinkDto)
     {
         return adminLinkService.addLink(addLinkDto);
     }
@@ -63,7 +65,7 @@ public class LinkController
     @SystemLog(businessName = "修改友链")
     @ApiOperation(value = "修改友链接口", notes = "修改友链")
     @ApiImplicitParam(name = "id", value = "友链ID", dataType = "long", paramType = "path", required = true)
-    public ResponseResult updateLink(@PathVariable Long id, @RequestBody UpdateLinkDto updateLinkDto)
+    public ResponseResult updateLink(@PathVariable Long id, @Valid @RequestBody UpdateLinkDto updateLinkDto)
     {
         return adminLinkService.updateLink(id, updateLinkDto);
     }

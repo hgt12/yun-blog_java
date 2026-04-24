@@ -15,6 +15,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 /**
  * 后台文章管理接口
  */
@@ -36,7 +38,7 @@ public class PostsController
             @ApiImplicitParam(name = "status", value = "文章状态", dataType = "string", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
+    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, @Valid PostsListDto postsListDto)
     {
         return adminPostsService.getPostsList(pageNum, pageSize, postsListDto);
     }
@@ -55,7 +57,7 @@ public class PostsController
     @PostMapping
     @SystemLog(businessName = "新增文章")
     @ApiOperation(value = "新增文章接口", notes = "新增文章")
-    public ResponseResult addPosts(@RequestBody AddPostsDto postsDto)
+    public ResponseResult addPosts(@Valid @RequestBody AddPostsDto postsDto)
     {
         return adminPostsService.addPosts(postsDto);
     }
@@ -64,7 +66,7 @@ public class PostsController
     @SystemLog(businessName = "编辑/更新文章")
     @ApiOperation(value = "编辑/更新文章接口", notes = "更新文章，会自动删除旧的图片文件")
     @ApiImplicitParam(name = "id", value = "文章ID", dataType = "long", paramType = "path", required = true)
-    public ResponseResult updatePosts(@PathVariable Long id, @RequestBody UpdatePostsDto updatePostsDto)
+    public ResponseResult updatePosts(@PathVariable Long id, @Valid @RequestBody UpdatePostsDto updatePostsDto)
     {
         return adminPostsService.updatePosts(id, updatePostsDto);
     }

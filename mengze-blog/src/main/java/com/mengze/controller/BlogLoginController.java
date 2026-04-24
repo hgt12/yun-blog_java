@@ -2,9 +2,9 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.LoginByEmailOrPhoneDto;
 import com.mengze.domain.dto.LoginDto;
 import com.mengze.domain.dto.ResetPasswordDto;
-import com.mengze.domain.dto.UserLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.vo.BlogUserLoginVo;
 import com.mengze.service.BlogLoginService;
@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 //登录接口
 @RestController
@@ -31,7 +33,7 @@ public class BlogLoginController
     @PostMapping("/login")
     @SystemLog(businessName = "用户名密码登录")
     @ApiOperation(value = "用户名密码登录", notes = "通过用户名和密码进行登录", response = BlogUserLoginVo.class)
-    public ResponseResult login(@RequestBody UserLoginDto dto)
+    public ResponseResult login(@Valid @RequestBody LoginDto dto)
     {
         return blogLoginService.login(dto);
     }
@@ -48,7 +50,7 @@ public class BlogLoginController
     @PostMapping("/loginByEmail")
     @SystemLog(businessName = "邮箱验证码登录")
     @ApiOperation(value = "邮箱验证码登录", notes = "通过邮箱和验证码进行登录", response = BlogUserLoginVo.class)
-    public ResponseResult loginByEmail(@RequestBody LoginDto dto)
+    public ResponseResult loginByEmail(@Valid @RequestBody LoginByEmailOrPhoneDto dto)
     {
         return blogLoginService.loginByEmail(dto);
     }
@@ -57,7 +59,7 @@ public class BlogLoginController
     @PostMapping("/loginByPhone")
     @SystemLog(businessName = "手机验证码登录")
     @ApiOperation(value = "手机验证码登录", notes = "通过手机号和验证码进行登录", response = BlogUserLoginVo.class)
-    public ResponseResult loginByPhone(@RequestBody LoginDto dto)
+    public ResponseResult loginByPhone(@Valid @RequestBody LoginByEmailOrPhoneDto dto)
     {
         return blogLoginService.loginByPhone(dto);
     }
@@ -66,7 +68,7 @@ public class BlogLoginController
     @PostMapping("/verifyResetCode")
     @SystemLog(businessName = "验证重置密码验证码")
     @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确")
-    public ResponseResult verifyResetCode(@RequestBody VerifyResetCodeDto dto)
+    public ResponseResult verifyResetCode(@Valid @RequestBody VerifyResetCodeDto dto)
     {
         return resetPasswordService.verifyResetCode(dto);
     }
@@ -75,7 +77,7 @@ public class BlogLoginController
     @PostMapping("/resetPassword")
     @SystemLog(businessName = "重置密码")
     @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码")
-    public ResponseResult resetPassword(@RequestBody ResetPasswordDto dto)
+    public ResponseResult resetPassword(@Valid @RequestBody ResetPasswordDto dto)
     {
         return resetPasswordService.resetPassword(dto);
     }

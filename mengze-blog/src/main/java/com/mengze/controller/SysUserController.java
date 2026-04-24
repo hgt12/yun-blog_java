@@ -11,6 +11,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 //个人信息接口
 @RestController
 @RequestMapping("/user")
@@ -33,7 +35,7 @@ public class SysUserController
     @PutMapping("/userInfo")
     @SystemLog(businessName = "更新用户信息")
     @ApiOperation(value = "更新用户信息", notes = "更新当前登录用户的个人信息")
-    public ResponseResult updateUserInfo(@RequestBody UpdateUserInfoDto dto)
+    public ResponseResult updateUserInfo(@Valid @RequestBody UpdateUserInfoDto dto)
     {
         return sysUserService.updateUserInfo(dto);
     }
@@ -42,7 +44,7 @@ public class SysUserController
     @PostMapping("/userRegister")
     @SystemLog(businessName = "用户注册")
     @ApiOperation(value = "用户注册", notes = "新用户注册")
-    public ResponseResult userRegister(@RequestBody UserRegisterDto dto)
+    public ResponseResult userRegister(@Valid @RequestBody UserRegisterDto dto)
     {
         return sysUserService.userRegister(dto);
     }

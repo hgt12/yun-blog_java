@@ -87,6 +87,12 @@
                 <artifactId>ip2region</artifactId>
                 <version>3.3.6</version>
             </dependency>
+            <!--validation参数校验-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-validation</artifactId>
+                <version>2.5.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

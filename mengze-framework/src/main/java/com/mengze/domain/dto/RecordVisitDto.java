@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * 记录访问请求DTO
  */
@@ -15,6 +17,7 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "记录访问请求对象")
 public class RecordVisitDto {
 
+    @NotBlank(message = "页面URL不能为空")
     @ApiModelProperty(value = "访问的页面URL", required = true, example = "/article/1")
     private String pageUrl;
 

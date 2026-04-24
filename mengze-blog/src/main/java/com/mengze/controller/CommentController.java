@@ -12,11 +12,11 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Map;
 
 /**
  * 评论接口
- * 
  * 权限说明：
  * - 文章评论（type=0）：需要登录
  * - 友链评论（type=1）：需要登录
@@ -69,7 +69,7 @@ public class CommentController
     @PostMapping
     @SystemLog(businessName = "添加评论")
     @ApiOperation(value = "添加评论", notes = "添加文章评论、友链评论或留言板评论")
-    public ResponseResult addComment(@RequestBody AddCommentDto addCommentDto)
+    public ResponseResult addComment(@Valid @RequestBody AddCommentDto addCommentDto)
     {
         return commentService.addComment(addCommentDto);
     }

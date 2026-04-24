@@ -16,6 +16,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 /**
  * 后台标签管理接口
  */
@@ -35,7 +37,7 @@ public class TagController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "关键字（标签名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getTagList(Integer pageNum, Integer pageSize, TagListDto tagListDto)
+    public ResponseResult<PageVo> getTagList(Integer pageNum, Integer pageSize, @Valid TagListDto tagListDto)
     {
         return adminTagService.getTagList(pageNum, pageSize, tagListDto);
     }
@@ -62,7 +64,7 @@ public class TagController
     @PostMapping
     @SystemLog(businessName = "新增标签")
     @ApiOperation(value = "新增标签接口", notes = "新增标签")
-    public ResponseResult addTag(@RequestBody AddTagDto addTagDto)
+    public ResponseResult addTag(@Valid @RequestBody AddTagDto addTagDto)
     {
         return adminTagService.addTag(addTagDto);
     }
@@ -71,7 +73,7 @@ public class TagController
     @SystemLog(businessName = "修改标签")
     @ApiOperation(value = "修改标签接口", notes = "修改标签")
     @ApiImplicitParam(name = "id", value = "标签ID", dataType = "long", paramType = "path", required = true)
-    public ResponseResult updateTag(@PathVariable Long id,@RequestBody UpdateTagDto updateTagDto)
+    public ResponseResult updateTag(@PathVariable Long id, @Valid @RequestBody UpdateTagDto updateTagDto)
     {
         return adminTagService.updateTag(id, updateTagDto);
     }

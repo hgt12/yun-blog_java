@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 /**
  * 网站统计相关接口
@@ -38,7 +39,7 @@ public class SiteStatisticsController {
      */
     @PostMapping("/recordVisit")
     @ApiOperation(value = "记录访问日志", notes = "记录用户访问，统计PV和UV")
-    public ResponseResult recordVisit(@RequestBody RecordVisitDto recordVisitDto, HttpServletRequest request) {
+    public ResponseResult recordVisit(@Valid @RequestBody RecordVisitDto recordVisitDto, HttpServletRequest request) {
         return siteStatisticsService.recordVisit(recordVisitDto, request);
     }
 }

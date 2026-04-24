@@ -4,7 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.ResetPasswordDto;
 import com.mengze.domain.dto.SendCodeDto;
-import com.mengze.domain.dto.UserLoginDto;
+import com.mengze.domain.dto.AdminLoginDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.vo.AdminAuthVo;
 import com.mengze.service.AdminAuthService;
@@ -14,6 +14,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 //后台验证相关接口
 @RestController
@@ -34,7 +36,7 @@ public class AdminAuthController
     @PostMapping("/login")
     @SystemLog(businessName = "管理员登录")
     @ApiOperation(value = "管理员登录", notes = "管理员进行登录", response = AdminAuthVo.class)
-    public ResponseResult login(@RequestBody UserLoginDto dto)
+    public ResponseResult login(@Valid @RequestBody AdminLoginDto dto)
     {
         return adminAuthService.login(dto);
     }
@@ -70,7 +72,7 @@ public class AdminAuthController
     @PostMapping("/sendCode")
     @SystemLog(businessName = "发送重置密码验证码")
     @ApiOperation(value = "重置密码验证码", notes = "获取重置密码验证码")
-    public ResponseResult sendCode(@RequestBody SendCodeDto dto)
+    public ResponseResult sendCode(@Valid @RequestBody SendCodeDto dto)
     {
         return authService.sendCode(dto);
     }
@@ -79,7 +81,7 @@ public class AdminAuthController
     @PostMapping("/verifyCode")
     @SystemLog(businessName = "验证重置密码验证码")
     @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确")
-    public ResponseResult verifyResetCode(@RequestBody VerifyResetCodeDto dto)
+    public ResponseResult verifyResetCode(@Valid @RequestBody VerifyResetCodeDto dto)
     {
         return resetPasswordService.verifyResetCode(dto);
     }
@@ -88,7 +90,7 @@ public class AdminAuthController
     @PostMapping("/resetPassword")
     @SystemLog(businessName = "重置密码")
     @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码")
-    public ResponseResult resetPassword(@RequestBody ResetPasswordDto dto)
+    public ResponseResult resetPassword(@Valid @RequestBody ResetPasswordDto dto)
     {
         return resetPasswordService.resetPassword(dto);
     }

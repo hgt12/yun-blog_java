@@ -13,6 +13,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 /**
  * 分类管理接口
  */
@@ -32,7 +34,7 @@ public class CategoryController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, CategoryListDto categoryListDto)
+    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, @Valid CategoryListDto categoryListDto)
     {
         return adminCategoryService.getCategoryList(pageNum, pageSize, categoryListDto);
     }
@@ -59,7 +61,7 @@ public class CategoryController
     @PostMapping
     @SystemLog(businessName = "新增分类")
     @ApiOperation(value = "新增分类接口", notes = "新增分类")
-    public ResponseResult addCategory(@RequestBody AddCategoryDto addCategoryDto)
+    public ResponseResult addCategory(@Valid @RequestBody AddCategoryDto addCategoryDto)
     {
         return adminCategoryService.addCategory(addCategoryDto);
     }
@@ -68,7 +70,7 @@ public class CategoryController
     @SystemLog(businessName = "编辑分类")
     @ApiOperation(value = "编辑分类接口", notes = "编辑分类")
     @ApiImplicitParam(name = "id", value = "分类ID", dataType = "long", paramType = "path", required = true)
-    public ResponseResult updateCategory(@PathVariable Long id, @RequestBody UpdateCategoryDto updateCategoryDto)
+    public ResponseResult updateCategory(@PathVariable Long id, @Valid @RequestBody UpdateCategoryDto updateCategoryDto)
     {
         return adminCategoryService.updateCategory(id, updateCategoryDto);
     }

@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import javax.validation.constraints.Pattern;
 
 /**
  * 文章列表操作请求DTO
@@ -24,7 +24,8 @@ public class PostsListDto
     @ApiModelProperty(value = "标签id", example = "1")
     private Long tagId;
 
-    @ApiModelProperty(value = "文章状态（已发布，草稿）", example = "草稿")
+    @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
+    @ApiModelProperty(value = "文章状态（0-已发布，1-草稿）", example = "0")
     private String status;
 
     @ApiModelProperty(value = "关键字（用于模糊搜索文章标题）", example = "标题")

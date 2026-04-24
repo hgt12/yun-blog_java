@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import javax.validation.constraints.Pattern;
 
 /**
  * 分类列表请求DTO
@@ -17,6 +17,7 @@ import java.util.List;
 @ApiModel(description = "分类列表请求对象")
 public class CategoryListDto {
 
+    @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
