@@ -33,6 +33,9 @@ import org.springframework.util.StringUtils;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService
 {
 
+    //国内手机号正则：1开头，第二位3-9，后面9位数字
+    private static final String PHONE_REGEX = "^1[3-9]\\d{9}$";
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -57,9 +60,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUserInfoVo vo = BeanCopyUtils.copyBean(byId, SysUserInfoVo.class);
         return ResponseResult.okResult(vo);
     }
-
-    //国内手机号正则：1开头，第二位3-9，后面9位数字
-    private static final String PHONE_REGEX = "^1[3-9]\\d{9}$";
 
     //更新用户信息
     @Override
