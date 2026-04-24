@@ -31,7 +31,7 @@ import java.util.List;
 public class AdminLinkServiceImpl implements AdminLinkService
 {
     @Autowired
-    LinkService linkService;
+    private LinkService linkService;
 
     //获取友链列表
     @Override
