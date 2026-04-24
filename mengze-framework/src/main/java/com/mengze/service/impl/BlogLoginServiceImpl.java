@@ -1,12 +1,9 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.LoginByEmailOrPhoneDto;
 import com.mengze.domain.dto.LoginDto;
-import com.mengze.domain.dto.ResetPasswordDto;
-import com.mengze.domain.dto.UserLoginDto;
-import com.mengze.domain.dto.VerifyResetCodeDto;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.BlogUserLoginVo;
@@ -25,7 +22,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -46,7 +42,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
     private SysUserMapper sysUserMapper;
 
     @Override
-    public ResponseResult login(UserLoginDto dto)
+    public ResponseResult login(LoginDto dto)
     {
         // 预防编程，用户名是否为空
         if (!StringUtils.hasText(dto.getUsername())) {
@@ -97,13 +93,13 @@ public class BlogLoginServiceImpl implements BlogLoginService
         //获取uesrid
         Long userId = loginUser.getSysUser().getId();
         //删除redis中的用户信息
-        redisCache.deleteObject("bloglogin:" + userId);
+        redisCache.deleteObject("blogLogin:" + userId);
         return ResponseResult.okResult();
     }
     
     //通过邮箱登录
     @Override
-    public ResponseResult loginByEmail(LoginDto dto)
+    public ResponseResult loginByEmail(LoginByEmailOrPhoneDto dto)
     {
         String email = dto.getEmail();
         String code = dto.getCode();
@@ -148,7 +144,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
     
     //通过手机登录
     @Override
-    public ResponseResult loginByPhone(LoginDto dto)
+    public ResponseResult loginByPhone(LoginByEmailOrPhoneDto dto)
     {
         String phone = dto.getPhone();
         String code = dto.getCode();
