@@ -46,11 +46,11 @@ public class SysMenu extends Model<SysMenu> {
     //排序
     private Integer sort;
     //菜单是否正常(0:正常;1:异常)
-    private Integer status;
+    private String status;
     //菜单是否可见(1:显示;0:隐藏)
-    private Integer visible;
+    private String visible;
     //菜单范围(1=平台 2=业务)
-    private Integer scope;
+    private String scope;
     //权限标识
     private String perm;
     //目录是否始终显示
