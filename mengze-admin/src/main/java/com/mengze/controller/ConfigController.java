@@ -2,7 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AdminConfigListDto;
+import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminConfigService;
 import io.swagger.annotations.Api;
@@ -35,8 +35,8 @@ public class ConfigController
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid AdminConfigListDto adminConfigListDto)
+    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid ConfigListDto configListDto)
     {
-        return adminConfigService.getConfigList(pageNum, pageSize, adminConfigListDto);
+        return adminConfigService.getConfigList(pageNum, pageSize, configListDto);
     }
 }

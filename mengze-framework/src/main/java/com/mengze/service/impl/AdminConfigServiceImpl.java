@@ -3,9 +3,8 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AdminConfigListDto;
+import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.vo.AdminConfigListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.mapper.ConfigMapper;
@@ -32,17 +31,17 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
 
     //获取配置列表
     @Override
-    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, AdminConfigListDto adminConfigListDto)
+    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, ConfigListDto configListDto)
     {
         //创建查询条件
         LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
 
         //根据关键字模糊查询
-        if (StringUtils.hasText(adminConfigListDto.getKeywords())){
+        if (StringUtils.hasText(configListDto.getKeywords())){
             queryWrapper.and(wrapper -> wrapper
-                    .like(Config::getConfigName, adminConfigListDto.getKeywords())
+                    .like(Config::getConfigName, configListDto.getKeywords())
                     .or()
-                    .like(Config::getConfigKey, adminConfigListDto.getKeywords())
+                    .like(Config::getConfigKey, configListDto.getKeywords())
             );
         }
 

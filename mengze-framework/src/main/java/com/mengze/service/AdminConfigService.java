@@ -2,7 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AdminConfigListDto;
+import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.entity.Config;
 import com.mengze.domain.vo.PageVo;
 
@@ -14,6 +14,6 @@ import com.mengze.domain.vo.PageVo;
  */
 public interface AdminConfigService extends IService<Config> {
 
-    ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, AdminConfigListDto adminConfigListDto);
+    ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, ConfigListDto configListDto);
 }
 
