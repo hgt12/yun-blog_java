@@ -31,7 +31,7 @@ public class SysRole extends Model<SysRole> {
     private String name;
     //排序
     private Integer sort;
-    //状态(0-停用,1-启用)
+    //状态(0-正常,1-停用)
     private String status;
     //数据权限(1-所有数据 2-部门及子部门数据 3-本部门数据 4-本人数据 5-自定义部门数据)
     private Integer dataScope;
