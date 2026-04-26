@@ -108,5 +108,13 @@ public class SystemConstants
      *  默认评论点赞量
      */
     public static final int DEFAULT_COMMENT_LIKES = 0;
+    /**
+     *  可见
+     */
+    public static final String VISIBLE = "0";
+    /**
+     *  不可见
+     */
+    public static final String INVISIBLE = "1";
 
 }
