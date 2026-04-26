@@ -16,5 +16,5 @@ import java.util.List;
 @ApiModel(description = "获取当前登录用户可访问的前端路由树响应对象")
 public class RoutersVo
 {
-    private List<MenuVo> menus;
+    private List<MenuRoutesVo> menus;
 }
