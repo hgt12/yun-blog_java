@@ -5,6 +5,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -122,6 +123,16 @@ public class GlobalExceptionHandler
         }
 
         return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(), message);
+    }
+
+    //处理登录认证失败异常（用户名或密码错误）
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseResult handleBadCredentialsException(BadCredentialsException exception)
+    {
+        //输出日志
+        log.warn("用户登录认证失败：用户名或密码错误");
+
+        return ResponseResult.errorResult(AppHttpCodeEnum.LOGIN_ERROR.getCode(), "用户名或密码错误");
     }
 
 

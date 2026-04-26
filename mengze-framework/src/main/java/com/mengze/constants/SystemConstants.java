@@ -37,6 +37,14 @@ public class SystemConstants
      */
     public static final String COMMENT_STATUS_NORMAL = "0";
     /**
+     *  允许评论
+     */
+    public static final String ALLOW_COMMENT = "0";
+    /**
+     *  不允许评论
+     */
+    public static final String NOT_ALLOWED_COMMENT = "1";
+    /**
      *  根评论标识（rootId为-1表示是根评论）
      */
     public static final Long COMMENT_ROOT_ID = -1L;
@@ -80,4 +88,25 @@ public class SystemConstants
      *  菜单类型为按钮
      */
     public static final String MENU_TYPE_B = "B";
+    /**
+     *  角色为超级管理员
+     */
+    public static final String ROLE_IS_ADMIN = "admin";
+    /**
+     *  角色为用户
+     */
+    public static final String ROLE_IS_USER = "user";
+    /**
+     *  角色为访客
+     */
+    public static final String ROLE_IS_VISITOR = "visitor";
+    /**
+     *  默认评论数
+     */
+    public static final String DEFAULT_NUMBER_OF_COMMENTS = "default_number_of_comments";
+    /**
+     *  默认评论点赞量
+     */
+    public static final int DEFAULT_COMMENT_LIKES = 0;
+
 }

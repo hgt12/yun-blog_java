@@ -33,8 +33,6 @@ public class SysUser extends Model<SysUser> {
     private String nickname;
     //邮箱
     private String email;
-    //用户类型（0 代表普通用户，1 代表管理员）
-    private String userType;
     //账号状态（0 正常，1 停用）
     private String status;
     //手机号

@@ -20,9 +20,6 @@ public interface SysUserService extends IService<SysUser> {
 
     ResponseResult userRegister(UserRegisterDto dto);
 
-    /**
-     * 获取博主信息（公开接口，无需登录）
-     */
     ResponseResult getBloggerInfo();
 }
 

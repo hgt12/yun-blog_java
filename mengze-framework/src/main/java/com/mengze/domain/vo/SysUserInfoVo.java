@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 @Data
 @Accessors(chain = true)
 @ApiModel(description = "前台用户信息响应对象")
@@ -27,6 +29,9 @@ public class SysUserInfoVo {
     
     @ApiModelProperty(value = "邮箱")
     private String email;
+    
+    @ApiModelProperty(value = "用户角色列表")
+    private List<String> roles;
 }
 
 

@@ -30,8 +30,8 @@ public class CommentVo {
     @ApiModelProperty(value = "用户ID")
     private Long userId;
     
-    @ApiModelProperty(value = "用户类型（0-普通用户，1-管理员/博主）")
-    private String userType;
+    @ApiModelProperty(value = "用户角色列表")
+    private List<String> roles;
     
     @ApiModelProperty(value = "昵称")
     private String nickname;
@@ -51,8 +51,8 @@ public class CommentVo {
     @ApiModelProperty(value = "回复目标评论的用户昵称")
     private String replyToCommentNickname;
     
-    @ApiModelProperty(value = "回复目标评论的用户类型（0-普通用户，1-博主/管理员）")
-    private String replyToCommentUserType;
+    @ApiModelProperty(value = "回复目标评论的用户角色列表")
+    private List<String> replyToCommentRoles;
     
     @ApiModelProperty(value = "点赞数")
     private Integer likeCount;

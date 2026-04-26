@@ -13,8 +13,11 @@ import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.Comment;
+import com.mengze.domain.entity.Article;
 import com.mengze.service.CommentService;
+import com.mengze.service.ArticleService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
 import com.mengze.utils.SecurityUtils;
@@ -22,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +39,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private SysUserMapper sysUserMapper;
 
     @Autowired
+    private SysRoleMapper sysRoleMapper;
+
+    @Autowired
     private EmailServiceImpl emailService;
+
+    @Autowired
+    private ArticleService articleService;
 
     //查询评论列表（包括文章评论，友链评论和留言板评论）
     @Override
@@ -77,6 +87,27 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.CONTENT_NOT_NULL);
         }
 
+        String type = addCommentDto.getType();
+        
+        //如果是文章评论，需要校验文章是否允许评论
+        if (SystemConstants.COMMENT_TYPE_ARTICLE.equals(type)) {
+            Long articleId = addCommentDto.getArticleId();
+            if (articleId == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(), "文章ID不能为空");
+            }
+            
+            //查询文章信息
+            Article article = articleService.getById(articleId);
+            if (article == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(), "文章不存在");
+            }
+            
+            //检查文章是否允许评论
+            if (!SystemConstants.ALLOW_COMMENT.equals(article.getIsComment())) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(), "该文章不允许评论");
+            }
+        }
+
         //使用 BeanCopyUtils 进行基础字段转换（自动复制 type, articleId, content, rootId, parentId, replyToCommentId, replyToUserId, nickname, email, personalWebsite）
         Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
         
@@ -84,8 +115,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (comment.getRootId() == null) {
             comment.setRootId(-1L);
         }
-        
-        String type = addCommentDto.getType();
         
         //根据评论类型进行权限校验和用户信息设置
         if (SystemConstants.COMMENT_TYPE_ARTICLE.equals(type) || SystemConstants.COMMENT_TYPE_LINK.equals(type))
@@ -138,9 +167,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
         
         //设置默认值
-        comment.setLikeCount(0);
+        comment.setLikeCount(SystemConstants.DEFAULT_COMMENT_LIKES);
         comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
-        comment.setDelFlag("0");
+        comment.setDelFlag(SystemConstants.DEFAULT_NUMBER_OF_COMMENTS);
         comment.setCreateTime(new Date());
 
         save(comment);
@@ -194,7 +223,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return toCommentVoList(comments);
     }
 
-    //转换为CommentVo列表，并设置回复目标昵称和用户类型
+    //转换为CommentVo列表，并设置回复目标昵称和用户角色
     private List<CommentVo> toCommentVoList(List<Comment> comments)
     {
         List<CommentVo> voList = BeanCopyUtils.copyBeanList(comments, CommentVo.class);
@@ -202,18 +231,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             CommentVo vo = voList.get(i);
             Comment original = comments.get(i);
             
-            // 只有评论时已登录（有user_id）的评论才实时获取最新头像和昵称
+            // 只有评论时已登录（有user_id）的评论才实时获取最新头像、昵称和角色
             if (original.getUserId() != null) {
                 SysUser sysUser = sysUserMapper.selectById(original.getUserId());
                 if (sysUser != null) {
                     // 使用用户表中的最新头像和昵称
                     vo.setAvatar(sysUser.getAvatar());
                     vo.setNickname(sysUser.getNickname());
-                    vo.setUserType(sysUser.getUserType());
+                    // 查询用户角色
+                    List<String> roles = sysRoleMapper.selectRoleCodeByUserId(sysUser.getId());
+                    vo.setRoles(roles != null && !roles.isEmpty() ? roles : Collections.emptyList());
                 } else {
                     // 用户不存在，使用评论表中的数据
                     vo.setAvatar(original.getAvatar());
-                    vo.setUserType("0");
+                    vo.setRoles(Collections.emptyList());
                 }
             } else {
                 // 未登录时的评论,使用评论表中保存的头像
@@ -221,28 +252,32 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 // 优先通过邮箱判断是否为博主，未登录时也可识别
                 if (StringUtils.hasText(original.getEmail()) 
                         && original.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
-                    vo.setUserType("1"); //博主标识
+                    // 博主标识 - 设置为admin角色
+                    vo.setRoles(Collections.singletonList(SystemConstants.ROLE_IS_ADMIN));
                 } else {
-                    vo.setUserType("0"); //普通用户
+                    // 普通用户 - 空角色列表
+                    vo.setRoles(Collections.emptyList());
                 }
             }
             
-            // 设置回复目标昵称和用户类型
+            // 设置回复目标昵称和用户角色
             if (vo.getReplyToCommentId() != null && vo.getReplyToCommentId() > 0)
             {
                 Comment replyTo = getById(vo.getReplyToCommentId());
                 if (replyTo != null)
                 {
-                    // 如果被回复的评论是登录后发布的，获取最新昵称
+                    // 如果被回复的评论是登录后发布的，获取最新昵称和角色
                     if (replyTo.getUserId() != null)
                     {
                         SysUser replyToSysUser = sysUserMapper.selectById(replyTo.getUserId());
                         if (replyToSysUser != null) {
                             vo.setReplyToCommentNickname(replyToSysUser.getNickname());
-                            vo.setReplyToCommentUserType(replyToSysUser.getUserType());
+                            // 查询被回复用户的角色
+                            List<String> replyToRoles = sysRoleMapper.selectRoleCodeByUserId(replyToSysUser.getId());
+                            vo.setReplyToCommentRoles(replyToRoles != null && !replyToRoles.isEmpty() ? replyToRoles : Collections.emptyList());
                         } else {
                             vo.setReplyToCommentNickname(replyTo.getNickname());
-                            vo.setReplyToCommentUserType("0");
+                            vo.setReplyToCommentRoles(Collections.emptyList());
                         }
                     } else {
                         // 被回复的评论是匿名评论，使用评论表中的昵称
@@ -250,9 +285,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                         // 判断被回复者是否为博主
                         if (StringUtils.hasText(replyTo.getEmail()) 
                                 && replyTo.getEmail().equalsIgnoreCase(SystemConstants.BLOGGER_EMAIL)) {
-                            vo.setReplyToCommentUserType("1"); //博主或者管理员
+                            // 博主或者管理员 - 设置为admin角色
+                            vo.setReplyToCommentRoles(Collections.singletonList(SystemConstants.ROLE_IS_ADMIN));
                         } else {
-                            vo.setReplyToCommentUserType("0"); //普通用户
+                            // 普通用户 - 空角色列表
+                            vo.setReplyToCommentRoles(Collections.singletonList(SystemConstants.ROLE_IS_VISITOR));
                         }
                     }
                 }

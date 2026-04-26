@@ -26,7 +26,7 @@ public class SysRole extends Model<SysRole> {
 
     private Long id;
     //角色编码
-    private String role_code;
+    private String roleCode;
     //角色名称
     private String name;
     //排序

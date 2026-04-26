@@ -3,10 +3,14 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
+import com.mengze.domain.entity.SysRole;
 import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.entity.SysUserRole;
+import com.mengze.domain.vo.BloggerInfoVo;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
@@ -21,6 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户表(SysUser)表服务实现类(前台)
@@ -48,6 +56,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Autowired
     private OssFileService ossFileService;
 
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
+    @Autowired
+    private com.mengze.mapper.SysUserRoleMapper sysUserRoleMapper;
+
+    @Autowired
+    private com.mengze.mapper.SysRoleMapper sysRoleMapper;
+
     //查询用户信息
     @Override
     public ResponseResult userInfo()
@@ -58,6 +75,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser byId = getById(userId);
         //封装成UserInfo
         SysUserInfoVo vo = BeanCopyUtils.copyBean(byId, SysUserInfoVo.class);
+        
+        //查询用户的角色信息
+        List<String> roles = getUserRoles(userId);
+        vo.setRoles(roles);
+        
         return ResponseResult.okResult(vo);
     }
 
@@ -257,6 +279,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         
         //存入数据库
         save(sysUser);
+        
+        //为新注册用户分配默认角色（普通用户角色）
+        assignDefaultRole(sysUser.getId());
+        
         return ResponseResult.okResult("注册成功");
     }
     
@@ -315,29 +341,97 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return null;
     }
 
-    //获取博主信息（公开接口，无需登录）
+    //获取博主信息
     @Override
     public ResponseResult getBloggerInfo()
     {
-        // 查询 user_type = 1 的用户（博主）
-        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SysUser::getUserType, "1")
-                .select(SysUser::getNickname, SysUser::getAvatar)
+        // 通过角色查询博主（查询拥有admin角色的用户）
+        // 首先查询admin角色的ID
+        LambdaQueryWrapper<SysRole> roleQueryWrapper = new LambdaQueryWrapper<>();
+        roleQueryWrapper.eq(SysRole::getRoleCode, SystemConstants.ROLE_IS_ADMIN)
                 .last("LIMIT 1");
+        SysRole adminRole = sysRoleMapper.selectOne(roleQueryWrapper);
         
-        SysUser blogger = getOne(queryWrapper);
+        if (adminRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SELECT_ERROR, "未找到管理员角色");
+        }
+        
+        // 查询拥有该角色的用户
+        LambdaQueryWrapper<SysUserRole> userRoleQueryWrapper = new LambdaQueryWrapper<>();
+        userRoleQueryWrapper.eq(SysUserRole::getRoleId, adminRole.getId())
+                .last("LIMIT 1");
+        SysUserRole userRole = sysUserRoleMapper.selectOne(userRoleQueryWrapper);
+        
+        if (userRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SELECT_ERROR, "未找到博主信息");
+        }
+        
+        // 查询用户信息
+        SysUser blogger = sysUserMapper.selectById(userRole.getUserId());
         
         if (blogger == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SELECT_ERROR, "未找到博主信息");
         }
         
         // 封装成 BloggerInfoVo
-        com.mengze.domain.vo.BloggerInfoVo vo = new com.mengze.domain.vo.BloggerInfoVo(
+        BloggerInfoVo vo = new BloggerInfoVo(
             blogger.getNickname(),
             blogger.getAvatar()
         );
         
         return ResponseResult.okResult(vo);
+    }
+
+    //查询用户的角色列表功能方法
+    private List<String> getUserRoles(Long userId)
+    {
+        //通过用户ID查询用户角色关联表
+        LambdaQueryWrapper<SysUserRole> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.eq(SysUserRole::getUserId, userId);
+        List<SysUserRole> userRoles = sysUserRoleMapper.selectList(userRoleWrapper);
+
+        //如果用户没有角色，返回空列表
+        if (userRoles == null || userRoles.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        //获取角色ID列表
+        List<Long> roleIds = userRoles.stream()
+                .map(SysUserRole::getRoleId)
+                .collect(Collectors.toList());
+
+        //查询角色信息
+        List<SysRole> sysRoles = sysRoleMapper.selectBatchIds(roleIds);
+
+        //返回角色代码列表
+        return sysRoles.stream()
+                .map(SysRole::getRoleCode)
+                .collect(Collectors.toList());
+    }
+    
+    //为新注册用户分配默认角色功能方法
+    private void assignDefaultRole(Long userId)
+    {
+        try {
+            //查询"普通用户"角色（role_code = "user"）
+            LambdaQueryWrapper<SysRole> roleQueryWrapper = new LambdaQueryWrapper<>();
+            roleQueryWrapper.eq(SysRole::getRoleCode, SystemConstants.ROLE_IS_USER)
+                    .last("LIMIT 1");
+            SysRole userRole = sysRoleMapper.selectOne(roleQueryWrapper);
+            
+            if (userRole != null) {
+                //创建用户角色关联记录
+                SysUserRole sysUserRole = new SysUserRole();
+                sysUserRole.setUserId(userId);
+                sysUserRole.setRoleId(userRole.getId());
+                sysUserRoleMapper.insert(sysUserRole);
+                log.info("为用户 {} 分配默认角色 {} 成功", userId, userRole.getName());
+            } else {
+                log.warn("未找到默认角色（role_code='user'），用户 {} 未分配角色", userId);
+            }
+        } catch (Exception e) {
+            log.error("为用户 {} 分配默认角色失败: {}", userId, e.getMessage(), e);
+        }
     }
 }
 

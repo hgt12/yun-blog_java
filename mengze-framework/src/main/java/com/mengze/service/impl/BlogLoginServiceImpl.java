@@ -11,6 +11,7 @@ import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.mapper.SysRoleMapper;
 import com.mengze.service.BlogLoginService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
@@ -24,6 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +43,9 @@ public class BlogLoginServiceImpl implements BlogLoginService
 
     @Autowired
     private SysUserMapper sysUserMapper;
+
+    @Autowired
+    private SysRoleMapper sysRoleMapper;
 
     @Override
     public ResponseResult login(LoginDto dto)
@@ -79,6 +85,14 @@ public class BlogLoginServiceImpl implements BlogLoginService
         if (!StringUtils.hasText(sysUserInfoVo.getAvatar())) {
             sysUserInfoVo.setAvatar(GravatarUtils.getGravatarUrl(sysUser1.getEmail()));
         }
+        
+        // 查询用户角色
+        List<String> roles = sysRoleMapper.selectRoleCodeByUserId(sysUser1.getId());
+        if (roles == null || roles.isEmpty()) {
+            // 如果没有角色，设置为空列表
+            roles = Collections.emptyList();
+        }
+        sysUserInfoVo.setRoles(roles);
         
         BlogUserLoginVo vo = new BlogUserLoginVo(jwt, sysUserInfoVo);
         return ResponseResult.okResult(vo);
@@ -216,6 +230,14 @@ public class BlogLoginServiceImpl implements BlogLoginService
         if (!StringUtils.hasText(sysUserInfoVo.getAvatar())) {
             sysUserInfoVo.setAvatar(GravatarUtils.getGravatarUrl(sysUser.getEmail()));
         }
+        
+        // 查询用户角色
+        List<String> roles = sysRoleMapper.selectRoleCodeByUserId(sysUser.getId());
+        if (roles == null || roles.isEmpty()) {
+            // 如果没有角色，设置为空列表
+            roles = Collections.emptyList();
+        }
+        sysUserInfoVo.setRoles(roles);
         
         BlogUserLoginVo vo = new BlogUserLoginVo(jwt, sysUserInfoVo);
         return ResponseResult.okResult(vo);
