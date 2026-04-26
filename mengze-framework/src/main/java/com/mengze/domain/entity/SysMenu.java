@@ -31,11 +31,11 @@ public class SysMenu extends Model<SysMenu> {
     private String name;
     //菜单类型（C-目录 M-菜单 B-按钮）
     private String type;
-    //路由路径
+    //路由字符串
     private String path;
     //路由名称（前端路由名）
     private String routeName;
-    //路由路径（扩展字段）
+    //路由路径（可用于自定义路由字段）
     private String routePath;
     //跳转路径
     private String redirect;
@@ -45,20 +45,18 @@ public class SysMenu extends Model<SysMenu> {
     private String icon;
     //排序
     private Integer sort;
-    //菜单是否正常(0:正常;1:异常)
-    private String status;
-    //菜单是否可见(1:显示;0:隐藏)
+    //菜单是否可见(0:显示;1:隐藏)
     private String visible;
     //菜单范围(1=平台 2=业务)
     private String scope;
     //权限标识
     private String perm;
     //目录是否始终显示
-    private Integer alwaysShow;
+    private String alwaysShow;
     //是否缓存(keepAlive)
-    private Integer keepAlive;
-    //路由参数(以JSON文本形式存储)
-    private String paramsJson;
+    private String keepAlive;
+    //路由参数
+    private String params;
     //删除标记(0-未删除,1-已删除)
     private String delFlag;
     //创建者ID

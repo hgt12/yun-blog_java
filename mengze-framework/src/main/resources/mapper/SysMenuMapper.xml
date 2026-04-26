@@ -8,57 +8,45 @@
                  LEFT JOIN sys_menu m ON m.id = rm.menu_id
         WHERE ur.user_id = #{userId}
           AND m.type IN ('M', 'B')
-          AND m.`status` = 0
+          AND m.visible = 0
           AND m.del_flag = 0
     </select>
 
-    <select id="selectAllRouterMenu" resultType="com.mengze.domain.vo.MenuVo">
-        SELECT DISTINCT m.id,
-                        m.create_time,
-                        m.parent_id,
-                        m.name,
-                        m.type,
-                        m.path,
-                        m.route_path,
-                        m.route_name,
-                        m.redirect,
-                        m.component,
-                        m.icon,
-                        m.status,
-                        m.visible,
-                        IFNULL(m.perm,'') AS perm,
-                        m.params_json
+    <select id="selectAllRouterMenu" resultType="com.mengze.domain.vo.MenuRoutesVo">
+        SELECT DISTINCT
+            m.id,
+            m.parent_id,
+            m.name,
+            m.type,
+            m.path,
+            m.route_name,
+            m.redirect,
+            m.component,
+            m.icon
         FROM sys_menu m
         WHERE m.type IN ('M', 'C')
-          AND m.`status` = 0
-          AND m.visible = 1
+          AND m.visible = 0
           AND m.del_flag = 0
         ORDER BY m.parent_id, m.sort
     </select>
 
-    <select id="selectRouterMenuTreeByUserId" resultType="com.mengze.domain.vo.MenuVo">
-        SELECT DISTINCT m.id,
-                        m.create_time,
-                        m.parent_id,
-                        m.name,
-                        m.type,
-                        m.path,
-                        m.route_path,
-                        m.route_name,
-                        m.redirect,
-                        m.component,
-                        m.icon,
-                        m.status,
-                        m.visible,
-                        IFNULL(m.perm,'') AS perm,
-                        m.params_json
+    <select id="selectRouterMenuTreeByUserId" resultType="com.mengze.domain.vo.MenuRoutesVo">
+        SELECT DISTINCT
+            m.id,
+            m.parent_id,
+            m.name,
+            m.type,
+            m.path,
+            m.route_name,
+            m.redirect,
+            m.component,
+            m.icon
         FROM sys_user_role ur
                  LEFT JOIN sys_role_menu rm ON ur.role_id = rm.role_id
                  LEFT JOIN sys_menu m ON m.id = rm.menu_id
         WHERE ur.user_id = #{userId}
           AND m.type IN ('M', 'C')
-          AND m.`status` = 0
-          AND m.visible = 1
+          AND m.visible = 0
           AND m.del_flag = 0
         ORDER BY m.parent_id, m.sort
     </select>
