@@ -42,8 +42,6 @@ public class MenuListVo
     private Integer sort;
     //菜单是否可见(1:显示;0:隐藏)
     private String visible;
-    //菜单范围(1=平台 2=业务)
-    private String scope;
     //权限标识
     private String perm;
 
