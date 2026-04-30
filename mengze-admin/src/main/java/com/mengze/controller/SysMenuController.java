@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.vo.MenuOptionVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.RoutersVo;
 import com.mengze.service.SysMenuService;
@@ -47,5 +48,16 @@ public class SysMenuController
     public ResponseResult getMenuList(@Valid MenuListDto menuListDto)
     {
         return sysMenuService.getMenuList(menuListDto);
+    }
+
+    @GetMapping("/options")
+    @SystemLog(businessName = "菜单下拉选项")
+    @ApiOperation(value = "菜单下拉选项", notes = "获取菜单下拉数据", response = MenuOptionVo.class, responseContainer = "List")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "onlyParent", value = "是否只返回目录/菜单父节点", dataType = "boolean", paramType = "query")
+    })
+    public ResponseResult getMenuOptions(Boolean onlyParent)
+    {
+        return sysMenuService.getMenuOptions(onlyParent);
     }
 }

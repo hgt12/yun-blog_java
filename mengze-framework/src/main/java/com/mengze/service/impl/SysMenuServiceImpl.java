@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.vo.MenuOptionVo;
 import com.mengze.domain.vo.MenuRoutesVo;
 import com.mengze.domain.vo.MenuListVo;
 import com.mengze.domain.vo.RoutersVo;
@@ -29,9 +30,6 @@ import java.util.stream.Collectors;
 @Service("sysMenuService")
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService
 {
-
-    @Autowired
-    private SysMenuService sysMenuService;
 
     @Override
     public List<String> selectPermByUserId(Long id)
@@ -113,6 +111,35 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return ResponseResult.okResult(menuTree);
     }
 
+    //获取菜单下拉数据
+    @Override
+    public ResponseResult getMenuOptions(Boolean onlyParent)
+    {
+        //查询所有菜单选项
+        LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
+
+        //查询可见的菜单
+        queryWrapper.eq(SysMenu::getVisible, SystemConstants.VISIBLE);
+
+        //如果前端的 onlyParent 为 true，只查询目录和菜单类型（不包含按钮）
+        if (onlyParent != null && onlyParent) {
+            queryWrapper.in(SysMenu::getType, SystemConstants.MENU_TYPE_C, SystemConstants.MENU_TYPE_M);
+        }
+
+        //按排序字段升序排列
+        queryWrapper.orderByAsc(SysMenu::getSort);
+        
+        //查询所有符合条件的菜单
+        List<SysMenu> menuList = list(queryWrapper);
+
+        //转换为 MenuOptionVo 列表
+        List<MenuOptionVo> menuOptionVos = BeanCopyUtils.copyBeanList(menuList, MenuOptionVo.class);
+
+        //构建菜单树
+        List<MenuOptionVo> menuTree = builderMenuOptionTree(menuOptionVos, 0L);
+
+        return ResponseResult.okResult(menuTree);
+    }
 
     //创建MenuList的菜单树
     private List<MenuListVo> builderMenuListTree(List<MenuListVo> menuListVos, Long parentId)
@@ -150,6 +177,26 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         List<MenuRoutesVo> childrenList = menuRoutesVos.stream()
                 .filter(m -> m.getParentId().equals(menuRoutesVo.getId()))
                 .map(m -> m.setChildren(getChildrenByMenuRoutes(m, menuRoutesVos)))
+                .collect(Collectors.toList());
+        return childrenList;
+    }
+
+    //创建MenuOption的菜单树
+    private List<MenuOptionVo> builderMenuOptionTree(List<MenuOptionVo> menuOptionVos, Long parentId)
+    {
+        List<MenuOptionVo> menuTree = menuOptionVos.stream()
+                .filter(menuOptionVo -> menuOptionVo.getParentId().equals(parentId))
+                .map(menuOptionVo -> menuOptionVo.setChildren(getChildrenByMenuOption(menuOptionVo, menuOptionVos)))
+                .collect(Collectors.toList());
+        return menuTree;
+    }
+
+    //获取传入参数的 子菜单（MenuOption）集合  
+    private List<MenuOptionVo> getChildrenByMenuOption(MenuOptionVo menuOptionVo, List<MenuOptionVo> menuOptionVos)
+    {
+        List<MenuOptionVo> childrenList = menuOptionVos.stream()
+                .filter(m -> m.getParentId().equals(menuOptionVo.getId()))
+                .map(m -> m.setChildren(getChildrenByMenuOption(m, menuOptionVos)))
                 .collect(Collectors.toList());
         return childrenList;
     }

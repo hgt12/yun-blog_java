@@ -20,5 +20,7 @@ public interface SysMenuService extends IService<SysMenu> {
     ResponseResult getRoutes();
 
     ResponseResult getMenuList(MenuListDto menuListDto);
+
+    ResponseResult getMenuOptions(Boolean onlyParent);
 }
 

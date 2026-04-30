@@ -81,6 +81,10 @@ public class SystemConstants
      */
     public static final String VISIT_LOG_QUEUE = "site:visitLog:queue";
     /**
+     *  菜单类型为目录
+     */
+    public static final String MENU_TYPE_C = "C";
+    /**
      *  菜单类型为菜单
      */
     public static final String MENU_TYPE_M = "M";
