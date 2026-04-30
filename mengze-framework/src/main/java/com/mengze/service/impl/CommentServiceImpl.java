@@ -108,7 +108,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
         }
 
-        //使用 BeanCopyUtils 进行基础字段转换（自动复制 type, articleId, content, rootId, parentId, replyToCommentId, replyToUserId, nickname, email, personalWebsite）
         Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
         
         //处理 rootId 默认值
@@ -128,7 +127,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             comment.setUserId(sysUser.getId());
             comment.setNickname(sysUser.getNickname());
             comment.setEmail(sysUser.getEmail());
-            //personalWebsite 已通过 BeanCopyUtils 复制
         } else if (SystemConstants.COMMENT_TYPE_MESSAGE.equals(type)) {
             //留言板评论可以不登录
             if (SecurityUtils.isLogin()) {
@@ -138,7 +136,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 comment.setUserId(sysUser.getId());
                 comment.setNickname(sysUser.getNickname());
                 comment.setEmail(sysUser.getEmail());
-                //personalWebsite 已通过 BeanCopyUtils 复制
             } else {
                 //未登录用户需要填写昵称和邮箱
                 if (!StringUtils.hasText(addCommentDto.getNickname())) {
@@ -147,7 +144,6 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 if (!StringUtils.hasText(addCommentDto.getEmail())) {
                     return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
                 }
-                //nickname, email, personalWebsite 已通过 BeanCopyUtils 复制，无需再设置
             }
         }
 
@@ -169,7 +165,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         //设置默认值
         comment.setLikeCount(SystemConstants.DEFAULT_COMMENT_LIKES);
         comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
-        comment.setDelFlag(SystemConstants.DEFAULT_NUMBER_OF_COMMENTS);
+        comment.setDelFlag(SystemConstants.COMMENT_STATUS_NORMAL);
         comment.setCreateTime(new Date());
 
         save(comment);

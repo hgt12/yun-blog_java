@@ -7,13 +7,13 @@ public class SystemConstants
     /**
      *  文章是草稿
      */
-    public static final int ARTICLE_STATUS_DRAFT = 1;
+    public static final String ARTICLE_STATUS_DRAFT = "1";
     /**
      *  文章是正常发布状态
      */
-    public static final int ARTICLE_STATUS_NORMAL = 0;
+    public static final String ARTICLE_STATUS_NORMAL = "0";
     /**
-     *  文章是正常发布状态字符串型
+     *  正常状态
      */
     public static final String STATUS_NORMAL = "0";
     /**
@@ -36,6 +36,10 @@ public class SystemConstants
      *  评论状态：正常文章评论
      */
     public static final String COMMENT_STATUS_NORMAL = "0";
+    /**
+     *  评论状态待审核
+     */
+    public static final String COMMENT_STATUS_PENDING_REVIEW = "1";
     /**
      *  允许评论
      */
@@ -104,10 +108,6 @@ public class SystemConstants
      *  角色为访客
      */
     public static final String ROLE_IS_VISITOR = "visitor";
-    /**
-     *  默认评论数
-     */
-    public static final String DEFAULT_NUMBER_OF_COMMENTS = "default_number_of_comments";
     /**
      *  默认评论点赞量
      */
