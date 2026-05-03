@@ -61,6 +61,15 @@ public class CommentController
         return adminCommentService.approveComment(ids);
     }
 
+    @PutMapping("/{ids}/reject")
+    @SystemLog(businessName = "审核评论（拒绝评论发布）")
+    @ApiOperation(value = "审核评论接口（拒绝评论发布）", notes = "审核评论（拒绝评论发布）")
+    @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult rejectComment(@PathVariable Long[] ids)
+    {
+        return adminCommentService.rejectComment(ids);
+    }
+
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除评论(逻辑删除)")
     @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除")

@@ -171,6 +171,51 @@ public class AdminCommentServiceImpl implements AdminCommentService
         }
     }
 
+    //审核评论（拒绝评论发布）
+    @Override
+    public ResponseResult rejectComment(Long[] ids)
+    {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要审核的评论");
+        }
+
+        //获取评论id列表
+        List<Long> idList = List.of(ids);
+
+        //查询需要审核的评论
+        List<Comment> commentsToReject = commentService.listByIds(idList);
+        if (commentsToReject.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        }
+
+        //检查是否有不属于待审核状态的评论
+        boolean hasInvalidStatus = commentsToReject.stream()
+                .anyMatch(comment -> !SystemConstants.COMMENT_STATUS_PENDING_REVIEW.equals(comment.getStatus()));
+
+        if (hasInvalidStatus) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR,
+                    "所选评论中含有状态为'正常'或'审核未通过'评论，请重新选择!");
+        }
+
+        //批量更新评论状态为审核未通过
+        commentsToReject.forEach(comment -> {
+            comment.setStatus(SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED);
+        });
+
+        //TODO 发送审核未通过邮箱给发布评论的用户
+
+        //批量更新到数据库
+        boolean updateResult = commentService.updateBatchById(commentsToReject);
+
+        if (updateResult) {
+            return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
+                    "成功拒绝 " + commentsToReject.size() + " 条评论进行发布");
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
+        }
+    }
+
     //删除评论（逻辑删除）
     @Override
     public ResponseResult deleteComment(Long[] ids)
