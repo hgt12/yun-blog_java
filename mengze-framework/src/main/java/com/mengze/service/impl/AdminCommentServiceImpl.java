@@ -11,6 +11,7 @@ import com.mengze.domain.entity.Comment;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminCommentListVo;
+import com.mengze.domain.vo.CommentStatisticsVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleMapper;
@@ -24,7 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -214,6 +220,45 @@ public class AdminCommentServiceImpl implements AdminCommentService
         } else {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
         }
+    }
+
+    //获取评论统计信息
+    @Override
+    public ResponseResult statisticsComment()
+    {
+        //查询评论总数
+        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
+        Long total = commentMapper.selectCount(queryWrapper);
+        
+        //查询待审核评论数
+        LambdaQueryWrapper<Comment> pendingWrapper = new LambdaQueryWrapper<>();
+        pendingWrapper.eq(Comment::getStatus, SystemConstants.COMMENT_STATUS_PENDING_REVIEW);
+        Long pendingReview = commentMapper.selectCount(pendingWrapper);
+        
+        //查询审核未通过评论数
+        LambdaQueryWrapper<Comment> rejectedWrapper = new LambdaQueryWrapper<>();
+        rejectedWrapper.eq(Comment::getStatus, SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED);
+        Long rejected = commentMapper.selectCount(rejectedWrapper);
+        
+        //查询今日评论数
+        //获取今天的开始时间（00:00:00）
+        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        Date todayStartDate = Date.from(todayStart.atZone(ZoneId.systemDefault()).toInstant());
+        
+        //获取今天的结束时间（23:59:59）
+        LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+        Date todayEndDate = Date.from(todayEnd.atZone(ZoneId.systemDefault()).toInstant());
+
+        //根据一天时间统计今天的评论数量
+        LambdaQueryWrapper<Comment> todayWrapper = new LambdaQueryWrapper<>();
+        todayWrapper.ge(Comment::getCreateTime, todayStartDate)
+                    .le(Comment::getCreateTime, todayEndDate);
+        Long todayCount = commentMapper.selectCount(todayWrapper);
+        
+        //转化未Vo
+        CommentStatisticsVo statisticsVo = new CommentStatisticsVo(total, pendingReview, todayCount, rejected);
+
+        return ResponseResult.okResult(statisticsVo);
     }
 
     //删除评论（逻辑删除）

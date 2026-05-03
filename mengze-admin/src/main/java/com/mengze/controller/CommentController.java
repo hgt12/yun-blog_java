@@ -70,6 +70,14 @@ public class CommentController
         return adminCommentService.rejectComment(ids);
     }
 
+    @GetMapping("/statistics")
+    @SystemLog(businessName = "获取统计信息")
+    @ApiOperation(value = "获取评论统计信息", notes = "获取统计信息")
+    public ResponseResult statisticsComment()
+    {
+        return adminCommentService.statisticsComment();
+    }
+
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除评论(逻辑删除)")
     @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除")

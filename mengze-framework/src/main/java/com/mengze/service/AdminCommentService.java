@@ -19,4 +19,6 @@ public interface AdminCommentService {
     ResponseResult approveComment(Long[] ids);
 
     ResponseResult rejectComment(Long[] ids);
+
+    ResponseResult statisticsComment();
 }
