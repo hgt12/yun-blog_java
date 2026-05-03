@@ -33,13 +33,17 @@ public class SystemConstants
      */
     public static final String COMMENT_TYPE_MESSAGE = "2";
     /**
-     *  评论状态：正常文章评论
+     *  评论状态：正常评论
      */
     public static final String COMMENT_STATUS_NORMAL = "0";
     /**
-     *  评论状态待审核
+     *  评论状态：待审核
      */
     public static final String COMMENT_STATUS_PENDING_REVIEW = "1";
+    /**
+     *  评论状态：审核未通过
+     */
+    public static final String COMMENT_STATUS_REVIEW_NOT_PASSED = "2";
     /**
      *  允许评论
      */

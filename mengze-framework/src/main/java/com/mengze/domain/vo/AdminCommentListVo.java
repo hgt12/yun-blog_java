@@ -53,7 +53,7 @@ public class AdminCommentListVo {
     @ApiModelProperty(value = "点赞数")
     private Integer likeCount;
     
-    @ApiModelProperty(value = "审核状态（0-正常，1-待审核）")
+    @ApiModelProperty(value = "审核状态（0-正常，1-待审核，2-审核未通过）")
     private String status;
     
     @ApiModelProperty(value = "创建时间")

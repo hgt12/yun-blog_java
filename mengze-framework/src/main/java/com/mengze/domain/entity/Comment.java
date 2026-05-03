@@ -52,7 +52,7 @@ public class Comment extends Model<Comment> {
     private Long replyToCommentId;
     //点赞数
     private Integer likeCount;
-    //状态（0-正常，1-待审核）
+    //状态（0-正常，1-待审核，2-审核未通过）
     private String status;
     //删除标志（0-未删除，1-已删除）
     private String delFlag;
