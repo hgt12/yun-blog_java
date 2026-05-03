@@ -30,6 +30,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "DELETE", "PUT")
                 // 设置允许的header属性
                 .allowedHeaders("*")
+                // 设置允许前端访问的响应头（用于文件下载时获取文件名）
+                .exposedHeaders("Content-Disposition")
                 // 跨域允许时间
                 .maxAge(3600);
     }

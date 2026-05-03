@@ -21,4 +21,6 @@ public interface AdminCommentService {
     ResponseResult rejectComment(Long[] ids);
 
     ResponseResult statisticsComment();
+
+    ResponseResult exportComment(Integer pageNum, Integer pageSize, CommentListDto commentListDto);
 }

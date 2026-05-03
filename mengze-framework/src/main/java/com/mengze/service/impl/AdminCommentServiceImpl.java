@@ -11,6 +11,7 @@ import com.mengze.domain.entity.Comment;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminCommentListVo;
+import com.mengze.domain.vo.CommentExportVo;
 import com.mengze.domain.vo.CommentStatisticsVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -49,8 +50,9 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
     @Autowired
     private ArticleMapper articleMapper;
+
     @Autowired
-    private CommentServiceImpl commentService;
+    private CommentService commentService;
 
     //获取评论列表
     @Override
@@ -261,6 +263,54 @@ public class AdminCommentServiceImpl implements AdminCommentService
         return ResponseResult.okResult(statisticsVo);
     }
 
+    //导出评论数据列表
+    @Override
+    public ResponseResult exportComment(Integer pageNum, Integer pageSize, CommentListDto commentListDto)
+    {
+        //构建查询条件
+        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
+        
+        //关键字模糊搜索
+        queryWrapper.like(StringUtils.hasText(commentListDto.getKeywords()), Comment::getContent, commentListDto.getKeywords());
+        
+        //评论类型筛选
+        queryWrapper.eq(StringUtils.hasText(commentListDto.getType()), Comment::getType, commentListDto.getType());
+        
+        //审核状态筛选
+        queryWrapper.eq(StringUtils.hasText(commentListDto.getStatus()), Comment::getStatus, commentListDto.getStatus());
+        
+        //文章ID筛选(type=0，即为文章评论时)
+        if (StringUtils.hasText(commentListDto.getArticleId()) 
+                && SystemConstants.COMMENT_TYPE_ARTICLE.equals(commentListDto.getType())) {
+            queryWrapper.eq(Comment::getArticleId, Long.parseLong(commentListDto.getArticleId()));
+        }
+        
+        //时间范围筛选
+        queryWrapper.ge(StringUtils.hasText(commentListDto.getStartTime()), Comment::getCreateTime, commentListDto.getStartTime())
+                    .le(StringUtils.hasText(commentListDto.getEndTime()), Comment::getCreateTime, commentListDto.getEndTime());
+        
+        //按创建时间倒序排列
+        queryWrapper.orderByDesc(Comment::getCreateTime);
+        
+        //根据是否传入分页参数决定查询方式
+        List<Comment> comments;
+        if (pageNum != null && pageSize != null && pageNum > 0 && pageSize > 0) {
+            //分页查询
+            Page<Comment> page = new Page<>(pageNum, pageSize);
+            commentMapper.selectPage(page, queryWrapper);
+            comments = page.getRecords();
+        } else {
+            //查询所有符合条件的评论
+            comments = commentMapper.selectList(queryWrapper);
+        }
+        
+        //转换为导出VO
+        List<CommentExportVo> exportData = toCommentExportVoList(comments);
+        
+        //返回导出数据
+        return ResponseResult.okResult(exportData);
+    }
+
     //删除评论（逻辑删除）
     @Override
     public ResponseResult deleteComment(Long[] ids)
@@ -428,5 +478,111 @@ public class AdminCommentServiceImpl implements AdminCommentService
         }
         
         return voList;
+    }
+    
+    //转换为CommentExportVo列表
+    private List<CommentExportVo> toCommentExportVoList(List<Comment> comments)
+    {
+        if (comments == null || comments.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        //批量查询文章标题
+        List<Long> articleIds = comments.stream()
+                .filter(c -> c.getArticleId() != null && c.getArticleId() > 0)
+                .map(Comment::getArticleId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        Map<Long, String> articleTitleMap = new HashMap<>();
+        if (!articleIds.isEmpty()) {
+            List<Article> articles = articleMapper.selectBatchIds(articleIds);
+            articleTitleMap = articles.stream()
+                    .collect(Collectors.toMap(Article::getId, Article::getTitle));
+        }
+        
+        //批量查询回复目标昵称
+        List<Long> replyToCommentIds = comments.stream()
+                .filter(c -> c.getReplyToCommentId() != null && c.getReplyToCommentId() > 0)
+                .map(Comment::getReplyToCommentId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        Map<Long, String> replyToNicknameMap = new HashMap<>();
+        if (!replyToCommentIds.isEmpty()) {
+            List<Comment> replyToComments = commentMapper.selectBatchIds(replyToCommentIds);
+            replyToNicknameMap = replyToComments.stream()
+                    .collect(Collectors.toMap(Comment::getId, Comment::getNickname));
+        }
+        
+        //转换为导出VO
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<CommentExportVo> exportList = new ArrayList<>();
+        
+        for (Comment comment : comments)
+        {
+            CommentExportVo vo = new CommentExportVo();
+            vo.setId(String.valueOf(comment.getId()));
+            
+            //评论类型转换为中文
+            String typeName = getCommentTypeName(comment.getType());
+            vo.setTypeName(typeName);
+            
+            //设置文章标题
+            if (comment.getArticleId() != null && comment.getArticleId() > 0) {
+                vo.setArticleTitle(articleTitleMap.get(comment.getArticleId()));
+            }
+            
+            //设置用户信息
+            vo.setNickname(comment.getNickname());
+            vo.setEmail(comment.getEmail());
+            vo.setPersonalWebsite(comment.getPersonalWebsite());
+            
+            //设置评论内容
+            vo.setContent(comment.getContent());
+            
+            //设置回复目标昵称
+            if (comment.getReplyToCommentId() != null && comment.getReplyToCommentId() > 0) {
+                vo.setReplyToNickname(replyToNicknameMap.get(comment.getReplyToCommentId()));
+            }
+            
+            vo.setLikeCount(comment.getLikeCount());
+            
+            //审核状态转换为中文
+            String statusName = getCommentStatusName(comment.getStatus());
+            vo.setStatusName(statusName);
+            
+            vo.setCreateTime(sdf.format(comment.getCreateTime()));
+            
+            exportList.add(vo);
+        }
+        
+        return exportList;
+    }
+    
+    //获取评论类型名称
+    private String getCommentTypeName(String type)
+    {
+        if (SystemConstants.COMMENT_TYPE_ARTICLE.equals(type)) {
+            return "文章评论";
+        } else if (SystemConstants.COMMENT_TYPE_LINK.equals(type)) {
+            return "友链评论";
+        } else if (SystemConstants.COMMENT_TYPE_MESSAGE.equals(type)) {
+            return "留言板评论";
+        }
+        return "未知类型";
+    }
+    
+    //获取评论状态名称
+    private String getCommentStatusName(String status)
+    {
+        if (SystemConstants.COMMENT_STATUS_NORMAL.equals(status)) {
+            return "正常";
+        } else if (SystemConstants.COMMENT_STATUS_PENDING_REVIEW.equals(status)) {
+            return "待审核";
+        } else if (SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED.equals(status)) {
+            return "审核未通过";
+        }
+        return "未知状态";
     }
 }
