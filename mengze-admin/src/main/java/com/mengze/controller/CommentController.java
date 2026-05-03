@@ -1,6 +1,5 @@
 package com.mengze.controller;
 
-import ch.qos.logback.core.spi.FilterReply;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CommentListDto;
@@ -51,5 +50,14 @@ public class CommentController
     public ResponseResult replyComment(@RequestBody @Valid ReplyCommentDto replyCommentDto)
     {
         return adminCommentService.replyComment(replyCommentDto);
+    }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除评论(逻辑删除)")
+    @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除")
+    @ApiImplicitParam(name = "ids", value = "评论id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteComment(@PathVariable Long[] ids)
+    {
+        return adminCommentService.deleteComment(ids);
     }
 }

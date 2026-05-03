@@ -16,6 +16,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.service.AdminCommentService;
+import com.mengze.service.CommentService;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,55 @@ public class AdminCommentServiceImpl implements AdminCommentService
             return ResponseResult.okResult("回复成功");
         } else {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "回复失败");
+        }
+    }
+
+    //删除评论（逻辑删除）
+    @Override
+    public ResponseResult deleteComment(Long[] ids)
+    {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的评论");
+        }
+
+        //获取评论id列表
+        List<Long> idList = List.of(ids);
+        
+        //查询要删除的评论，找出所有根评论
+        List<Comment> commentsToDelete = commentMapper.selectBatchIds(idList);
+        if (commentsToDelete.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        }
+        
+        //收集所有需要删除的评论ID（包括子评论）
+        List<Long> allIdsToDelete = new ArrayList<>(idList);
+        
+        for (Comment comment : commentsToDelete)
+        {
+            //如果是根评论则需要删除其所有子评论
+            if (comment.getRootId() == null || comment.getRootId() == -1)
+            {
+                LambdaQueryWrapper<Comment> childWrapper = new LambdaQueryWrapper<>();
+                childWrapper.eq(Comment::getRootId, comment.getId());
+                List<Comment> childComments = commentMapper.selectList(childWrapper);
+                
+                //添加子评论ID到删除列表
+                List<Long> childIds = childComments.stream()
+                        .map(Comment::getId)
+                        .collect(Collectors.toList());
+                allIdsToDelete.addAll(childIds);
+            }
+        }
+        
+        //删除评论
+        int deleteCount = commentMapper.deleteBatchIds(allIdsToDelete);
+        
+        if (deleteCount > 0) {
+            return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(), 
+                    "成功删除 " + deleteCount + " 条评论");
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败");
         }
     }
 

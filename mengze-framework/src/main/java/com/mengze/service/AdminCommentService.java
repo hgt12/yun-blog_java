@@ -13,4 +13,6 @@ public interface AdminCommentService {
     ResponseResult getCommentList(Integer pageNum, Integer pageSize, CommentListDto commentListDto);
 
     ResponseResult replyComment(ReplyCommentDto replyCommentDto);
+
+    ResponseResult deleteComment(Long[] ids);
 }
