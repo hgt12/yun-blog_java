@@ -52,6 +52,15 @@ public class CommentController
         return adminCommentService.replyComment(replyCommentDto);
     }
 
+    @PutMapping("/{ids}/approve")
+    @SystemLog(businessName = "审核评论（允许评论发布）")
+    @ApiOperation(value = "审核评论接口（允许评论发布）", notes = "审核评论（允许评论发布）")
+    @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult approveComment(@PathVariable Long[] ids)
+    {
+        return adminCommentService.approveComment(ids);
+    }
+
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除评论(逻辑删除)")
     @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除")

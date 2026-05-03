@@ -15,4 +15,6 @@ public interface AdminCommentService {
     ResponseResult replyComment(ReplyCommentDto replyCommentDto);
 
     ResponseResult deleteComment(Long[] ids);
+
+    ResponseResult approveComment(Long[] ids);
 }

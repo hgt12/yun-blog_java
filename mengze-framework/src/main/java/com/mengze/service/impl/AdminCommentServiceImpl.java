@@ -43,6 +43,8 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
     @Autowired
     private ArticleMapper articleMapper;
+    @Autowired
+    private CommentServiceImpl commentService;
 
     //获取评论列表
     @Override
@@ -121,6 +123,51 @@ public class AdminCommentServiceImpl implements AdminCommentService
             return ResponseResult.okResult("回复成功");
         } else {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "回复失败");
+        }
+    }
+
+    //审核评论（允许评论发布）
+    @Override
+    public ResponseResult approveComment(Long[] ids)
+    {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要审核的评论");
+        }
+
+        //获取评论id列表
+        List<Long> idList = List.of(ids);
+
+        //查询需要审核的评论
+        List<Comment> commentsToApprove = commentService.listByIds(idList);
+        if (commentsToApprove.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        }
+
+        //检查是否有不属于待审核状态的评论
+        boolean hasInvalidStatus = commentsToApprove.stream()
+                .anyMatch(comment -> !SystemConstants.COMMENT_STATUS_PENDING_REVIEW.equals(comment.getStatus()));
+
+        if (hasInvalidStatus) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR,
+                    "所选评论中含有状态为'正常'或'审核未通过'评论，请重新选择!");
+        }
+
+        //批量更新评论状态为正常
+        commentsToApprove.forEach(comment -> {
+            comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
+        });
+
+        //TODO 发送审核通过邮箱给发布评论的用户
+
+        //批量更新到数据库
+        boolean updateResult = commentService.updateBatchById(commentsToApprove);
+
+        if (updateResult) {
+            return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
+                    "成功审核通过 " + commentsToApprove.size() + " 条评论");
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
         }
     }
 

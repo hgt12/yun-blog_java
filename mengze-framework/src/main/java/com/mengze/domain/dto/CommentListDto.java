@@ -24,7 +24,7 @@ public class CommentListDto {
     @ApiModelProperty(value = "评论类型（0-文章评论，1-友链留言，2-留言板）", example = "0")
     private String type;
 
-    @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
+    @Pattern(regexp = "^$|^[012]$", message = "状态只能为0、1或2")
     @ApiModelProperty(value = "审核状态（0-正常，1-待审核，2-审核未通过）", example = "0")
     private String status;
 
