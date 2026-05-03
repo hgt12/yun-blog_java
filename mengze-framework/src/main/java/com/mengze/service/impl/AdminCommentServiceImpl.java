@@ -5,13 +5,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CommentListDto;
+import com.mengze.domain.dto.ReplyCommentDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Comment;
+import com.mengze.domain.entity.LoginUser;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminCommentListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.service.AdminCommentService;
+import com.mengze.utils.SecurityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -37,6 +43,7 @@ public class AdminCommentServiceImpl implements AdminCommentService
     @Autowired
     private ArticleMapper articleMapper;
 
+    //获取评论列表
     @Override
     public ResponseResult getCommentList(Integer pageNum, Integer pageSize, CommentListDto commentListDto)
     {
@@ -73,6 +80,47 @@ public class AdminCommentServiceImpl implements AdminCommentService
         List<AdminCommentListVo> commentVoList = buildCommentTree(page.getRecords());
         
         return ResponseResult.okResult(new PageVo(commentVoList, page.getTotal()));
+    }
+
+    //回复评论（管理员回复）
+    @Override
+    public ResponseResult replyComment(ReplyCommentDto replyCommentDto)
+    {
+        //获取当前登录的管理员信息
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        if (loginUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN, "用户未登录");
+        }
+        
+        //判断是否是系统管理员
+        if (!SecurityUtils.isAdmin()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NO_OPERATOR_AUTH, "只有系统管理员才能回复评论");
+        }
+        
+        SysUser currentUser = loginUser.getSysUser();
+        
+        //创建评论对象并复制前端传递的字段
+        Comment comment = new Comment();
+        BeanUtils.copyProperties(replyCommentDto, comment);
+        
+        //补充管理员信息
+        comment.setUserId(currentUser.getId());
+        comment.setNickname(currentUser.getNickname());
+        comment.setEmail(currentUser.getEmail());
+        comment.setAvatar(currentUser.getAvatar());
+        
+        //设置默认值
+        comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);  // 管理员评论默认审核通过
+        comment.setLikeCount(SystemConstants.DEFAULT_COMMENT_LIKES);  // 初始化点赞数
+        
+        //保存评论
+        int result = commentMapper.insert(comment);
+        
+        if (result > 0) {
+            return ResponseResult.okResult("回复成功");
+        } else {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "回复失败");
+        }
     }
 
     //构建评论树形结构

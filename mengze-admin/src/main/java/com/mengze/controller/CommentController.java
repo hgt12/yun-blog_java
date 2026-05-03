@@ -1,8 +1,10 @@
 package com.mengze.controller;
 
+import ch.qos.logback.core.spi.FilterReply;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CommentListDto;
+import com.mengze.domain.dto.ReplyCommentDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminCommentService;
 import io.swagger.annotations.Api;
@@ -10,9 +12,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -43,5 +43,13 @@ public class CommentController
     public ResponseResult getCommentList(Integer pageNum, Integer pageSize, @Valid CommentListDto commentListDto)
     {
         return adminCommentService.getCommentList(pageNum, pageSize, commentListDto);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "回复评论")
+    @ApiOperation(value = "回复评论", notes = "管理员回复评论")
+    public ResponseResult replyComment(@RequestBody @Valid ReplyCommentDto replyCommentDto)
+    {
+        return adminCommentService.replyComment(replyCommentDto);
     }
 }
