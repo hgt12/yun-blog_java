@@ -32,7 +32,8 @@ public class SensitiveUtilServiceImpl implements SensitiveUtilService
      * @return 是否敏感
      */
     @Override
-    public Boolean checkSensitiveWords(String content, String email) {
+    public Boolean checkSensitiveWords(String content, String email)
+    {
         if (StringUtils.isEmpty(content)) {
             return false;
         }
@@ -71,6 +72,46 @@ public class SensitiveUtilServiceImpl implements SensitiveUtilService
             return true;
         }
         log.info("多AI并行检测无敏感词 >>>>> 可以评论");
+        return false;
+    }
+
+    /**
+     * 敏感词检测（用于用户名、昵称等）
+     * 不跳过博主检测，所有用户一视同仁
+     *
+     * @param content 待检测内容
+     * @return 是否包含敏感词
+     */
+    @Override
+    public Boolean checkSensitiveWordsSimple(String content)
+    {
+        if (StringUtils.isEmpty(content)) {
+            return false;
+        }
+
+        //1.本地词库检测
+        if (SensitiveUtil.containsSensitiveWords(content)) {
+            // 获取检测到的具体敏感词及其来源文件
+            java.util.Map<String, String> localSensitiveWordsWithSource = SensitiveUtil.findSensitiveWordsWithSource(content);
+            log.info("本地词库检测为敏感词（用户名/昵称），检测到的敏感词及来源: {}", localSensitiveWordsWithSource);
+            return true;
+        }
+        log.info("本地词库检测无敏感词（用户名/昵称） >>>>> 进入开源词库检测");
+        //2.开源词库检测
+        if (SensitiveWordHelper.contains(content)) {
+            // 获取开源词库检测到的具体敏感词
+            java.util.List<String> openSourceSensitiveWords = SensitiveWordHelper.findAll(content);
+            log.info("开源词库检测为敏感词（用户名/昵称），检测到的敏感词: {}", openSourceSensitiveWords);
+            return true;
+        }
+        log.info("开源词库检测无敏感词（用户名/昵称） >>>>> 进入多ai并行检测");
+        //3.多AI并行检测
+        DetectionStatusEnum aiStatus = aiChatService.aiCheckWord(content);
+        if (aiStatus.shouldBlock()) {
+            log.info("多AI并行检测为敏感词（用户名/昵称），内容: {}", content);
+            return true;
+        }
+        log.info("多AI并行检测无敏感词（用户名/昵称） >>>>> 检测通过");
         return false;
     }
 

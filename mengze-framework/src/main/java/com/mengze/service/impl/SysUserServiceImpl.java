@@ -16,6 +16,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
 import com.mengze.service.OssFileService;
+import com.mengze.service.SensitiveUtilService;
 import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
@@ -65,6 +66,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Autowired
     private com.mengze.mapper.SysRoleMapper sysRoleMapper;
 
+    @Autowired
+    private SensitiveUtilService sensitiveUtilService;
+
     //查询用户信息
     @Override
     public ResponseResult userInfo()
@@ -95,6 +99,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //昵称不能为空
         if (!StringUtils.hasText(updateUserInfoDto.getNickname())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_NOT_NULL, "昵称不能为空");
+        }
+        
+        //敏感词检测 - 昵称
+        if (sensitiveUtilService.checkSensitiveWordsSimple(updateUserInfoDto.getNickname())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "昵称包含敏感词，请修改后重试");
         }
 
         //邮箱和电话号码不能同时为空
@@ -223,7 +232,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (StringUtils.hasText(dto.getPhone()) && !dto.getPhone().matches(PHONE_REGEX)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR, "请输入正确的手机号码");
         }
-        
+
+        //敏感词检测 - 用户名
+        if (sensitiveUtilService.checkSensitiveWordsSimple(dto.getUsername())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户名包含敏感词，请修改后重试");
+        }
+
         //验证验证码
         ResponseResult verifyResult = verifyCode(dto);
         if (verifyResult != null) {

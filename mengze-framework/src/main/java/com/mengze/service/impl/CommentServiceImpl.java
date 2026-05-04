@@ -148,6 +148,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 if (!StringUtils.hasText(addCommentDto.getEmail())) {
                     return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
                 }
+                
+                //敏感词检测 - 昵称（未登录用户填写的昵称）
+                if (sensitiveUtilService.checkSensitiveWordsSimple(addCommentDto.getNickname())) {
+                    return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "昵称包含敏感词，请修改后重试");
+                }
             }
         }
 

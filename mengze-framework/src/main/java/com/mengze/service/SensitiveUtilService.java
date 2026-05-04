@@ -12,4 +12,11 @@ public interface SensitiveUtilService {
      * @return 是否敏感
      */
     Boolean checkSensitiveWords(String content, String email);
+
+    /**
+     * 简单敏感词检测（用于用户名、昵称等）
+     * @param content 待检测内容
+     * @return 是否包含敏感词
+     */
+    Boolean checkSensitiveWordsSimple(String content);
 }
