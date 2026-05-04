@@ -21,6 +21,7 @@ import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
 import com.mengze.utils.SecurityUtils;
+import com.mengze.utils.XssUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -100,6 +101,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (!StringUtils.hasText(updateUserInfoDto.getNickname())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_NOT_NULL, "昵称不能为空");
         }
+        
+        //XSS防护：转义昵称
+        String safeNickname = XssUtils.escapeHtml(updateUserInfoDto.getNickname());
+        updateUserInfoDto.setNickname(safeNickname);
         
         //敏感词检测 - 昵称
         if (sensitiveUtilService.checkSensitiveWordsSimple(updateUserInfoDto.getNickname())) {
@@ -236,6 +241,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //敏感词检测 - 用户名
         if (sensitiveUtilService.checkSensitiveWordsSimple(dto.getUsername())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户名包含敏感词，请修改后重试");
+        }
+
+        //XSS防护：转义用户名和昵称
+        dto.setUsername(XssUtils.escapeHtml(dto.getUsername()));
+        if (StringUtils.hasText(dto.getNickname())) {
+            dto.setNickname(XssUtils.escapeHtml(dto.getNickname()));
         }
 
         //验证验证码

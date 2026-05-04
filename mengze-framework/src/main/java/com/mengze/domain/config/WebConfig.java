@@ -5,6 +5,8 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.mengze.filter.ContentTypeValidationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -73,5 +75,20 @@ public class WebConfig implements WebMvcConfigurer {
         RestTemplate restTemplate = new RestTemplate(factory);
         return restTemplate;
     }
+
+    /**
+     * Content-Type验证过滤器
+     * 防止Content-Type伪造攻击
+     * 如果前端代码规范，所有接口都正确设置Content-Type，则启用
+     */
+     @Bean
+     public FilterRegistrationBean<ContentTypeValidationFilter> contentTypeFilter()
+     {
+         FilterRegistrationBean<ContentTypeValidationFilter> registration = new FilterRegistrationBean<>();
+         registration.setFilter(new ContentTypeValidationFilter());
+         registration.addUrlPatterns("/*");
+         registration.setOrder(1);
+         return registration;
+     }
 
 }

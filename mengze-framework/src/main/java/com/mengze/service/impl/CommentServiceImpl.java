@@ -21,6 +21,7 @@ import com.mengze.service.ArticleService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
 import com.mengze.utils.SecurityUtils;
+import com.mengze.utils.XssUtils;
 import com.mengze.service.SensitiveUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -113,6 +114,20 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         Comment comment = BeanCopyUtils.copyBean(addCommentDto, Comment.class);
+        
+        //XSS防护：转义用户输入的内容
+        if (StringUtils.hasText(comment.getContent())) {
+            comment.setContent(XssUtils.escapeHtml(comment.getContent()));
+        }
+        if (StringUtils.hasText(comment.getNickname())) {
+            comment.setNickname(XssUtils.escapeHtml(comment.getNickname()));
+        }
+        if (StringUtils.hasText(comment.getPersonalWebsite())) {
+            // 验证URL安全性
+            if (!XssUtils.isSafeUrl(comment.getPersonalWebsite())) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "个人网址包含不安全的协议");
+            }
+        }
         
         //处理 rootId 默认值
         if (comment.getRootId() == null) {
