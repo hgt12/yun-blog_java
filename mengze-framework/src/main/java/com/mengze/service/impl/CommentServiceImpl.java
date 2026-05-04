@@ -21,6 +21,7 @@ import com.mengze.service.ArticleService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.GravatarUtils;
 import com.mengze.utils.SecurityUtils;
+import com.mengze.service.SensitiveUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -46,6 +47,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private ArticleService articleService;
+
+    @Autowired
+    private SensitiveUtilService sensitiveUtilService;
 
     //查询评论列表（包括文章评论，友链评论和留言板评论）
     @Override
@@ -162,15 +166,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             comment.setAvatar(GravatarUtils.getCommentPreviewAvatarUrl(comment.getEmail()));
         }
         
+        //敏感词检测
+        boolean isSensitive = sensitiveUtilService.checkSensitiveWords(comment.getContent(), comment.getEmail());
+        
         //设置默认值
         comment.setLikeCount(SystemConstants.DEFAULT_COMMENT_LIKES);
-        comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
+        
+        //根据敏感词检测结果设置评论状态
+        if (isSensitive) {
+            //检测到敏感词，设置为待审核状态
+            comment.setStatus(SystemConstants.COMMENT_STATUS_PENDING_REVIEW);
+        } else {
+            //未检测到敏感词，设置为正常状态
+            comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
+        }
+        
         comment.setDelFlag(SystemConstants.COMMENT_STATUS_NORMAL);
         comment.setCreateTime(new Date());
 
         save(comment);
         
-        //发送邮件通知
+        //如果检测到敏感词，发送敏感词相关的邮件通知
+        if (isSensitive) {
+            //发送敏感词检测邮件通知（包括给用户和博主）
+            emailService.sendSensitiveWordNotification(comment);
+            
+            //返回提示信息
+            return ResponseResult.errorResult(AppHttpCodeEnum.COMMENT_SENSITIVE_PENDING_REVIEW);
+        }
+        
+        //未检测到敏感词，发送正常的评论通知邮件
         emailService.sendCommentNotificationByEmail(comment);
 
         return ResponseResult.okResult();

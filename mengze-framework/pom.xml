@@ -98,7 +98,7 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
         </dependency>
-<!--        七牛云对象存储服务-->
+        <!--七牛云对象存储服务-->
         <dependency>
             <groupId>com.qiniu</groupId>
             <artifactId>qiniu-java-sdk</artifactId>
@@ -129,6 +129,26 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!--敏感词检测-->
+        <dependency>
+            <groupId>com.github.houbb</groupId>
+            <artifactId>sensitive-word</artifactId>
+        </dependency>
+        <!--deepseek-->
+        <dependency>
+            <groupId>io.github.pig-mesh.ai</groupId>
+            <artifactId>deepseek-spring-boot-starter</artifactId>
+        </dependency>
+        <!--deepseek核心库-->
+        <dependency>
+            <groupId>io.github.pig-mesh.ai</groupId>
+            <artifactId>deepseek4j-core</artifactId>
+        </dependency>
+        <!--guava工具库（用于线程池等工具类）-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
     </dependencies>
 </project>
