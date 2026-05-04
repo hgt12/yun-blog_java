@@ -36,7 +36,7 @@ public class AddCommentDto {
     private String email;
     
     @Pattern(regexp = "^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "个人网址格式不正确")
-    @ApiModelProperty(value = "个人网址", example = "https://example.com")
+    @ApiModelProperty(value = "个人网址（可选）", example = "https://example.com")
     private String personalWebsite;
     
     @NotBlank(message = "说点什么吧~")

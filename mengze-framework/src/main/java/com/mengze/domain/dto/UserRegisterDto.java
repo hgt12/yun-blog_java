@@ -23,8 +23,9 @@ public class UserRegisterDto {
     private String username;
     
     @NotBlank(message = "密码不能为空")
-    @Pattern(regexp = "^.{6,20}$", message = "密码长度必须在6-20位之间")
-    @ApiModelProperty(value = "密码", required = true, example = "123456")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,20}$", 
+             message = "密码必须包含大小写字母和数字，长度8-20位")
+    @ApiModelProperty(value = "密码", required = true, example = "Pass123456")
     private String password;
     
     @Pattern(regexp = "^$|^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$", message = "邮箱格式不正确")
