@@ -54,6 +54,9 @@ public class AdminCommentServiceImpl implements AdminCommentService
     @Autowired
     private CommentService commentService;
 
+    @Autowired
+    private EmailServiceImpl emailService;
+
     //获取评论列表
     @Override
     public ResponseResult getCommentList(Integer pageNum, Integer pageSize, CommentListDto commentListDto)
@@ -166,7 +169,12 @@ public class AdminCommentServiceImpl implements AdminCommentService
             comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
         });
 
-        //TODO 发送审核通过邮箱给发布评论的用户
+        //发送审核通过邮件给发布评论的用户
+        commentsToApprove.forEach(comment -> {
+            if (StringUtils.hasText(comment.getEmail())) {
+                emailService.sendCommentApprovedNotification(comment);
+            }
+        });
 
         //批量更新到数据库
         boolean updateResult = commentService.updateBatchById(commentsToApprove);
@@ -211,7 +219,12 @@ public class AdminCommentServiceImpl implements AdminCommentService
             comment.setStatus(SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED);
         });
 
-        //TODO 发送审核未通过邮箱给发布评论的用户
+        //发送审核未通过邮件给发布评论的用户
+        commentsToReject.forEach(comment -> {
+            if (StringUtils.hasText(comment.getEmail())) {
+                emailService.sendCommentRejectedNotification(comment);
+            }
+        });
 
         //批量更新到数据库
         boolean updateResult = commentService.updateBatchById(commentsToReject);

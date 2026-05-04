@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.time.LocalDate;
 import java.util.Map;
 
 //邮件服务类
@@ -185,6 +186,66 @@ public class EmailServiceImpl
         }
     }
 
+    //发送评论审核通过通知邮件
+    @Async("asyncExecutor")
+    public void sendCommentApprovedNotification(Comment comment)
+    {
+        try {
+            String articleTitle = getArticleTitle(comment);
+            String articleUrl = buildArticleUrl(comment);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(from);
+            helper.setTo(comment.getEmail());
+            helper.setSubject("【云梦泽的个人博客】您的评论已通过审核");
+
+            String htmlContent = buildCommentApprovedNotificationHtml(
+                    comment.getNickname(),
+                    comment.getContent(),
+                    articleTitle,
+                    articleUrl
+            );
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            // 邮件发送失败不影响评论功能，只记录日志
+            e.printStackTrace();
+        }
+    }
+
+    //发送评论审核未通过通知邮件
+    @Async("asyncExecutor")
+    public void sendCommentRejectedNotification(Comment comment)
+    {
+        try {
+            String articleTitle = getArticleTitle(comment);
+            String articleUrl = buildArticleUrl(comment);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(from);
+            helper.setTo(comment.getEmail());
+            helper.setSubject("【云梦泽的个人博客】您的评论未通过审核");
+
+            String htmlContent = buildCommentRejectedNotificationHtml(
+                    comment.getNickname(),
+                    comment.getContent(),
+                    articleTitle,
+                    articleUrl
+            );
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            // 邮件发送失败不影响评论功能，只记录日志
+            e.printStackTrace();
+        }
+    }
+
     //获取文章标题
     private String getArticleTitle(Comment comment)
     {
@@ -338,7 +399,7 @@ public class EmailServiceImpl
                 "                                此邮件由系统自动发送，请勿直接回复" +
                 "                            </p>" +
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
-                "                                © 2026 云梦泽的个人博客 · All rights reserved" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -406,7 +467,7 @@ public class EmailServiceImpl
                 "                                此邮件由系统自动发送，请勿直接回复" +
                 "                            </p>" +
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
-                "                                © 2026 云梦泽的个人博客 · All rights reserved" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -418,7 +479,7 @@ public class EmailServiceImpl
                 "</html>";
     }
 
-    //构建敏感词通知邮件HTML内容（发给评论用户）
+    //敏感词通知邮件（发给评论用户）
     private String buildSensitiveWordUserNotificationHtml(String nickname, String commentContent, String articleTitle, String articleUrl, java.util.List<String> sensitiveWords)
     {
         // 构建敏感词列表HTML
@@ -479,7 +540,7 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #ff9800 0%, #fb8c00 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(255,152,0,0.3); transition: all 0.3s;\">查看文章</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #ff9800 0%, #fb8c00 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(255,152,0,0.3); transition: all 0.3s;\">查看页面</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -490,7 +551,7 @@ public class EmailServiceImpl
                 "                                此邮件由系统自动发送，请勿直接回复" +
                 "                            </p>" +
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
-                "                                © 2026 云梦泽的个人博客 · All rights reserved" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -502,7 +563,7 @@ public class EmailServiceImpl
                 "</html>";
     }
 
-    //构建敏感词通知邮件HTML内容（发给博主）
+    //敏感词通知邮件（发给博主）
     private String buildSensitiveWordAdminNotificationHtml(String commenterNickname, String commenterEmail, String commentContent, String articleTitle, String articleUrl, java.util.Map<String, String> sensitiveWordsWithSource)
     {
         // 构建敏感词及来源列表HTML
@@ -568,7 +629,7 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(244,67,54,0.3); transition: all 0.3s; margin-right: 10px;\">查看文章</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(244,67,54,0.3); transition: all 0.3s; margin-right: 10px;\">查看页面</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -579,7 +640,7 @@ public class EmailServiceImpl
                 "                                此邮件由系统自动发送，请勿直接回复" +
                 "                            </p>" +
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
-                "                                © 2026 云梦泽的个人博客 · All rights reserved" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -591,7 +652,7 @@ public class EmailServiceImpl
                 "</html>";
     }
 
-    //构建回复通知邮件HTML内容
+    //回复通知邮件
     private String buildReplyNotificationHtml(String articleTitle, String replierNickname, String replyContent, String originalComment, String articleUrl)
     {
         return "<!DOCTYPE html>" +
@@ -642,7 +703,145 @@ public class EmailServiceImpl
                 "                                此邮件由系统自动发送，请勿直接回复" +
                 "                            </p>" +
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
-                "                                © 2026 云梦泽的个人博客 · All rights reserved" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
+                "                            </p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                </table>" +
+                "            </td>" +
+                "        </tr>" +
+                "    </table>" +
+                "</body>" +
+                "</html>";
+    }
+
+    //评论审核通过通知邮件
+    private String buildCommentApprovedNotificationHtml(String nickname, String commentContent, String articleTitle, String articleUrl)
+    {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; background: linear-gradient(135deg, #a5dff9 0%, #008c9e 100%); font-family: 'Segoe UI', Arial, sans-serif;\">" +
+                "    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding: 40px 20px;\">" +
+                "        <tr>" +
+                "            <td align=\"center\">" +
+                "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
+                "                    <!-- 头部 -->" +
+                "                    <tr>" +
+                "                        <td style=\"background: rgb(82, 196, 26); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #f6ffed; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <!-- 内容 -->" +
+                "                    <tr>" +
+                "                        <td style=\"padding: 50px 40px;\">" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\"> 恭喜，" + nickname + "！</h2>" +
+                "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
+                "                                您在《<strong>" + articleTitle + "</strong>》中发表的评论已通过审核，现已正常显示。" +
+                "                            </p>" +
+                "                            <!-- 成功提示 -->" +
+                "                            <div style=\"background-color: #f6ffed; border-left: 4px solid #52c41a; border-radius: 8px; padding: 25px; margin: 30px 0;\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
+                "                                       - ̗̀ ෆ( ˶’ᵕ’˶)ෆ ̖́-   审核通过" +
+                "                                </p>" +
+                "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
+                "                                    您的评论已通过审核，其他用户现在可以看到您的评论了。<br><br>" +
+                "                                    <span style=\"display: block; text-align: center; font-size: 20px; margin: 10px 0;\">ʕ ◦`꒳´◦ʔ</span><br>" +
+                "                                    感谢您的留言！" +
+                "                                </p>" +
+                "                            </div>" +
+                "                            <!-- 评论内容 -->" +
+                "                            <div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%); border-left: 4px solid #52c41a; border-radius: 8px; padding: 25px; margin: 30px 0; box-shadow: 0 2px 8px rgba(82,196,26,0.1);\">" +
+                "                                <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;\">您的评论内容</p>" +
+                "                                <p style=\"color: #3c4858; font-size: 15px; line-height: 1.8; margin: 0; word-wrap: break-word;\">" + commentContent + "</p>" +
+                "                            </div>" +
+                "                            <!-- 查看按钮 -->" +
+                "                            <div style=\"text-align: center; margin: 30px 0;\">" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(82,196,26,0.3); transition: all 0.3s;\">查看评论</a>" +
+                "                            </div>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <!-- 底部 -->" +
+                "                    <tr>" +
+                "                        <td style=\"background: linear-gradient(135deg, #f8f9fa 0%, #eaecef 100%); padding: 30px; text-align: center; border-top: 1px solid #eaecef;\">" +
+                "                            <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px;\">" +
+                "                                此邮件由系统自动发送，请勿直接回复" +
+                "                            </p>" +
+                "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
+                "                            </p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                </table>" +
+                "            </td>" +
+                "        </tr>" +
+                "    </table>" +
+                "</body>" +
+                "</html>";
+    }
+
+    //评论审核未通过通知邮件
+    private String buildCommentRejectedNotificationHtml(String nickname, String commentContent, String articleTitle, String articleUrl)
+    {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; background: linear-gradient(135deg, #a5dff9 0%, #008c9e 100%); font-family: 'Segoe UI', Arial, sans-serif;\">" +
+                "    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding: 40px 20px;\">" +
+                "        <tr>" +
+                "            <td align=\"center\">" +
+                "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
+                "                    <!-- 头部 -->" +
+                "                    <tr>" +
+                "                        <td style=\"background: rgb(244, 67, 54); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #ffebee; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <!-- 内容 -->" +
+                "                    <tr>" +
+                "                        <td style=\"padding: 50px 40px;\">" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">您好，" + nickname + "！</h2>" +
+                "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
+                "                                很抱歉，您在《<strong>" + articleTitle + "</strong>》中发表的评论未能通过审核。" +
+                "                            </p>" +
+                "                            <!-- 提示信息 -->" +
+                "                            <div style=\"background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 8px; padding: 25px; margin: 30px 0;\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
+                "                                     ˚ʚ｡･-･｡ɞ˚   审核未通过" +
+                "                                </p>" +
+                "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
+                "                                    经过审核，您发布的内容性质太过于敏感，以至于容易送博主进去喝茶，因此未能通过审核。<br><br>" +
+                "                                    <span style=\"display: block; text-align: center; font-size: 20px; margin: 10px 0;\">( ⩌⤚⩌)</span><br>" +
+                "                                    我们致力于维护良好的社区环境，希望您能理解。如有疑问，欢迎联系我们。" +
+                "                                </p>" +
+                "                            </div>" +
+                "                            <!-- 评论内容 -->" +
+                "                            <div style=\"background: #f8f9fa; border-left: 4px solid #cbd5e0; border-radius: 8px; padding: 20px; margin: 20px 0;\">" +
+                "                                <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 12px;\">您的评论内容</p>" +
+                "                                <p style=\"color: #718096; font-size: 14px; line-height: 1.6; margin: 0; word-wrap: break-word;\">" + commentContent + "</p>" +
+                "                            </div>" +
+                "                            <!-- 查看按钮 -->" +
+                "                            <div style=\"text-align: center; margin: 30px 0;\">" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(244,67,54,0.3); transition: all 0.3s;\">查看页面</a>" +
+                "                            </div>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <!-- 底部 -->" +
+                "                    <tr>" +
+                "                        <td style=\"background: linear-gradient(135deg, #f8f9fa 0%, #eaecef 100%); padding: 30px; text-align: center; border-top: 1px solid #eaecef;\">" +
+                "                            <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px;\">" +
+                "                                此邮件由系统自动发送，请勿直接回复" +
+                "                            </p>" +
+                "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
+                "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
                 "                        </td>" +
                 "                    </tr>" +
