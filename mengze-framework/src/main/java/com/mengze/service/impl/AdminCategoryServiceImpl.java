@@ -112,6 +112,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     {
         //根据分类id 查询分类
         Category category = categoryService.getById(id);
+        if (category == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该分类不存在！");
+        }
 
         //转换成Vo
         CategoryFormDetailVo categoryFormDetailVo = BeanCopyUtils.copyBean(category, CategoryFormDetailVo.class);

@@ -145,6 +145,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
     {
         //先查询文章id
         Article article = articleService.getById(id);
+        if (article == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该文章不存在！");
+        }
 
         //转化成Vo
         PostsFormDetailVo postsFormDetailVo = BeanCopyUtils.copyBean(article, PostsFormDetailVo.class);

@@ -71,6 +71,9 @@ public class AdminLinkServiceImpl implements AdminLinkService
     {
         //获取友链id
         Link link = linkService.getById(id);
+        if (link == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该友链不存在！");
+        }
 
         //封装为Vo
         LinkFormDetailVo linkFormDetailVo = BeanCopyUtils.copyBean(link, LinkFormDetailVo.class);

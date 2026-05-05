@@ -127,6 +127,9 @@ public class AdminTagServiceImpl implements AdminTagService
     {
         //获取标签id，查询标签
         Tag tag = tagService.getById(id);
+        if (tag == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该标签不存在！");
+        }
 
         //封装成vo
         TagFormDetailVo tagFormDetailVo = BeanCopyUtils.copyBean(tag, TagFormDetailVo.class);
