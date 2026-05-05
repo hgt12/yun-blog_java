@@ -161,6 +161,12 @@ public class AdminTagServiceImpl implements AdminTagService
         //获取标签id
         updateTagDto.setId(id);
 
+        //检查标签是否存在
+        Tag oldTag = tagService.getById(id);
+        if (oldTag == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该标签不存在！");
+        }
+
         // 检查标签名称是否与其他标签重复（排除自己）
         LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Tag::getName, updateTagDto.getName())

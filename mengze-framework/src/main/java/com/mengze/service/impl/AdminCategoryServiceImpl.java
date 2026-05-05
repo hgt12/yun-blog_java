@@ -9,6 +9,7 @@ import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.dto.UpdateCategoryDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
+import com.mengze.domain.entity.Link;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminCategoryService;
@@ -146,6 +147,12 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         //获取分类id
         updateCategoryDto.setId(id);
 
+        //检查分类是否存在
+        Category oldCategory = categoryService.getById(id);
+        if (oldCategory == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该分类不存在！");
+        }
+
         // 检查分类名称是否与其他分类重复（排除自己）
         LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Category::getName, updateCategoryDto.getName())
@@ -155,9 +162,6 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         if (count > 0) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类名称已存在，请修改后重试！");
         }
-
-        //获取旧的分类信息
-        Category oldCategory = categoryService.getById(id);
 
         String msg = null;
 

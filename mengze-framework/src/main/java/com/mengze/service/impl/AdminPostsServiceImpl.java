@@ -7,11 +7,8 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
 import com.mengze.domain.dto.UpdatePostsDto;
-import com.mengze.domain.entity.Article;
-import com.mengze.domain.entity.Category;
+import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.*;
-import com.mengze.domain.entity.ArticleTag;
-import com.mengze.domain.entity.Tag;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.*;
@@ -206,8 +203,11 @@ public class AdminPostsServiceImpl implements AdminPostsService
         // 获取ID
         updatePostsDto.setId(id);
 
-        // 获取旧文章信息
+        //检查文章是否存在
         Article oldArticle = articleService.getById(id);
+        if (oldArticle == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该文章不存在！");
+        }
 
         // 处理文章内容中的图片
         String content = updatePostsDto.getContent();

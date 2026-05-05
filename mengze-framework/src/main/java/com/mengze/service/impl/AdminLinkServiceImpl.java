@@ -105,6 +105,12 @@ public class AdminLinkServiceImpl implements AdminLinkService
         //获取友链id
         updateLinkDto.setId(id);
 
+        //检查友链是否存在
+        Link oldLink = linkService.getById(id);
+        if (oldLink == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该友链不存在！");
+        }
+
         // 检查友链站点地址是否与其他友链重复（排除自己）
         LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Link::getAddress, updateLinkDto.getName())
