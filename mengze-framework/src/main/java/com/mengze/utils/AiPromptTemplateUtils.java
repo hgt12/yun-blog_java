@@ -10,7 +10,7 @@ public class AiPromptTemplateUtils {
      * 敏感词检测提示词模板
      */
     private static final String SENSITIVE_CHECK_TEMPLATE = 
-            "请严格判断以下内容是否包含敏感信息（暴力、色情、反动、诱导等）和包括不限于近期网络梗的违规敏感词，中文拼音首字母缩写和英文单词等敏感信息，" +
+            "请根据内容的上下文和语境严格判断以下是否包含敏感信息（暴力、色情、反动、诱导、广告营销等）和包括不限于近期网络梗的违规敏感词，中文拼音首字母缩写和英文单词等敏感信息，" +
             "用JSON格式回答：{\"sensitive\":布尔值, \"confidence\":0-1的置信度}\n" +
             "内容：%s";
 
