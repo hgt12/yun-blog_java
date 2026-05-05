@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ApiModel(description = "分类选项")
 public class CategoryOptionVo {
-    @ApiModelProperty(value = "分类ID")
+    @ApiModelProperty(value = "分类ID", example = "1")
     @JSONField(name = "value")//转换成 value 再响应给前端
     private Long id;
 
-    @ApiModelProperty(value = "分类名称")
+    @ApiModelProperty(value = "分类名称", example = "后端技术")
     @JSONField(name = "label")//转换成 label 再响应给前端
     private String name;
 }

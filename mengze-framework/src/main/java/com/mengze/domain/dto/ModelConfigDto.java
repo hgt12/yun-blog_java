@@ -1,5 +1,7 @@
 package com.mengze.domain.dto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,19 +13,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ApiModel(description = "AI模型配置请求对象")
 public class ModelConfigDto {
-    /**
-     * 模型名称
-     */
+    
+    @ApiModelProperty(value = "模型名称", example = "gpt-3.5-turbo")
     private String name;
     
-    /**
-     * 优先级
-     */
+    @ApiModelProperty(value = "优先级", example = "1")
     private Integer priority;
     
-    /**
-     * 权重
-     */
+    @ApiModelProperty(value = "权重", example = "0.8")
     private Float weight;
 }

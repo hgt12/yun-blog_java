@@ -17,6 +17,6 @@ public class PageVo
     @ApiModelProperty(value = "数据列表")
     private List rows;
     
-    @ApiModelProperty(value = "总记录数")
+    @ApiModelProperty(value = "总记录数", example = "100")
     private Long total;
 }

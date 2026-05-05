@@ -13,27 +13,16 @@ import java.util.List;
 @AllArgsConstructor
 @ApiModel(description = "归档响应对象")
 public class ArchiveVo {
-    /**
-     * 年份
-     */
-    @ApiModelProperty(value = "年份")
+
+    @ApiModelProperty(value = "年份", example = "2024")
     private Integer year;
 
-    /**
-     * 月份
-     */
-    @ApiModelProperty(value = "月份")
+    @ApiModelProperty(value = "月份", example = "1")
     private Integer month;
 
-    /**
-     * 该月文章数量
-     */
-    @ApiModelProperty(value = "该月文章数量")
+    @ApiModelProperty(value = "该月文章数量", example = "10")
     private Integer articleCount;
 
-    /**
-     * 文章列表
-     */
     @ApiModelProperty(value = "文章列表")
     private List<ArchiveArticleVo> articles;
 }

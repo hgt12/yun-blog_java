@@ -14,19 +14,19 @@ import java.util.Date;
 @ApiModel(description = "系统配置响应对象")
 public class AdminConfigListVo
 {
-    @ApiModelProperty(value = "配置ID")
+    @ApiModelProperty(value = "配置ID", example = "1")
     private Long id;
 
-    @ApiModelProperty(value = "配置名称")
+    @ApiModelProperty(value = "配置名称", example = "网站标题")
     private String configName;
 
-    @ApiModelProperty(value = "配置键")
+    @ApiModelProperty(value = "配置键", example = "site.title")
     private String configKey;
 
-    @ApiModelProperty(value = "配置值")
+    @ApiModelProperty(value = "配置值", example = "梦泽博客")
     private String configValue;
 
-    @ApiModelProperty(value = "描述")
+    @ApiModelProperty(value = "描述", example = "网站的标题配置")
     private String remark;
 
 }

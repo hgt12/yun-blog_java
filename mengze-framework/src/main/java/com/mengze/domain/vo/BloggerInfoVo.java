@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "博主信息响应对象")
 public class BloggerInfoVo {
 
-    @ApiModelProperty(value = "昵称")
+    @ApiModelProperty(value = "昵称", example = "梦泽")
     private String nickname;
 
-    @ApiModelProperty(value = "头像URL")
+    @ApiModelProperty(value = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
 }

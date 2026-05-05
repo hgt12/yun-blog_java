@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "用户登录响应对象")
 public class BlogUserLoginVo
 {
-    @ApiModelProperty(value = "JWT令牌")
+    @ApiModelProperty(value = "JWT令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
     
     @ApiModelProperty(value = "用户信息")

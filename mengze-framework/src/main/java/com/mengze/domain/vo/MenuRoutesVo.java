@@ -3,6 +3,7 @@ package com.mengze.domain.vo;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,25 +22,34 @@ import java.util.List;
 @ApiModel(description = "获取当前登录用户的菜单")
 public class MenuRoutesVo
 {
-    @TableId
+    @ApiModelProperty(value = "菜单ID", example = "1")
     private Long id;
-    //父菜单ID
+    
+    @ApiModelProperty(value = "父菜单ID", example = "0")
     private Long parentId;
-    //菜单名称
+    
+    @ApiModelProperty(value = "菜单名称", example = "系统管理")
     private String name;
-    //菜单类型（C-目录 M-菜单 B-按钮）
+    
+    @ApiModelProperty(value = "菜单类型（C-目录 M-菜单 B-按钮）", example = "C")
     private String type;
-    //路由字符串
+    
+    @ApiModelProperty(value = "路由字符串", example = "/system")
     private String path;
-    //路由名称（前端路由名）
+    
+    @ApiModelProperty(value = "路由名称（前端路由名）", example = "System")
     private String routeName;
-    //跳转路径
+    
+    @ApiModelProperty(value = "跳转路径", example = "/system/user")
     private String redirect;
-    //组件路径
+    
+    @ApiModelProperty(value = "组件路径", example = "system/user/index")
     private String component;
-    //ICON
+    
+    @ApiModelProperty(value = "图标", example = "system")
     private String icon;
 
     @TableField(exist = false)
+    @ApiModelProperty(value = "子菜单列表")
     private List<MenuRoutesVo> children;
 }

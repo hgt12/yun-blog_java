@@ -22,10 +22,10 @@ public class AdminUserInfoVo
     @ApiModelProperty(value = "用户信息")
     private SysUserInfoVo user;
 
-    @ApiModelProperty(value = "角色列表")
+    @ApiModelProperty(value = "角色列表", example = "[\"admin\", \"editor\"]")
     private List<String> roles;
 
-    @ApiModelProperty(value = "菜单列表")
+    @ApiModelProperty(value = "菜单列表", example = "[\"system:user:list\", \"system:role:list\"]")
     private List<String> perms;
 
 }

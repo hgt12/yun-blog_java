@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "热门文章响应对象")
 public class HotArticleListVo
 {
-    @ApiModelProperty(value = "文章ID")
+    @ApiModelProperty(value = "文章ID", example = "1")
     private Long id;
     
-    @ApiModelProperty(value = "文章标题")
+    @ApiModelProperty(value = "文章标题", example = "Spring Boot入门教程")
     private String title;
     
-    @ApiModelProperty(value = "访问量")
+    @ApiModelProperty(value = "访问量", example = "1000")
     private Long viewCount;
 }
