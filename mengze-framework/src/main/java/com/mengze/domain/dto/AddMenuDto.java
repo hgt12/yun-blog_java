@@ -10,7 +10,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 添加菜单请求DTO
@@ -58,10 +57,10 @@ public class AddMenuDto {
     private Integer sort;
 
     @Pattern(regexp = "^[01]$", message = "菜单可见状态只能为0或1")
-    @ApiModelProperty(value = "菜单是否可见（0-显示 1-隐藏）", required = true, example = "0")
+    @ApiModelProperty(value = "菜单是否可见（0-显示 1-隐藏）", example = "0")
     private String visible;
 
-    @ApiModelProperty(value = "目录是否始终显示（0-显示 1-隐藏）", required = true, example = "0")
+    @ApiModelProperty(value = "目录是否始终显示（0-显示 1-隐藏）", example = "0")
     private String alwaysShow;
     
     @ApiModelProperty(value = "权限标识（按钮必填）", example = "system:user:add")
