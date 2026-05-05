@@ -49,9 +49,9 @@ public class SysMenu extends Model<SysMenu> {
     private String visible;
     //权限标识
     private String perm;
-    //目录是否始终显示
+    //目录是否始终显示(0:显示;1:隐藏)
     private String alwaysShow;
-    //是否缓存(keepAlive)
+    //是否缓存(keepAlive)(0:缓存;1:不缓存)
     private String keepAlive;
     //路由参数
     private String params;

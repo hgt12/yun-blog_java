@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.vo.MenuFormDetailVo;
 import com.mengze.domain.vo.MenuOptionVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.RoutersVo;
@@ -13,6 +14,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -60,4 +62,16 @@ public class SysMenuController
     {
         return sysMenuService.getMenuOptions(onlyParent);
     }
+
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取菜单表单数据")
+    @ApiOperation(value = "获取菜单表单数据", notes = "获取菜单表单数据，用于编辑菜单数据", response = MenuFormDetailVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "菜单id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<MenuFormDetailVo> getMenuFormDetail(@PathVariable Long id)
+    {
+        return sysMenuService.getMenuFormDetail(id);
+    }
+
 }

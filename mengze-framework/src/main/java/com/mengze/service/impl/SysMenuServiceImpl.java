@@ -1,14 +1,13 @@
 package com.mengze.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.MenuListDto;
-import com.mengze.domain.vo.MenuOptionVo;
-import com.mengze.domain.vo.MenuRoutesVo;
-import com.mengze.domain.vo.MenuListVo;
-import com.mengze.domain.vo.RoutersVo;
+import com.mengze.domain.vo.*;
 import com.mengze.mapper.SysMenuMapper;
 import com.mengze.domain.entity.SysMenu;
 import com.mengze.service.SysMenuService;
@@ -18,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -141,6 +141,49 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return ResponseResult.okResult(menuTree);
     }
 
+    //获取菜单表单详情
+    @Override
+    public ResponseResult<MenuFormDetailVo> getMenuFormDetail(Long id)
+    {
+        //根据菜单id查询表单数据
+        SysMenu menu = getById(id);
+
+        //转换成Vo
+        MenuFormDetailVo menuFormDetailVo = BeanCopyUtils.copyBean(menu, MenuFormDetailVo.class);
+
+        //转换 alwaysShow 字段：String("0"/"1") -> Boolean (0:显示;1:隐藏)
+        if (StringUtils.hasText(menu.getAlwaysShow())) {
+            menuFormDetailVo.setAlwaysShow(SystemConstants.CONTENTS_ALWAYS_SHOW.equals(menu.getAlwaysShow()));
+        } else {
+            menuFormDetailVo.setAlwaysShow(false);
+        }
+
+        //转换 keepAlive 字段：String("0"/"1") -> Boolean (0:缓存;1:不缓存)
+        if (StringUtils.hasText(menu.getKeepAlive())) {
+            menuFormDetailVo.setKeepAlive(SystemConstants.CACHE_KEEP_ALIVE.equals(menu.getKeepAlive()));
+        } else {
+            menuFormDetailVo.setKeepAlive(false);
+        }
+
+        //转换 params 字段：JSON String -> List<MenuParamVo>
+        if (StringUtils.hasText(menu.getParams())) {
+            try {
+                List<MenuParamVo> paramList = JSON.parseObject(
+                    menu.getParams(),
+                        new TypeReference<>() {}
+                );
+                menuFormDetailVo.setParams(paramList);
+            } catch (Exception e) {
+                //如果解析失败，设置为空列表
+                menuFormDetailVo.setParams(new ArrayList<>());
+            }
+        } else {
+            menuFormDetailVo.setParams(new ArrayList<>());
+        }
+
+        return ResponseResult.okResult(menuFormDetailVo);
+    }
+
     //创建MenuList的菜单树
     private List<MenuListVo> builderMenuListTree(List<MenuListVo> menuListVos, Long parentId)
     {
@@ -150,7 +193,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .collect(Collectors.toList());
         return menuTree;
     }
-
     //获取传入参数的 子菜单（MenuList）集合
     private List<MenuListVo> getChildrenByMenuList(MenuListVo menuListVo, List<MenuListVo> menuListVos)
     {
@@ -161,6 +203,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return childrenList;
     }
 
+
     //创建MenuRoutes的菜单树
     private List<MenuRoutesVo> builderMenuRoutesTree(List<MenuRoutesVo> menuRoutesVos, Long parentId)
     {
@@ -170,7 +213,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .collect(Collectors.toList());
         return menuTree;
     }
-
     //获取传入参数的 子菜单（MenuRoutes）集合
     private List<MenuRoutesVo> getChildrenByMenuRoutes(MenuRoutesVo menuRoutesVo, List<MenuRoutesVo> menuRoutesVos)
     {
@@ -181,6 +223,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return childrenList;
     }
 
+
     //创建MenuOption的菜单树
     private List<MenuOptionVo> builderMenuOptionTree(List<MenuOptionVo> menuOptionVos, Long parentId)
     {
@@ -190,7 +233,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .collect(Collectors.toList());
         return menuTree;
     }
-
     //获取传入参数的 子菜单（MenuOption）集合  
     private List<MenuOptionVo> getChildrenByMenuOption(MenuOptionVo menuOptionVo, List<MenuOptionVo> menuOptionVos)
     {

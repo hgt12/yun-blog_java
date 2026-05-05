@@ -3,7 +3,6 @@ package com.mengze.constants;
 //常量类，后面有需要的常量都可以在这里写
 public class SystemConstants
 {
-    //下面字段对应数据库里的字段
     /**
      *  文章是草稿
      */
@@ -124,5 +123,21 @@ public class SystemConstants
      *  不可见
      */
     public static final String INVISIBLE = "1";
+    /**
+     *  目录始终显示
+     */
+    public static final String CONTENTS_ALWAYS_SHOW = "0";
+    /**
+     *  目录不显示
+     */
+    public static final String CONTENTS_HIDE = "1";
+    /**
+     *  缓存 keepAlive
+     */
+    public static final String CACHE_KEEP_ALIVE = "0";
+    /**
+     *  不缓存 keepAlive
+     */
+    public static final String NOT_CACHE_KEEP_ALIVE = "1";
 
 }
