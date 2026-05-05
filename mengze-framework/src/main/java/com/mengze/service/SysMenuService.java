@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.dto.UpdateMenuDto;
 import com.mengze.domain.entity.SysMenu;
 import com.mengze.domain.vo.MenuFormDetailVo;
 
@@ -28,5 +29,7 @@ public interface SysMenuService extends IService<SysMenu> {
     ResponseResult<MenuFormDetailVo> getMenuFormDetail(Long id);
 
     ResponseResult addMenu(AddMenuDto addMenuDto);
+
+    ResponseResult updateMenu(Long id, UpdateMenuDto updateMenuDto);
 }
 

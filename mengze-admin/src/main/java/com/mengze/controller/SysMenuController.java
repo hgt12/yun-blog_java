@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.dto.UpdateMenuDto;
 import com.mengze.domain.vo.MenuFormDetailVo;
 import com.mengze.domain.vo.MenuOptionVo;
 import com.mengze.domain.vo.PageVo;
@@ -78,6 +79,15 @@ public class SysMenuController
     public ResponseResult addMenu(@Valid @RequestBody AddMenuDto addMenuDto)
     {
         return sysMenuService.addMenu(addMenuDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "编辑菜单")
+    @ApiOperation(value = "编辑菜单接口", notes = "编辑菜单", response = String.class)
+    @ApiImplicitParam(name = "id", value = "菜单ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateMenu(@PathVariable Long id, @Valid @RequestBody UpdateMenuDto updateMenuDto)
+    {
+        return sysMenuService.updateMenu(id, updateMenuDto);
     }
 
 }

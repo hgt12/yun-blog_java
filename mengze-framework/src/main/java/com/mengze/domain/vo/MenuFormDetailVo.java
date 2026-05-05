@@ -53,11 +53,11 @@ public class MenuFormDetailVo
     @ApiModelProperty(value = "权限标识", example = "sys:config:query")
     private String perm;
 
-    @ApiModelProperty(value = "目录是否始终显示", example = "false")
-    private Boolean alwaysShow;
+    @ApiModelProperty(value = "目录是否始终显示(0-显示, 1-隐藏)", example = "0")
+    private String alwaysShow;
 
-    @ApiModelProperty(value = "是否缓存(keepAlive)", example = "true")
-    private Boolean keepAlive;
+    @ApiModelProperty(value = "是否缓存(keepAlive)(0-缓存, 1-不缓存)", example = "0")
+    private String keepAlive;
 
     @ApiModelProperty(value = "路由参数")
     private List<MenuParamVo> params;

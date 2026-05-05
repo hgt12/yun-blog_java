@@ -8,6 +8,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
+import com.mengze.domain.dto.UpdateMenuDto;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysMenuMapper;
@@ -152,23 +153,12 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     {
         //根据菜单id查询表单数据
         SysMenu menu = getById(id);
+        if (menu == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "菜单不存在！");
+        }
 
         //转换成Vo
         MenuFormDetailVo menuFormDetailVo = BeanCopyUtils.copyBean(menu, MenuFormDetailVo.class);
-
-        //转换 alwaysShow 字段：String("0"/"1") -> Boolean (0:显示;1:隐藏)
-        if (StringUtils.hasText(menu.getAlwaysShow())) {
-            menuFormDetailVo.setAlwaysShow(SystemConstants.CONTENTS_ALWAYS_SHOW.equals(menu.getAlwaysShow()));
-        } else {
-            menuFormDetailVo.setAlwaysShow(false);
-        }
-
-        //转换 keepAlive 字段：String("0"/"1") -> Boolean (0:缓存;1:不缓存)
-        if (StringUtils.hasText(menu.getKeepAlive())) {
-            menuFormDetailVo.setKeepAlive(SystemConstants.CACHE_KEEP_ALIVE.equals(menu.getKeepAlive()));
-        } else {
-            menuFormDetailVo.setKeepAlive(false);
-        }
 
         //转换 params 字段：JSON String -> List<MenuParamVo>
         if (StringUtils.hasText(menu.getParams())) {
@@ -242,6 +232,61 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         //保存菜单
         sysMenuService.save(menu);
+
+        return ResponseResult.okResult();
+    }
+
+    //更新菜单
+    @Override
+    public ResponseResult updateMenu(Long id, UpdateMenuDto updateMenuDto)
+    {
+        //获得菜单id
+        updateMenuDto.setId(id);
+
+        //检查菜单是否存在
+        SysMenu oldMenu = sysMenuService.getById(id);
+        if (oldMenu == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "菜单不存在！");
+        }
+
+        //校验父菜单是否存在
+        if (updateMenuDto.getParentId() != 0L) {
+            SysMenu parentMenu = getById(updateMenuDto.getParentId());
+            if (parentMenu == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "父菜单不存在！");
+            }
+            if (updateMenuDto.getParentId().equals(id)) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "父菜单不能是自己！");
+            }
+        }
+
+        //校验目录/菜单必须有路由路径
+        if ((SystemConstants.MENU_TYPE_C.equals(updateMenuDto.getType()) ||
+                SystemConstants.MENU_TYPE_M.equals(updateMenuDto.getType())) &&
+                !StringUtils.hasText(updateMenuDto.getRoutePath())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "目录和菜单的路由路径不能为空！");
+        }
+
+        //校验同一父菜单下是否存在同名菜单（排除自己）
+        LambdaQueryWrapper<SysMenu> nameQuery = new LambdaQueryWrapper<>();
+        nameQuery.eq(SysMenu::getParentId, updateMenuDto.getParentId())
+                .eq(SysMenu::getName, updateMenuDto.getName())
+                .ne(SysMenu::getId, id);
+
+        if (count(nameQuery) > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该父菜单下已存在同名菜单！");
+        }
+
+        //复制属性
+        SysMenu menu = BeanCopyUtils.copyBean(updateMenuDto, SysMenu.class);
+
+        //处理 params 字段
+        if (updateMenuDto.getParams() != null) {
+            menu.setParams(JSON.toJSONString(updateMenuDto.getParams()));
+        }
+
+        //更新菜单
+        sysMenuService.updateById(menu);
 
         return ResponseResult.okResult();
     }
