@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
 import com.mengze.domain.vo.*;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysMenuMapper;
 import com.mengze.domain.entity.SysMenu;
 import com.mengze.service.SysMenuService;
@@ -30,6 +32,9 @@ import java.util.stream.Collectors;
 @Service("sysMenuService")
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService
 {
+
+    @Autowired
+    private SysMenuService sysMenuService;
 
     @Override
     public List<String> selectPermByUserId(Long id)
@@ -182,6 +187,63 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
 
         return ResponseResult.okResult(menuFormDetailVo);
+    }
+
+    //新增菜单
+    @Override
+    public ResponseResult addMenu(AddMenuDto addMenuDto)
+    {
+        //校验父菜单是否存在（如果不是顶级菜单）
+        if (addMenuDto.getParentId() != 0L) {
+            SysMenu parentMenu = getById(addMenuDto.getParentId());
+            if (parentMenu == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "父菜单不存在！");
+            }
+        }
+
+        //校验路由路径：目录和菜单必填，按钮可不填
+        if ((SystemConstants.MENU_TYPE_C.equals(addMenuDto.getType()) || 
+             SystemConstants.MENU_TYPE_M.equals(addMenuDto.getType())) && 
+            !StringUtils.hasText(addMenuDto.getRoutePath())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "目录和菜单的路由路径不能为空！");
+        }
+
+        //检查同一父菜单下是否存在同名菜单
+        LambdaQueryWrapper<SysMenu> nameQueryWrapper = new LambdaQueryWrapper<>();
+        nameQueryWrapper.eq(SysMenu::getParentId, addMenuDto.getParentId())
+                       .eq(SysMenu::getName, addMenuDto.getName());
+        long nameCount = count(nameQueryWrapper);
+
+        if (nameCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该父菜单下已存在同名菜单，请勿重复添加！");
+        }
+
+        //检查同一父菜单下路由路径是否重复（仅对目录和菜单类型）
+        if (StringUtils.hasText(addMenuDto.getPath()) && 
+            (SystemConstants.MENU_TYPE_C.equals(addMenuDto.getType()) || 
+             SystemConstants.MENU_TYPE_M.equals(addMenuDto.getType()))) {
+            LambdaQueryWrapper<SysMenu> pathQueryWrapper = new LambdaQueryWrapper<>();
+            pathQueryWrapper.eq(SysMenu::getParentId, addMenuDto.getParentId())
+                           .eq(SysMenu::getPath, addMenuDto.getPath());
+            long pathCount = count(pathQueryWrapper);
+            
+            if (pathCount > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该父菜单下已存在相同路由地址！");
+            }
+        }
+
+        //复制基本属性
+        SysMenu menu = BeanCopyUtils.copyBean(addMenuDto, SysMenu.class);
+        
+        //处理 params 字段：List<MenuParamDto> -> JSON String
+        if (addMenuDto.getParams() != null && !addMenuDto.getParams().isEmpty()) {
+            menu.setParams(JSON.toJSONString(addMenuDto.getParams()));
+        }
+
+        //保存菜单
+        sysMenuService.save(menu);
+
+        return ResponseResult.okResult();
     }
 
     //创建MenuList的菜单树

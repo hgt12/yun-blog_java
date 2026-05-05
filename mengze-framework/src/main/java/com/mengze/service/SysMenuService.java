@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
 import com.mengze.domain.entity.SysMenu;
 import com.mengze.domain.vo.MenuFormDetailVo;
@@ -25,5 +26,7 @@ public interface SysMenuService extends IService<SysMenu> {
     ResponseResult getMenuOptions(Boolean onlyParent);
 
     ResponseResult<MenuFormDetailVo> getMenuFormDetail(Long id);
+
+    ResponseResult addMenu(AddMenuDto addMenuDto);
 }
 

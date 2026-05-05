@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddMenuDto;
 import com.mengze.domain.dto.MenuListDto;
 import com.mengze.domain.vo.MenuFormDetailVo;
 import com.mengze.domain.vo.MenuOptionVo;
@@ -13,10 +14,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -72,6 +70,14 @@ public class SysMenuController
     public ResponseResult<MenuFormDetailVo> getMenuFormDetail(@PathVariable Long id)
     {
         return sysMenuService.getMenuFormDetail(id);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增菜单")
+    @ApiOperation(value = "新增菜单接口", notes = "新增菜单", response = String.class)
+    public ResponseResult addMenu(@Valid @RequestBody AddMenuDto addMenuDto)
+    {
+        return sysMenuService.addMenu(addMenuDto);
     }
 
 }
