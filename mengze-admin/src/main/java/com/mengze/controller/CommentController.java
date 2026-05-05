@@ -6,6 +6,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CommentListDto;
 import com.mengze.domain.dto.ReplyCommentDto;
 import com.mengze.domain.vo.CommentExportVo;
+import com.mengze.domain.vo.CommentStatisticsVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminCommentService;
@@ -55,7 +56,7 @@ public class CommentController
 
     @PostMapping
     @SystemLog(businessName = "回复评论")
-    @ApiOperation(value = "回复评论", notes = "管理员回复评论")
+    @ApiOperation(value = "回复评论", notes = "管理员回复评论", response = String.class)
     public ResponseResult replyComment(@RequestBody @Valid ReplyCommentDto replyCommentDto)
     {
         return adminCommentService.replyComment(replyCommentDto);
@@ -63,7 +64,7 @@ public class CommentController
 
     @PutMapping("/{ids}/approve")
     @SystemLog(businessName = "审核评论（允许评论发布）")
-    @ApiOperation(value = "审核评论接口（允许评论发布）", notes = "审核评论（允许评论发布）")
+    @ApiOperation(value = "审核评论接口（允许评论发布）", notes = "审核评论（允许评论发布）", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult approveComment(@PathVariable Long[] ids)
     {
@@ -72,7 +73,7 @@ public class CommentController
 
     @PutMapping("/{ids}/reject")
     @SystemLog(businessName = "审核评论（拒绝评论发布）")
-    @ApiOperation(value = "审核评论接口（拒绝评论发布）", notes = "审核评论（拒绝评论发布）")
+    @ApiOperation(value = "审核评论接口（拒绝评论发布）", notes = "审核评论（拒绝评论发布）", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult rejectComment(@PathVariable Long[] ids)
     {
@@ -81,7 +82,7 @@ public class CommentController
 
     @GetMapping("/statistics")
     @SystemLog(businessName = "获取统计信息")
-    @ApiOperation(value = "获取评论统计信息", notes = "获取统计信息")
+    @ApiOperation(value = "获取评论统计信息", notes = "获取统计信息", response = CommentStatisticsVo.class)
     public ResponseResult statisticsComment()
     {
         return adminCommentService.statisticsComment();
@@ -151,7 +152,7 @@ public class CommentController
 
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除评论(逻辑删除)")
-    @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除")
+    @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deleteComment(@PathVariable Long[] ids)
     {

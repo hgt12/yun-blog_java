@@ -57,7 +57,7 @@ public class PostsController
 
     @PostMapping
     @SystemLog(businessName = "新增文章")
-    @ApiOperation(value = "新增文章接口", notes = "新增文章")
+    @ApiOperation(value = "新增文章接口", notes = "新增文章", response = String.class)
     public ResponseResult addPosts(@Valid @RequestBody AddPostsDto postsDto)
     {
         return adminPostsService.addPosts(postsDto);
@@ -65,7 +65,7 @@ public class PostsController
 
     @PutMapping("/{id}")
     @SystemLog(businessName = "编辑/更新文章")
-    @ApiOperation(value = "编辑/更新文章接口", notes = "更新文章，会自动删除旧的图片文件")
+    @ApiOperation(value = "编辑/更新文章接口", notes = "更新文章，会自动删除旧的图片文件", response = String.class)
     @ApiImplicitParam(name = "id", value = "文章ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult updatePosts(@PathVariable Long id, @Valid @RequestBody UpdatePostsDto updatePostsDto)
     {
@@ -74,7 +74,7 @@ public class PostsController
 
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除文章(逻辑删除)")
-    @ApiOperation(value = "删除文章接口（批量逻辑删除）", notes = "删除文章，支持批量删除，会自动删除相关的图片文件和标签关联")
+    @ApiOperation(value = "删除文章接口（批量逻辑删除）", notes = "删除文章，支持批量删除，会自动删除相关的图片文件和标签关联", response = String.class)
     @ApiImplicitParam(name = "ids", value = "文章id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deletePosts(@PathVariable Long[] ids)
     {

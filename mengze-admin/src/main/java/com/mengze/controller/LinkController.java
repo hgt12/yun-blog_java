@@ -54,7 +54,7 @@ public class LinkController
 
     @PostMapping
     @SystemLog(businessName = "新增友链")
-    @ApiOperation(value = "新增友链接口", notes = "新增友链")
+    @ApiOperation(value = "新增友链接口", notes = "新增友链", response = String.class)
     public ResponseResult addLink(@Valid @RequestBody AddLinkDto addLinkDto)
     {
         return adminLinkService.addLink(addLinkDto);
@@ -62,7 +62,7 @@ public class LinkController
 
     @PutMapping("/{id}")
     @SystemLog(businessName = "修改友链")
-    @ApiOperation(value = "修改友链接口", notes = "修改友链")
+    @ApiOperation(value = "修改友链接口", notes = "修改友链", response = String.class)
     @ApiImplicitParam(name = "id", value = "友链ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult updateLink(@PathVariable Long id, @Valid @RequestBody UpdateLinkDto updateLinkDto)
     {
@@ -71,7 +71,7 @@ public class LinkController
 
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除友链(逻辑删除)")
-    @ApiOperation(value = "删除友链接口（批量逻辑删除）", notes = "删除友链，支持批量删除")
+    @ApiOperation(value = "删除友链接口（批量逻辑删除）", notes = "删除友链，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "友链id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deleteLink(@PathVariable Long[] ids)
     {

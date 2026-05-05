@@ -20,7 +20,7 @@ public class UploadController
 
     @PostMapping("/upload")
     @SystemLog(businessName = "上传图片")
-    @ApiOperation(value = "上传图片", notes = "上传头像、文章图片等文件")
+    @ApiOperation(value = "上传图片", notes = "上传头像、文章图片等文件", response = String.class)
     public ResponseResult uploadImg(MultipartFile img)
     {
         return uploadService.uploadImg(img);

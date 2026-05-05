@@ -61,7 +61,7 @@ public class CategoryController
 
     @PostMapping
     @SystemLog(businessName = "新增分类")
-    @ApiOperation(value = "新增分类接口", notes = "新增分类")
+    @ApiOperation(value = "新增分类接口", notes = "新增分类", response = String.class)
     public ResponseResult addCategory(@Valid @RequestBody AddCategoryDto addCategoryDto)
     {
         return adminCategoryService.addCategory(addCategoryDto);
@@ -69,7 +69,7 @@ public class CategoryController
 
     @PutMapping("/{id}")
     @SystemLog(businessName = "编辑分类")
-    @ApiOperation(value = "编辑分类接口", notes = "编辑分类")
+    @ApiOperation(value = "编辑分类接口", notes = "编辑分类", response = String.class)
     @ApiImplicitParam(name = "id", value = "分类ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult updateCategory(@PathVariable Long id, @Valid @RequestBody UpdateCategoryDto updateCategoryDto)
     {
@@ -78,7 +78,7 @@ public class CategoryController
 
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除分类(逻辑删除)")
-    @ApiOperation(value = "删除分类接口（批量逻辑删除）", notes = "删除分类，支持批量删除")
+    @ApiOperation(value = "删除分类接口（批量逻辑删除）", notes = "删除分类，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deleteCategory(@PathVariable Long[] ids)
     {

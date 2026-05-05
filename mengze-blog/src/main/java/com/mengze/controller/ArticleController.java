@@ -80,7 +80,7 @@ public class ArticleController {
     // 预览量接口
     @PutMapping("/viewCount/{id}")
     @SystemLog(businessName = "根据根据文章id获取预览量")
-    @ApiOperation(value = "预览量", notes = "根据根据文章id获取预览量")
+    @ApiOperation(value = "预览量", notes = "根据根据文章id获取预览量", response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "文章id"),
     })

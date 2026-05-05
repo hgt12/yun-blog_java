@@ -45,7 +45,7 @@ public class CommentController
 
     @PostMapping
     @SystemLog(businessName = "添加评论")
-    @ApiOperation(value = "添加评论", notes = "添加文章评论、友链评论或留言板评论")
+    @ApiOperation(value = "添加评论", notes = "添加文章评论、友链评论或留言板评论", response = String.class)
     public ResponseResult addComment(@Valid @RequestBody AddCommentDto addCommentDto)
     {
         return commentService.addComment(addCommentDto);
@@ -53,7 +53,7 @@ public class CommentController
 
     @PutMapping("/like/{commentId}")
     @SystemLog(businessName = "点赞评论")
-    @ApiOperation(value = "点赞评论", notes = "对指定评论进行点赞")
+    @ApiOperation(value = "点赞评论", notes = "对指定评论进行点赞", response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "commentId", value = "评论id")
     })
@@ -64,7 +64,7 @@ public class CommentController
 
     @PostMapping("/generateAvatar")
     @SystemLog(businessName = "生成评论头像")
-    @ApiOperation(value = "生成评论头像", notes = "根据邮箱生成评论框预览头像")
+    @ApiOperation(value = "生成评论头像", notes = "根据邮箱生成评论框预览头像", response = String.class)
     public ResponseResult generateAvatar(@RequestBody Map<String, String> params)
     {
         String email = params.get("email");

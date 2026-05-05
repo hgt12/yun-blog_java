@@ -64,7 +64,7 @@ public class TagController
 
     @PostMapping
     @SystemLog(businessName = "新增标签")
-    @ApiOperation(value = "新增标签接口", notes = "新增标签")
+    @ApiOperation(value = "新增标签接口", notes = "新增标签", response = String.class)
     public ResponseResult addTag(@Valid @RequestBody AddTagDto addTagDto)
     {
         return adminTagService.addTag(addTagDto);
@@ -72,7 +72,7 @@ public class TagController
 
     @PutMapping("/{id}")
     @SystemLog(businessName = "修改标签")
-    @ApiOperation(value = "修改标签接口", notes = "修改标签")
+    @ApiOperation(value = "修改标签接口", notes = "修改标签", response = String.class)
     @ApiImplicitParam(name = "id", value = "标签ID", dataType = "long", paramType = "path", required = true)
     public ResponseResult updateTag(@PathVariable Long id, @Valid @RequestBody UpdateTagDto updateTagDto)
     {
@@ -81,7 +81,7 @@ public class TagController
 
     @DeleteMapping("/{ids}")
     @SystemLog(businessName = "删除标签(逻辑删除)")
-    @ApiOperation(value = "删除标签接口（批量逻辑删除）", notes = "删除标签，支持批量删除")
+    @ApiOperation(value = "删除标签接口（批量逻辑删除）", notes = "删除标签，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "标签id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deleteTag(@PathVariable Long[] ids)
     {

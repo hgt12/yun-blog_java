@@ -44,7 +44,7 @@ public class AdminAuthController
     //用户登出
     @PostMapping("/logout")
     @SystemLog(businessName = "登出")
-    @ApiOperation(value = "用户登出", notes = "用户登出接口")
+    @ApiOperation(value = "用户登出", notes = "用户登出接口", response = String.class)
     public ResponseResult logout()
     {
         return adminAuthService.logout();
@@ -53,7 +53,7 @@ public class AdminAuthController
     //获取图形验证码
     @GetMapping("/captcha")
     @SystemLog(businessName = "获取图形验证码")
-    @ApiOperation(value = "图形验证码", notes = "获取图形验证码")
+    @ApiOperation(value = "图形验证码", notes = "获取图形验证码", response = String.class)
     public ResponseResult captcha()
     {
         return adminAuthService.captcha();
@@ -71,7 +71,7 @@ public class AdminAuthController
     //发送重置密码验证码
     @PostMapping("/sendCode")
     @SystemLog(businessName = "发送重置密码验证码")
-    @ApiOperation(value = "重置密码验证码", notes = "获取重置密码验证码")
+    @ApiOperation(value = "重置密码验证码", notes = "获取重置密码验证码", response = String.class)
     public ResponseResult sendCode(@Valid @RequestBody SendCodeDto dto)
     {
         return authService.sendCode(dto);
@@ -80,7 +80,7 @@ public class AdminAuthController
     //验证重置验证码
     @PostMapping("/verifyCode")
     @SystemLog(businessName = "验证重置密码验证码")
-    @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确")
+    @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确", response = String.class)
     public ResponseResult verifyResetCode(@Valid @RequestBody VerifyResetCodeDto dto)
     {
         return resetPasswordService.verifyResetCode(dto);
@@ -89,7 +89,7 @@ public class AdminAuthController
     //重置密码
     @PostMapping("/resetPassword")
     @SystemLog(businessName = "重置密码")
-    @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码")
+    @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码", response = String.class)
     public ResponseResult resetPassword(@Valid @RequestBody ResetPasswordDto dto)
     {
         return resetPasswordService.resetPassword(dto);

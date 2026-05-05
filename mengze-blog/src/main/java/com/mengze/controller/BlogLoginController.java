@@ -40,7 +40,7 @@ public class BlogLoginController
 
     @PostMapping("logout")
     @SystemLog(businessName = "用户登出")
-    @ApiOperation(value = "用户登出", notes = "退出登录")
+    @ApiOperation(value = "用户登出", notes = "退出登录", response = String.class)
     public ResponseResult logout()
     {
         return blogLoginService.logout();
@@ -67,7 +67,7 @@ public class BlogLoginController
     //验证重置验证码
     @PostMapping("/verifyResetCode")
     @SystemLog(businessName = "验证重置密码验证码")
-    @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确")
+    @ApiOperation(value = "验证重置密码验证码", notes = "验证重置密码时的验证码是否正确", response = String.class)
     public ResponseResult verifyResetCode(@Valid @RequestBody VerifyResetCodeDto dto)
     {
         return resetPasswordService.verifyResetCode(dto);
@@ -76,7 +76,7 @@ public class BlogLoginController
     //重置密码
     @PostMapping("/resetPassword")
     @SystemLog(businessName = "重置密码")
-    @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码")
+    @ApiOperation(value = "重置密码", notes = "通过验证码重置用户密码", response = String.class)
     public ResponseResult resetPassword(@Valid @RequestBody ResetPasswordDto dto)
     {
         return resetPasswordService.resetPassword(dto);

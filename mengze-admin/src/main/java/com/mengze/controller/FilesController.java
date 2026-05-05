@@ -22,7 +22,7 @@ public class FilesController
 
     @PostMapping
     @SystemLog(businessName = "上传图片")
-    @ApiOperation(value = "上传图片", notes = "上传头像、文章图片等文件")
+    @ApiOperation(value = "上传图片", notes = "上传头像、文章图片等文件", response = String.class)
     public ResponseResult uploadFile(MultipartFile file)
     {
         return uploadService.uploadImg(file);

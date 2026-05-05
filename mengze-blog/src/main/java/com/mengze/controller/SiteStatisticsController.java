@@ -38,7 +38,7 @@ public class SiteStatisticsController {
      * 记录访问日志（统计PV和UV）
      */
     @PostMapping("/recordVisit")
-    @ApiOperation(value = "记录访问日志", notes = "记录用户访问，统计PV和UV")
+    @ApiOperation(value = "记录访问日志", notes = "记录用户访问，统计PV和UV", response = String.class)
     public ResponseResult recordVisit(@Valid @RequestBody RecordVisitDto recordVisitDto, HttpServletRequest request) {
         return siteStatisticsService.recordVisit(recordVisitDto, request);
     }

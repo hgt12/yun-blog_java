@@ -24,7 +24,7 @@ public class AuthController
      //发送验证码接口，邮箱/手机号两种方式，登录/注册/忘记密码时使用
     @PostMapping("/sendCode")
     @SystemLog(businessName = "发送验证码")
-    @ApiOperation(value = "发送验证码", notes = "发送邮箱或手机验证码，用于登录/注册/忘记密码")
+    @ApiOperation(value = "发送验证码", notes = "发送邮箱或手机验证码，用于登录/注册/忘记密码", response = String.class)
     public ResponseResult sendCode(@Valid @RequestBody SendCodeDto dto)
     {
         return authService.sendCode(dto);
