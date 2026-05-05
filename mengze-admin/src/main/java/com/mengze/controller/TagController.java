@@ -56,10 +56,11 @@ public class TagController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "标签id", dataType = "long", paramType = "path")
     })
-    public ResponseResult<TagFormDetailVo> getFagFormDetail(@PathVariable Long id)
+    public ResponseResult<TagFormDetailVo> getTagFormDetail(@PathVariable Long id)
     {
         return adminTagService.getTagFormDetail(id);
     }
+
 
     @PostMapping
     @SystemLog(businessName = "新增标签")
