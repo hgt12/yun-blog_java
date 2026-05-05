@@ -45,20 +45,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问
                 .antMatchers("/auth/login").anonymous()
-                // 对于刷新Token接口不需要认证就能访问
-                .antMatchers("/auth/refreshToken").anonymous()
-                // 对于获取图形验证码接口不需要认证就能访问
-                .antMatchers("/auth/captcha").anonymous()
-                // 对于获取忘记密码的验证码接口不需要认证就能访问
-                .antMatchers("/auth/sendCode").anonymous()
-                // 对于验证验证码接口不需要认证就能访问
-                .antMatchers("/auth/verifyCode").anonymous()
-                // 对于重置密码接口不需要认证就能访问
-                .antMatchers("/auth/resetPassword").anonymous()
-                // 对于获取获取天气接口不需要认证就能访问
-                .antMatchers("/weather/now").anonymous()
+                // 对于刷新Token接口所有人都能访问
+                .antMatchers("/auth/refreshToken").permitAll()
+                // 对于获取图形验证码接口所有人都能访问
+                .antMatchers("/auth/captcha").permitAll()
+                // 对于获取忘记密码的验证码接口所有人都能访问
+                .antMatchers("/auth/sendCode").permitAll()
+                // 对于验证验证码接口所有人都能访问
+                .antMatchers("/auth/verifyCode").permitAll()
+                // 对于重置密码接口所有人都能访问
+                .antMatchers("/auth/resetPassword").permitAll()
+                // 对于获取获取天气接口所有人都能访问
+                .antMatchers("/weather/now").permitAll()
                 // 对于swagger-ui相关页面不需要认证就能访问
-                .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs", "/v3/api-docs", "/webjars/**").anonymous()
+                .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs", "/v3/api-docs", "/webjars/**").permitAll()
                 // 除上面外的所有请求都需要认证才可以访问
                 .anyRequest().authenticated();
 
