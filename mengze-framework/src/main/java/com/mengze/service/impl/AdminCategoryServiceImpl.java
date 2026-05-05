@@ -9,7 +9,6 @@ import com.mengze.domain.dto.CategoryListDto;
 import com.mengze.domain.dto.UpdateCategoryDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.Category;
-import com.mengze.domain.entity.Link;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminCategoryService;
@@ -22,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 分类管理服务实现类
@@ -202,6 +203,21 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         //获取分类id列表
         List<Long> idList = List.of(ids);
+
+        //检查分类是否存在
+        List<Category> categoriesToDelete = categoryService.listByIds(idList);
+        if (categoriesToDelete.size() != ids.length) {
+            //找出不存在的 分类id
+            Set<Long> existIds = categoriesToDelete.stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下分类 id 不存在：" + notExistIds);
+        }
 
         //收集所有有文章的分类信息
         StringBuilder errorMsg = new StringBuilder();

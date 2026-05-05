@@ -24,9 +24,8 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-
 
 /**
  * 后台文章管理服务实现类
@@ -291,6 +290,21 @@ public class AdminPostsServiceImpl implements AdminPostsService
         }
 
         List<Long> idList = List.of(ids);
+
+        //检查文章是否存在
+        List<Article> articlesToDelete = articleService.listByIds(idList);
+        if (articlesToDelete.size() != ids.length) {
+            //找出不存在的 文章id
+            Set<Long> existIds = articlesToDelete.stream()
+                    .map(Article::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下文章 id 不存在：" + notExistIds);
+        }
 
         // 遍历每个文章ID，将相关图片移动到deleted文件夹
         for (Long articleId : idList)

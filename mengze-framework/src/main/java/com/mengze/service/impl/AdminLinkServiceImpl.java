@@ -7,7 +7,6 @@ import com.mengze.domain.dto.AddLinkDto;
 import com.mengze.domain.dto.LinkListDto;
 import com.mengze.domain.dto.UpdateLinkDto;
 import com.mengze.domain.entity.Link;
-import com.mengze.domain.entity.Tag;
 import com.mengze.domain.vo.AdminLinkListVo;
 import com.mengze.domain.vo.LinkFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -19,8 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 后台友链管理服务实现类
@@ -143,7 +144,23 @@ public class AdminLinkServiceImpl implements AdminLinkService
         //获取友链id列表
         //因为友链不会与其他管理相关联
         //所以不需要进行像分类和标签删除功能的那些繁琐的检索
-        List<Long> linkIdList = List.of(ids);
+        List<Long> linkIdList = Arrays.asList(ids);
+
+        List<Link> linksToDelete = linkService.listByIds(linkIdList);
+        if (linksToDelete.size() != ids.length) {
+             //找出不存在的 友链id
+            Set<Long> existIds = linksToDelete.stream()
+                    .map(Link::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = linkIdList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下友链 id 不存在：" + notExistIds);
+        }
+
+        //执行删除
         linkService.removeByIds(linkIdList);
 
         return ResponseResult.okResult();

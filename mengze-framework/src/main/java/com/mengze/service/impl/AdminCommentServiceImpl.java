@@ -6,10 +6,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.CommentListDto;
 import com.mengze.domain.dto.ReplyCommentDto;
-import com.mengze.domain.entity.Article;
-import com.mengze.domain.entity.Comment;
-import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.AdminCommentListVo;
 import com.mengze.domain.vo.CommentExportVo;
 import com.mengze.domain.vo.CommentStatisticsVo;
@@ -30,11 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -110,6 +103,12 @@ public class AdminCommentServiceImpl implements AdminCommentService
         if (!SecurityUtils.isAdmin()) {
             return ResponseResult.errorResult(AppHttpCodeEnum.NO_OPERATOR_AUTH, "只有系统管理员才能回复评论");
         }
+
+        //获取评论id
+        Long commentId = replyCommentDto.getParentId();
+        if (commentId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN, "评论不存在");
+        }
         
         SysUser currentUser = loginUser.getSysUser();
         
@@ -151,8 +150,17 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
         //查询需要审核的评论
         List<Comment> commentsToApprove = commentService.listByIds(idList);
-        if (commentsToApprove.isEmpty()) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        if (commentsToApprove.size() != ids.length) {
+            //找出不存在的 评论id
+            Set<Long> existIds = commentsToApprove.stream()
+                    .map(Comment::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败！！原因：以下评论 id 不存在：" + notExistIds);
         }
 
         //检查是否有不属于待审核状态的评论
@@ -201,8 +209,17 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
         //查询需要审核的评论
         List<Comment> commentsToReject = commentService.listByIds(idList);
-        if (commentsToReject.isEmpty()) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        if (commentsToReject.size() != ids.length) {
+            //找出不存在的 评论id
+            Set<Long> existIds = commentsToReject.stream()
+                    .map(Comment::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败！！原因：以下评论 id 不存在：" + notExistIds);
         }
 
         //检查是否有不属于待审核状态的评论
@@ -338,8 +355,17 @@ public class AdminCommentServiceImpl implements AdminCommentService
         
         //查询要删除的评论，找出所有根评论
         List<Comment> commentsToDelete = commentMapper.selectBatchIds(idList);
-        if (commentsToDelete.isEmpty()) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "评论不存在");
+        if (commentsToDelete.size() != ids.length) {
+            //找出不存在的 评论id
+            Set<Long> existIds = commentsToDelete.stream()
+                    .map(Comment::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下评论 id 不存在：" + notExistIds);
         }
         
         //收集所有需要删除的评论ID（包括子评论）

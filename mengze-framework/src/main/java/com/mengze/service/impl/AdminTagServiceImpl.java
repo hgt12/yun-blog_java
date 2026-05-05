@@ -199,6 +199,21 @@ public class AdminTagServiceImpl implements AdminTagService
         //获取标签id
         List<Long> tagIdList =List.of(ids);
 
+        //检查标签是否存在
+        List<Tag> tagsToDelete = tagService.listByIds(tagIdList);
+        if (tagsToDelete.size() != ids.length) {
+            //找出不存在的 标签id
+            Set<Long> existIds = tagsToDelete.stream()
+                    .map(Tag::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = tagIdList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下标签 id 不存在：" + notExistIds);
+        }
+
         //收集所有有文章的标签信息
         StringBuilder errorMsg = new StringBuilder();
 
