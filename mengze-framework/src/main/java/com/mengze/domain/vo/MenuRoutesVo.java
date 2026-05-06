@@ -1,7 +1,6 @@
 package com.mengze.domain.vo;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -9,11 +8,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.Date;
 import java.util.List;
 
 /**
- * 菜单Vo
+ * 菜单路由Vo
  */
 @Data
 @AllArgsConstructor

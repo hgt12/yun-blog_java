@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -225,6 +226,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         //复制基本属性
         SysMenu menu = BeanCopyUtils.copyBean(addMenuDto, SysMenu.class);
         
+        //将routePath的值同时保存到path中
+        if (StringUtils.hasText(addMenuDto.getRoutePath())) {
+            menu.setPath(addMenuDto.getRoutePath());
+        }
+        
         //处理 params 字段：List<MenuParamDto> -> JSON String
         if (addMenuDto.getParams() != null && !addMenuDto.getParams().isEmpty()) {
             menu.setParams(JSON.toJSONString(addMenuDto.getParams()));
@@ -280,6 +286,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         //复制属性
         SysMenu menu = BeanCopyUtils.copyBean(updateMenuDto, SysMenu.class);
 
+        //将routePath的值同时保存到path中
+        if (StringUtils.hasText(updateMenuDto.getRoutePath())) {
+            menu.setPath(updateMenuDto.getRoutePath());
+        }
+
         //处理 params 字段
         if (updateMenuDto.getParams() != null) {
             menu.setParams(JSON.toJSONString(updateMenuDto.getParams()));
@@ -287,6 +298,37 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         //更新菜单
         sysMenuService.updateById(menu);
+
+        return ResponseResult.okResult();
+    }
+
+    //删除菜单
+    @Override
+    public ResponseResult deleteMenu(Long id)
+    {
+        // 参数校验
+        if (id == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的菜单");
+        }
+        
+        //获取菜单并判断是否存在
+        SysMenu menu = sysMenuService.getById(id);
+        if (menu == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该菜单不存在！");
+        }
+
+        //检查是否存在子菜单
+        LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysMenu::getParentId, id);
+        long childCount = sysMenuService.count(queryWrapper);
+        
+        if (childCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, 
+                String.format("菜单【%s】下存在 %d 个子菜单，无法删除！请先删除子菜单。", menu.getName(), childCount));
+        }
+
+        //执行删除
+        sysMenuService.removeById(id);
 
         return ResponseResult.okResult();
     }

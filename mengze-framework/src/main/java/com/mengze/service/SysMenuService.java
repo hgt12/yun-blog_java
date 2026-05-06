@@ -31,5 +31,7 @@ public interface SysMenuService extends IService<SysMenu> {
     ResponseResult addMenu(AddMenuDto addMenuDto);
 
     ResponseResult updateMenu(Long id, UpdateMenuDto updateMenuDto);
+
+    ResponseResult deleteMenu(Long id);
 }
 

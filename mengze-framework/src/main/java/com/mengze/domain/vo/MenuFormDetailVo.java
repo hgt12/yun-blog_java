@@ -26,9 +26,6 @@ public class MenuFormDetailVo
     @ApiModelProperty(value = "菜单类型（C-目录 M-菜单 B-按钮）", example = "M")
     private String type;
 
-    @ApiModelProperty(value = "路由字符串", example = "dict")
-    private String path;
-
     @ApiModelProperty(value = "路由名称（前端路由名）", example = "Dict")
     private String routeName;
 

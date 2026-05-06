@@ -90,4 +90,13 @@ public class SysMenuController
         return sysMenuService.updateMenu(id, updateMenuDto);
     }
 
+    @DeleteMapping("/{id}")
+    @SystemLog(businessName = "删除菜单(逻辑删除)")
+    @ApiOperation(value = "删除菜单接口", notes = "删除单个菜单（逻辑删除）", response = String.class)
+    @ApiImplicitParam(name = "id", value = "菜单id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteMenu(@PathVariable Long id)
+    {
+        return sysMenuService.deleteMenu(id);
+    }
+
 }
