@@ -43,6 +43,7 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter {
      * 白名单路径（不需要验证Content-Type）
      */
     private static final List<String> WHITELIST_PATHS = Arrays.asList(
+        "/auth/logout",     // 退出登录
         "/auth/refreshToken",     // 刷新token接口
         "/upload",           // 文件上传接口
         "/swagger",          // Swagger文档
