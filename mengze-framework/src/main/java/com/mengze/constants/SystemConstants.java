@@ -139,5 +139,9 @@ public class SystemConstants
      *  不缓存 keepAlive
      */
     public static final String NOT_CACHE_KEEP_ALIVE = "1";
+    /**
+     *  默认作者名称
+     */
+    public static final String DEFAULT_AUTHOR = "云梦泽";
 
 }

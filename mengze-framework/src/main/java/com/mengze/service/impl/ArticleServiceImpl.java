@@ -12,6 +12,7 @@ import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.HotArticleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.TagVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.mapper.TagMapper;
@@ -101,6 +102,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     {
         //根据id查询文章
         Article article = getById(id);
+        if (article == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该文章不存在！");
+        }
         //从redis中获取viewCount
         Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
         article.setViewCount(viewCount.longValue());
@@ -116,7 +120,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         
         //根据创建者ID查询作者昵称
         Long createBy = article.getCreateBy();
-        String author = "云梦泽"; // 默认作者名
+        String author = SystemConstants.DEFAULT_AUTHOR; // 默认作者名
         if (createBy != null) {
             SysUser sysUser = sysUserService.getById(createBy);
             if (sysUser != null && sysUser.getNickname() != null) {
