@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Data
 @ConfigurationProperties(prefix = "oss")
-public class OssUploadServiceImpl implements UploadService
+public class UploadServiceImpl implements UploadService
 {
     private String accessKey;
     private String secretKey;

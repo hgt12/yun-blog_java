@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class OssFileServiceImpl implements OssFileService
 {
     @Autowired
-    private OssUploadServiceImpl ossUploadService;
+    private UploadServiceImpl ossUploadService;
     
     @Autowired
     private RedisCache redisCache;
