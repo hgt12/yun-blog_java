@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-//Oss上传图片实现类
+//上传相关实现类
 @Service
 @Data
 @ConfigurationProperties(prefix = "oss")
@@ -40,23 +40,24 @@ public class UploadServiceImpl implements UploadService
     // Redis key前缀，用于存储临时文件信息
     private static final String TEMP_FILE_KEY_PREFIX = "temp:file:";
 
+    //用于前台用户上传头像
     @Override
-    public ResponseResult uploadImg(MultipartFile img)
+    public ResponseResult uploadAvatar(MultipartFile avatar)
     {
         //判断文件是否为空
-        if (img == null || img.isEmpty()) {
-            throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
+        if (avatar == null || avatar.isEmpty()) {
+            throw new SystemException(AppHttpCodeEnum.FILE_NULL);
         }
         
         //判断文件大小（限制2MB）
         long maxSize = 2 * 1024 * 1024; // 2MB
-        if (img.getSize() > maxSize) {
+        if (avatar.getSize() > maxSize) {
             throw new SystemException(AppHttpCodeEnum.FILE_SIZE_ERROR);
         }
         
         //判断文件类型
         //获取原始文件名
-        String originalFilename = img.getOriginalFilename();
+        String originalFilename = avatar.getOriginalFilename();
         //判断文件名是否为png，jpg，gif，jpeg
         if (!originalFilename.endsWith(".png") && !originalFilename.endsWith(".jpg") && !originalFilename.endsWith(".gif") && !originalFilename.endsWith(".jpeg")) {
             throw new SystemException(AppHttpCodeEnum.FILE_TYPE_ERROR);
@@ -64,7 +65,7 @@ public class UploadServiceImpl implements UploadService
         
         //上传到临时目录，文件路径格式：temp/yyyy/MM/dd/文件名.后缀
         String filePath = "temp/" + PathUtils.generateFilePath(originalFilename);
-        String url = uploadOss(img, filePath);
+        String url = uploadOss(avatar, filePath);
         
         //将临时文件信息存入Redis，设置24小时过期时间
         //存储格式：key=temp:file:文件路径, value=上传时间戳
