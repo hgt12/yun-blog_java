@@ -2,15 +2,22 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.FileListDto;
+import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysFileService;
 import com.mengze.service.UploadService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
 
 //后台用户上传文件相关接口
 @RestController
@@ -38,5 +45,18 @@ public class FilesController
     public ResponseResult uploadFile(MultipartFile file)
     {
         return sysFileService.uploadFile(file);
+    }
+
+    @GetMapping
+    @SystemLog(businessName = "分页查询文件列表")
+    @ApiOperation(value = "文件列表", notes = "分页查询文件列表", response = PageVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "keywords", value = "关键字（文件名称）", dataType = "string", paramType = "query")
+    })
+    public ResponseResult<PageVo> getFileList(Integer pageNum, Integer pageSize, @Valid FileListDto fileListDto)
+    {
+        return sysFileService.getFileList(pageNum, pageSize, fileListDto);
     }
 }

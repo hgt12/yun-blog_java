@@ -29,9 +29,9 @@ public class SysFile extends Model<SysFile> {
     private Long id;
     //文件名称
     private String name;
-    //文件来源（例：文章图片，用户头像等....）
+    //文件来源
     private String fileSource;
-    //文件类型
+    //文件类型（图片，视频，文档等.....）
     private String type;
     //文件存储路径(用于删除)
     private String filePath;
