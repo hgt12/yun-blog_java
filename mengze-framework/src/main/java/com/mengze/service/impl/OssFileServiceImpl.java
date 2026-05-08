@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +56,7 @@ public class OssFileServiceImpl implements OssFileService
     {
         if (!StringUtils.hasText(tempFileUrl) || !tempFileUrl.contains(TEMP_PATH_PREFIX)) {
             String filePath = extractKeyFromUrl(tempFileUrl);
-            return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl);
+            return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl, null, null);
         }
         
         try {
@@ -74,18 +75,47 @@ public class OssFileServiceImpl implements OssFileService
             // 删除临时文件
             bucketManager.delete(uploadService.getBucket(), tempKey);
             
-            // 从Redis中删除临时文件记录
-            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
-            
             // 返回正式文件元数据
             String formalUrl = uploadService.getDomain() + formalKey;
-            UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl);
+            Long fileSize = null;
+            String mimeType = null;
+            Object tempMetaObj = redisCache.getCacheObject(TEMP_FILE_KEY_PREFIX + tempKey + ":meta");
+            if (tempMetaObj instanceof Map) {
+                Map<?, ?> tempMeta = (Map<?, ?>) tempMetaObj;
+                Object sizeObj = tempMeta.get("size");
+                Object mimeTypeObj = tempMeta.get("mimeType");
+                if (sizeObj instanceof Number) {
+                    fileSize = ((Number) sizeObj).longValue();
+                } else if (sizeObj instanceof String && StringUtils.hasText((String) sizeObj)) {
+                    try {
+                        fileSize = Long.parseLong((String) sizeObj);
+                    } catch (NumberFormatException ignored) {
+                        log.warn("无法解析文件大小: {}", sizeObj);
+                    }
+                } else if (sizeObj != null) {
+                    try {
+                        fileSize = Long.parseLong(sizeObj.toString());
+                    } catch (NumberFormatException ignored) {
+                        log.warn("无法解析文件大小对象: {}, 类型: {}", sizeObj, sizeObj.getClass().getName());
+                    }
+                }
+                if (mimeTypeObj != null) {
+                    mimeType = String.valueOf(mimeTypeObj);
+                }
+                log.info("tempMeta sizeObj={}, sizeObjType={}", sizeObj, sizeObj == null ? "null" : sizeObj.getClass().getName());
+            }
+            
+            // 最后再删除临时文件记录，避免把元数据删掉后读不到 size
+            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
+            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey + ":meta");
+            
+            UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl, fileSize, mimeType);
             log.info("文件转正成功: {} -> {}", tempFileUrl, formalUrl);
             return uploadFileMetaVo;
             
         } catch (QiniuException e) {
             log.error("文件转正失败: {}", tempFileUrl, e);
-            return new UploadFileMetaVo("", "", tempFileUrl);
+            return new UploadFileMetaVo("", "", tempFileUrl, null, null);
         }
     }
 

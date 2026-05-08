@@ -19,6 +19,12 @@ public class UploadFileMetaVo {
     @ApiModelProperty(value = "文件路径", example = "2026/05/07/fd2c11e91a984e80a80004a22ca6707d_avatar.png")
     private String filePath;
 
-    @ApiModelProperty(value = "标签ID", example = "http://t8ul2nlc8.hn-bkt.clouddn.com/2026/05/07/fd2c11e91a984e80a80004a22ca6707d_avatar.png")
+    @ApiModelProperty(value = "文件URL", example = "http://t8ul2nlc8.hn-bkt.clouddn.com/2026/05/07/fd2c11e91a984e80a80004a22ca6707d_avatar.png")
     private String url;
+
+    @ApiModelProperty(value = "文件大小，单位字节", example = "102400")
+    private Long size;
+
+    @ApiModelProperty(value = "MIME类型", example = "image/png")
+    private String mimeType;
 }

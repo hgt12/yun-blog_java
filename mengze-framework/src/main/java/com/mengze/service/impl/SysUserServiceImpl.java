@@ -185,6 +185,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
                     avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
                     avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setSize(uploadFileMetaVo.getSize());
+                    avatarFile.setMimeType(uploadFileMetaVo.getMimeType());
                     avatarFile.setCreateBy(currentUserId);
                     sysFileService.save(avatarFile);
                 } else {
@@ -193,6 +195,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
                     avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
                     avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setSize(uploadFileMetaVo.getSize());
+                    avatarFile.setMimeType(uploadFileMetaVo.getMimeType());
                     avatarFile.setUpdateBy(currentUserId);
                     sysFileService.updateById(avatarFile);
                 }
