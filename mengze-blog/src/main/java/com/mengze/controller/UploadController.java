@@ -19,10 +19,10 @@ public class UploadController
     private UploadService uploadService;
 
     @PostMapping("/uploadAvatar")
-    @SystemLog(businessName = "上传图片")
-    @ApiOperation(value = "上传图片", notes = "上传头像", response = String.class)
-    public ResponseResult uploadAvatar(MultipartFile avatar)
+    @SystemLog(businessName = "上传头像")
+    @ApiOperation(value = "上传头像", notes = "上传头像", response = String.class)
+    public ResponseResult uploadImage(MultipartFile image)
     {
-        return uploadService.uploadAvatar(avatar);
+        return uploadService.uploadImage(image);
     }
 }
