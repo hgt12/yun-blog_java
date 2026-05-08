@@ -170,14 +170,15 @@ public class AdminPostsServiceImpl implements AdminPostsService
         //处理文章内容中的临时图片，将其转为正式文件
         String content = postsDto.getContent();
         if (ImageUrlUtils.containsTempImages(content)) {
-            content = ossFileService.processContentImages(content);
+            content = ossFileService.processContentFlies(content);
             postsDto.setContent(content);
         }
 
         //处理缩略图
         String thumbnail = postsDto.getThumbnail();
         if (StringUtils.hasText(thumbnail) && thumbnail.contains("temp/")) {
-            thumbnail = ossFileService.moveTempToFormal(thumbnail);
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(thumbnail);
+            thumbnail = uploadFileMetaVo.getUrl();
             postsDto.setThumbnail(thumbnail);
         }
 
@@ -223,7 +224,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         // 处理新内容中的临时图片
         if (ImageUrlUtils.containsTempImages(content)) {
-            content = ossFileService.processContentImages(content);
+            content = ossFileService.processContentFlies(content);
             updatePostsDto.setContent(content);
         }
 
@@ -245,7 +246,8 @@ public class AdminPostsServiceImpl implements AdminPostsService
         String oldThumbnail = oldArticle.getThumbnail();
 
         if (StringUtils.hasText(newThumbnail) && newThumbnail.contains("temp/")) {
-            newThumbnail = ossFileService.moveTempToFormal(newThumbnail);
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(newThumbnail);
+            newThumbnail = uploadFileMetaVo.getUrl();
             updatePostsDto.setThumbnail(newThumbnail);
         }
 

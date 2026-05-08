@@ -1,5 +1,7 @@
 package com.mengze.service;
 
+import com.mengze.domain.vo.UploadFileMetaVo;
+
 import java.util.List;
 
 /**
@@ -12,16 +14,16 @@ public interface OssFileService
     /**
      * 将临时文件转为正式文件
      * @param tempFileUrl 临时文件URL
-     * @return 正式文件URL
+     * @return 正式文件元数据
      */
-    String moveTempToFormal(String tempFileUrl);
+    UploadFileMetaVo moveTempToFormal(String tempFileUrl);
     
     /**
      * 批量将临时文件转为正式文件
      * @param tempFileUrls 临时文件URL列表
-     * @return 正式文件URL列表
+     * @return 正式文件元数据列表
      */
-    List<String> batchMoveTempToFormal(List<String> tempFileUrls);
+    List<UploadFileMetaVo> batchMoveTempToFormal(List<String> tempFileUrls);
     
     /**
      * 删除OSS上的文件
@@ -42,7 +44,7 @@ public interface OssFileService
      * @param content 包含图片URL的内容（HTML、Markdown等）
      * @return 处理后的内容
      */
-    String processContentImages(String content);
+    String processContentFlies(String content);
     
     /**
      * 清理过期的临时文件
