@@ -172,7 +172,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             //根据当前用户和头像来源查找文件记录，存在则更新，不存在则新增
             if (StringUtils.hasText(avatar)) {
                 LambdaQueryWrapper<SysFile> fileQueryWrapper = new LambdaQueryWrapper<>();
-                String fileSource = "用户 " + oldSysUser.getUsername() + " 的头像图片";
+                String fileSource = "用户“" + oldSysUser.getUsername() + "”的头像图片";
                 fileQueryWrapper.eq(SysFile::getCreateBy, currentUserId)
                         .eq(SysFile::getFileSource, fileSource)
                         .last("LIMIT 1");
