@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
+import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.domain.dto.UserRegisterDto;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.domain.entity.SysUser;
@@ -15,8 +16,10 @@ import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.domain.entity.SysFile;
 import com.mengze.service.OssFileService;
 import com.mengze.service.SensitiveUtilService;
+import com.mengze.service.SysFileService;
 import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.RedisCache;
@@ -57,6 +60,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Autowired
     private OssFileService ossFileService;
+
+    @Autowired
+    private SysFileService sysFileService;
 
     @Autowired
     private SysUserMapper sysUserMapper;
@@ -160,12 +166,42 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //处理头像：如果是临时文件，转为正式文件
         String avatar = updateUserInfoDto.getAvatar();
         if (StringUtils.hasText(avatar) && avatar.contains("temp/")) {
-            avatar = ossFileService.moveTempToFormal(avatar);
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(avatar);
+            avatar = uploadFileMetaVo.getUrl();
+
+            //根据当前用户和头像来源查找文件记录，存在则更新，不存在则新增
+            if (StringUtils.hasText(avatar)) {
+                LambdaQueryWrapper<SysFile> fileQueryWrapper = new LambdaQueryWrapper<>();
+                String fileSource = "用户 " + oldSysUser.getUsername() + " 的头像图片";
+                fileQueryWrapper.eq(SysFile::getCreateBy, currentUserId)
+                        .eq(SysFile::getFileSource, fileSource)
+                        .last("LIMIT 1");
+                SysFile avatarFile = sysFileService.getOne(fileQueryWrapper);
+
+                if (avatarFile == null) {
+                    avatarFile = new SysFile();
+                    avatarFile.setName(uploadFileMetaVo.getName());
+                    avatarFile.setFileSource(fileSource);
+                    avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
+                    avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
+                    avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setCreateBy(currentUserId);
+                    sysFileService.save(avatarFile);
+                } else {
+                    avatarFile.setName(uploadFileMetaVo.getName());
+                    avatarFile.setFileSource(fileSource);
+                    avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
+                    avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
+                    avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setUpdateBy(currentUserId);
+                    sysFileService.updateById(avatarFile);
+                }
+            }
         }
-        
+
         //如果头像发生变化，删除OSS上的旧头像
         String oldAvatar = oldSysUser.getAvatar();
-        if (StringUtils.hasText(avatar) && StringUtils.hasText(oldAvatar) 
+        if (StringUtils.hasText(avatar) && StringUtils.hasText(oldAvatar)
                 && !avatar.equals(oldAvatar)) {
             try {
                 ossFileService.deleteFileByUrl(oldAvatar);
@@ -174,7 +210,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 log.warn("从oss中删除旧头像失败: {}, 错误: {}", oldAvatar, e.getMessage()); //删除失败不影响更新流程，只记录日志
             }
         }
-        
+
         //使用LambdaUpdateWrapper条件更新
         LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<SysUser>()
                 .eq(SysUser::getId, currentUserId)

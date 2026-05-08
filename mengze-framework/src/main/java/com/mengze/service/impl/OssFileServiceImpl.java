@@ -1,7 +1,9 @@
 package com.mengze.service.impl;
 
+import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.service.OssFileService;
 import com.mengze.utils.ImageUrlUtils;
+import com.mengze.utils.PathUtils;
 import com.mengze.utils.RedisCache;
 import com.qiniu.common.QiniuException;
 import com.qiniu.storage.BucketManager;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 public class OssFileServiceImpl implements OssFileService
 {
     @Autowired
-    private UploadServiceImpl ossUploadService;
+    private UploadServiceImpl uploadService;
     
     @Autowired
     private RedisCache redisCache;
@@ -43,16 +45,17 @@ public class OssFileServiceImpl implements OssFileService
     private BucketManager getBucketManager()
     {
         Configuration cfg = new Configuration(Region.autoRegion());
-        Auth auth = Auth.create(ossUploadService.getAccessKey(), ossUploadService.getSecretKey());
+        Auth auth = Auth.create(uploadService.getAccessKey(), uploadService.getSecretKey());
         return new BucketManager(auth, cfg);
     }
 
     // 临时 > 正式
     @Override
-    public String moveTempToFormal(String tempFileUrl)
+    public UploadFileMetaVo moveTempToFormal(String tempFileUrl)
     {
         if (!StringUtils.hasText(tempFileUrl) || !tempFileUrl.contains(TEMP_PATH_PREFIX)) {
-            return tempFileUrl; // 不是临时文件，直接返回
+            String filePath = extractKeyFromUrl(tempFileUrl);
+            return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl);
         }
         
         try {
@@ -60,32 +63,35 @@ public class OssFileServiceImpl implements OssFileService
             String tempKey = extractKeyFromUrl(tempFileUrl);
             
             // 生成正式文件的key（去掉temp/前缀）
-            String formalKey = tempKey.replace(TEMP_PATH_PREFIX, "");
+            String sourcePath = tempKey.replace(TEMP_PATH_PREFIX, "");
+            String fileName = extractFileName(sourcePath);
+            String formalKey = PathUtils.generateFilePath(fileName);
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
-            bucketManager.copy(ossUploadService.getBucket(), tempKey, ossUploadService.getBucket(), formalKey, true);
+            bucketManager.copy(uploadService.getBucket(), tempKey, uploadService.getBucket(), formalKey, true);
             
             // 删除临时文件
-            bucketManager.delete(ossUploadService.getBucket(), tempKey);
+            bucketManager.delete(uploadService.getBucket(), tempKey);
             
             // 从Redis中删除临时文件记录
             redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
             
-            // 返回正式文件URL
-            String formalUrl = ossUploadService.getDomain() + formalKey;
+            // 返回正式文件元数据
+            String formalUrl = uploadService.getDomain() + formalKey;
+            UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl);
             log.info("文件转正成功: {} -> {}", tempFileUrl, formalUrl);
-            return formalUrl;
+            return uploadFileMetaVo;
             
         } catch (QiniuException e) {
             log.error("文件转正失败: {}", tempFileUrl, e);
-            return tempFileUrl; // 失败时返回原URL
+            return new UploadFileMetaVo("", "", tempFileUrl);
         }
     }
 
     //批量 临时 > 正式
     @Override
-    public List<String> batchMoveTempToFormal(List<String> tempFileUrls)
+    public List<UploadFileMetaVo> batchMoveTempToFormal(List<String> tempFileUrls)
     {
         if (tempFileUrls == null || tempFileUrls.isEmpty()) {
             return new ArrayList<>();
@@ -101,7 +107,7 @@ public class OssFileServiceImpl implements OssFileService
     {
         try {
             BucketManager bucketManager = getBucketManager();
-            bucketManager.delete(ossUploadService.getBucket(), fileKey);
+            bucketManager.delete(uploadService.getBucket(), fileKey);
             log.info("从oss中删除文件成功: {}", fileKey);
             return true;
         } catch (QiniuException e) {
@@ -129,7 +135,7 @@ public class OssFileServiceImpl implements OssFileService
     }
     
     @Override
-    public String processContentImages(String content)
+    public String processContentFlies(String content)
     {
         if (!ImageUrlUtils.containsTempImages(content)) {
             return content;
@@ -141,8 +147,8 @@ public class OssFileServiceImpl implements OssFileService
         // 逐个转换为正式URL
         String result = content;
         for (String tempUrl : tempImageUrls) {
-            String formalUrl = moveTempToFormal(tempUrl);
-            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, formalUrl);
+            UploadFileMetaVo fileMetaVo = moveTempToFormal(tempUrl);
+            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, fileMetaVo.getUrl());
         }
         
         return result;
@@ -228,6 +234,16 @@ public class OssFileServiceImpl implements OssFileService
         return url;
     }
 
+    private String extractFileName(String filePath)
+    {
+        if (!StringUtils.hasText(filePath)) {
+            return "";
+        }
+
+        int lastSlashIndex = filePath.lastIndexOf('/');
+        return lastSlashIndex >= 0 ? filePath.substring(lastSlashIndex + 1) : filePath;
+    }
+
     // 正式 > 已删除
     @Override
     public boolean moveFileToDeleted(String fileUrl)
@@ -257,10 +273,10 @@ public class OssFileServiceImpl implements OssFileService
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
-            bucketManager.copy(ossUploadService.getBucket(), sourceKey, ossUploadService.getBucket(), targetKey, true);
+            bucketManager.copy(uploadService.getBucket(), sourceKey, uploadService.getBucket(), targetKey, true);
             
             // 删除源文件
-            bucketManager.delete(ossUploadService.getBucket(), sourceKey);
+            bucketManager.delete(uploadService.getBucket(), sourceKey);
             
             log.info("文件移动到deleted文件夹成功: {} -> {}", sourceKey, targetKey);
             return true;
@@ -319,13 +335,13 @@ public class OssFileServiceImpl implements OssFileService
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
-            bucketManager.copy(ossUploadService.getBucket(), deletedKey, ossUploadService.getBucket(), restoredKey, true);
+            bucketManager.copy(uploadService.getBucket(), deletedKey, uploadService.getBucket(), restoredKey, true);
             
             // 删除deleted文件夹中的文件
-            bucketManager.delete(ossUploadService.getBucket(), deletedKey);
+            bucketManager.delete(uploadService.getBucket(), deletedKey);
             
             // 返回恢复后的文件URL
-            String restoredUrl = ossUploadService.getDomain() + restoredKey;
+            String restoredUrl = uploadService.getDomain() + restoredKey;
             log.info("文件从deleted文件夹恢复成功: {} -> {}", deletedKey, restoredKey);
             return restoredUrl;
             
