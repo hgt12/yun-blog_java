@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
  */
 public class ImageUrlUtils
 {
-    // 匹配临时图片URL的正则表达式
-    private static final String TEMP_IMAGE_REGEX = "(https?://[^\\s\"']+/temp/[^\\s\"']+)";
+    // 匹配 Markdown/HTML 中临时图片的 URL的正则表达式
+    private static final String TEMP_IMAGE_REGEX = "(https?://[^\\s\"')]+/temp/[^\\s\"')]+)";
     private static final Pattern TEMP_IMAGE_PATTERN = Pattern.compile(TEMP_IMAGE_REGEX);
     
     // 匹配所有图片URL的正则表达式
-    private static final String IMAGE_URL_REGEX = "(https?://[^\\s\"']+\\.(jpg|jpeg|png|gif|webp|bmp))";
+    private static final String IMAGE_URL_REGEX = "(https?://[^\\s\"')]+\\.(jpg|jpeg|png|gif|webp|bmp))";
     private static final Pattern IMAGE_URL_PATTERN = Pattern.compile(IMAGE_URL_REGEX, Pattern.CASE_INSENSITIVE);
     
     /**
