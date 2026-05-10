@@ -38,14 +38,7 @@ public interface OssFileService
      * @return 是否删除成功
      */
     boolean deleteFileByUrl(String fileUrl);
-    
-    /**
-     * 处理内容中的临时图片，将其转为正式文件
-     * @param content 包含图片URL的内容（HTML、Markdown等）
-     * @return 处理后的内容
-     */
-    String processContentFlies(String content);
-    
+
     /**
      * 清理过期的临时文件
      * @return 清理的文件数量

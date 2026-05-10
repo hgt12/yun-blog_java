@@ -58,6 +58,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Autowired
     private OssFileService ossFileService;
 
+    @Autowired
+    private SysFileService sysFileService;
+
     //获取文章列表
     @Override
     public ResponseResult getPostsList(Integer pageNum, Integer pageSize, PostsListDto postsListDto)
@@ -170,7 +173,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         //处理文章内容中的临时图片，将其转为正式文件
         String content = postsDto.getContent();
         if (ImageUrlUtils.containsTempImages(content)) {
-            content = ossFileService.processContentFlies(content);
+            content = processContentImagesAndSaveRecords(content, postsDto.getTitle());
             postsDto.setContent(content);
         }
 
@@ -178,8 +181,19 @@ public class AdminPostsServiceImpl implements AdminPostsService
         String thumbnail = postsDto.getThumbnail();
         if (StringUtils.hasText(thumbnail) && thumbnail.contains("temp/")) {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(thumbnail);
+            //判断图片是否保存（从oss中的 临时 > 正式）成功
+            if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
+                throw new RuntimeException("缩略图保存失败，无法保存文章记录: " + thumbnail);
+            }
+            String fileSource = "文章《" + postsDto.getTitle() + "》中的缩略图";
             thumbnail = uploadFileMetaVo.getUrl();
             postsDto.setThumbnail(thumbnail);
+            saveFileRecord(uploadFileMetaVo.getName(),
+                    uploadFileMetaVo.getFilePath(),
+                    uploadFileMetaVo.getUrl(),
+                    uploadFileMetaVo.getSize(),
+                    uploadFileMetaVo.getMimeType(),
+                    fileSource);
         }
 
         //添加文章
@@ -224,7 +238,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         // 处理新内容中的临时图片
         if (ImageUrlUtils.containsTempImages(content)) {
-            content = ossFileService.processContentFlies(content);
+            content = processContentImagesAndSaveRecords(content, oldArticle.getTitle());
             updatePostsDto.setContent(content);
         }
 
@@ -237,7 +251,8 @@ public class AdminPostsServiceImpl implements AdminPostsService
         for (String oldImageUrl : oldContentImages) {
             if (!newContentImages.contains(oldImageUrl)) {
                 ossFileService.deleteFileByUrl(oldImageUrl);
-                log.info("删除旧的内容图片: {}", oldImageUrl);
+                deleteFileRecordByUrl(oldImageUrl);
+                log.info("删除旧的内容图片并同步文件表: {}", oldImageUrl);
             }
         }
 
@@ -247,8 +262,17 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         if (StringUtils.hasText(newThumbnail) && newThumbnail.contains("temp/")) {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(newThumbnail);
+            if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
+                throw new RuntimeException("缩略图保存失败，无法更新文章记录: " + newThumbnail);
+            }
             newThumbnail = uploadFileMetaVo.getUrl();
             updatePostsDto.setThumbnail(newThumbnail);
+            saveFileRecord(uploadFileMetaVo.getName(),
+                    uploadFileMetaVo.getFilePath(),
+                    uploadFileMetaVo.getUrl(),
+                    uploadFileMetaVo.getSize(),
+                    uploadFileMetaVo.getMimeType(),
+                    "文章《" + oldArticle.getTitle() + "》中的缩略图");
         }
 
         // 如果缩略图发生变化，删除旧缩略图
@@ -256,7 +280,8 @@ public class AdminPostsServiceImpl implements AdminPostsService
             StringUtils.hasText(newThumbnail) &&
             !oldThumbnail.equals(newThumbnail)) {
             ossFileService.deleteFileByUrl(oldThumbnail);
-            log.info("删除旧的缩略图: {}", oldThumbnail);
+            deleteFileRecordByUrl(oldThumbnail);
+            log.info("删除旧的缩略图并同步文件表: {}", oldThumbnail);
         }
 
         // 更新文章基本信息
@@ -308,7 +333,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下文章 id 不存在：" + notExistIds);
         }
 
-        // 遍历每个文章ID，将相关图片移动到deleted文件夹
+        // 遍历每个文章ID，将相关图片移动到deleted文件夹，并同步删除文件表记录
         for (Long articleId : idList)
         {
             Article article = articleService.getById(articleId);
@@ -332,6 +357,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
                 int movedCount = ossFileService.batchMoveFilesToDeleted(imageUrls);
                 log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}", 
                     articleId, movedCount, imageUrls.size());
+
+                // 同步删除文件表记录
+                for (String imageUrl : imageUrls) {
+                    deleteFileRecordByUrl(imageUrl);
+                }
+                log.info("文章ID: {} 的图片文件表记录已删除，共 {} 条", articleId, imageUrls.size());
             }
 
             // 删除文章标签关联关系
@@ -406,5 +437,63 @@ public class AdminPostsServiceImpl implements AdminPostsService
         return articleTags.stream()
                 .map(ArticleTag::getTagId)
                 .collect(Collectors.toList());
+    }
+
+    //处理文章内容中的图片并将其写入文件表
+    private String processContentImagesAndSaveRecords(String content, String postTitle)
+    {
+        List<String> tempImageUrls = ImageUrlUtils.extractTempImageUrls(content);
+        String result = content;
+
+        // 因为同一篇文章里可能重复引用同一张临时图片，所一这里先去重，避免重复转正和重复删除临时文件
+        List<String> distinctTempImageUrls = tempImageUrls.stream().distinct().collect(Collectors.toList());
+
+        for (String tempUrl : distinctTempImageUrls) {
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(tempUrl);
+
+            //判断图片是否保存（从oss中的 临时 > 正式）成功
+            if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
+                throw new RuntimeException("图片保存失败，无法保存文章内容中的图片记录: " + tempUrl);
+            }
+
+            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, uploadFileMetaVo.getUrl());
+            if (StringUtils.hasText(uploadFileMetaVo.getFilePath())) {
+                String fileSource = "文章《" + postTitle + "》中的图片";
+                saveFileRecord(uploadFileMetaVo.getName(),
+                        uploadFileMetaVo.getFilePath(),
+                        uploadFileMetaVo.getUrl(),
+                        uploadFileMetaVo.getSize(),
+                        uploadFileMetaVo.getMimeType(),
+                        fileSource);
+            }
+        }
+
+        return result;
+    }
+
+    //将元数据写入文件表
+    private void saveFileRecord(String fileName, String filePath, String url, Long size, String mimeType, String fileSource)
+    {
+        SysFile sysFile = new SysFile();
+        sysFile.setName(fileName);
+        sysFile.setFilePath(filePath);
+        sysFile.setUrl(url);
+        sysFile.setSize(size);
+        sysFile.setMimeType(mimeType);
+        sysFile.setFileSource(fileSource);
+        sysFile.setType(SystemConstants.FILE_TYPE_IMAGE);
+        sysFileService.save(sysFile);
+    }
+
+    //处理删除文件
+    private void deleteFileRecordByUrl(String url)
+    {
+        if (!StringUtils.hasText(url)) {
+            return;
+        }
+
+        LambdaQueryWrapper<SysFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysFile::getUrl, url);
+        sysFileService.remove(queryWrapper);
     }
 }

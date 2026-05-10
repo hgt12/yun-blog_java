@@ -9,6 +9,7 @@ import com.qiniu.common.QiniuException;
 import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
+import com.qiniu.storage.model.FileInfo;
 import com.qiniu.util.Auth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,13 @@ public class OssFileServiceImpl implements OssFileService
     @Override
     public UploadFileMetaVo moveTempToFormal(String tempFileUrl)
     {
-        if (!StringUtils.hasText(tempFileUrl) || !tempFileUrl.contains(TEMP_PATH_PREFIX)) {
+        if (!StringUtils.hasText(tempFileUrl)) {
+            log.warn("临时文件的Url不存在: {}", tempFileUrl);
+            return null;
+        }
+
+        // 已经是正式地址时，直接返回，不重复转正
+        if (!tempFileUrl.contains(TEMP_PATH_PREFIX)) {
             String filePath = extractKeyFromUrl(tempFileUrl);
             return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl, null, null);
         }
@@ -62,60 +69,46 @@ public class OssFileServiceImpl implements OssFileService
         try {
             // 从URL中提取文件key
             String tempKey = extractKeyFromUrl(tempFileUrl);
+            if (!StringUtils.hasText(tempKey)) {
+                log.warn("无法从URL提取临时文件key: {}", tempFileUrl);
+                return null;
+            }
+
+            // 如果临时文件已经不存在，说明可能已被前一次处理转正，直接按正式文件处理，避免重复 copy 报错
+            BucketManager bucketManager = getBucketManager();
+            FileInfo tempFileInfo;
+            try {
+                tempFileInfo = bucketManager.stat(uploadService.getBucket(), tempKey);
+            } catch (QiniuException e) {
+                log.warn("临时文件已不存在，无法继续转正: {}", tempFileUrl, e);
+                return null;
+            }
             
             // 生成正式文件的key（去掉temp/前缀）
-            String sourcePath = tempKey.replace(TEMP_PATH_PREFIX, "");
-            String fileName = extractFileName(sourcePath);
+            String fileName = extractFileName(tempKey.replace(TEMP_PATH_PREFIX, ""));
             String formalKey = PathUtils.generateFilePath(fileName);
             
             // 在OSS上移动文件（实际是复制+删除）
-            BucketManager bucketManager = getBucketManager();
             bucketManager.copy(uploadService.getBucket(), tempKey, uploadService.getBucket(), formalKey, true);
             
+            Long fileSize = tempFileInfo.fsize;
+            String mimeType = tempFileInfo.mimeType;
+
             // 删除临时文件
             bucketManager.delete(uploadService.getBucket(), tempKey);
             
+            // 删除临时文件时间戳记录
+            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
+            
             // 返回正式文件元数据
             String formalUrl = uploadService.getDomain() + formalKey;
-            Long fileSize = null;
-            String mimeType = null;
-            Object tempMetaObj = redisCache.getCacheObject(TEMP_FILE_KEY_PREFIX + tempKey + ":meta");
-            if (tempMetaObj instanceof Map) {
-                Map<?, ?> tempMeta = (Map<?, ?>) tempMetaObj;
-                Object sizeObj = tempMeta.get("size");
-                Object mimeTypeObj = tempMeta.get("mimeType");
-                if (sizeObj instanceof Number) {
-                    fileSize = ((Number) sizeObj).longValue();
-                } else if (sizeObj instanceof String && StringUtils.hasText((String) sizeObj)) {
-                    try {
-                        fileSize = Long.parseLong((String) sizeObj);
-                    } catch (NumberFormatException ignored) {
-                        log.warn("无法解析文件大小: {}", sizeObj);
-                    }
-                } else if (sizeObj != null) {
-                    try {
-                        fileSize = Long.parseLong(sizeObj.toString());
-                    } catch (NumberFormatException ignored) {
-                        log.warn("无法解析文件大小对象: {}, 类型: {}", sizeObj, sizeObj.getClass().getName());
-                    }
-                }
-                if (mimeTypeObj != null) {
-                    mimeType = String.valueOf(mimeTypeObj);
-                }
-                log.info("tempMeta sizeObj={}, sizeObjType={}", sizeObj, sizeObj == null ? "null" : sizeObj.getClass().getName());
-            }
-            
-            // 最后再删除临时文件记录，避免把元数据删掉后读不到 size
-            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
-            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey + ":meta");
-            
             UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl, fileSize, mimeType);
             log.info("文件转正成功: {} -> {}", tempFileUrl, formalUrl);
             return uploadFileMetaVo;
             
         } catch (QiniuException e) {
             log.error("文件转正失败: {}", tempFileUrl, e);
-            return new UploadFileMetaVo("", "", tempFileUrl, null, null);
+            return null;
         }
     }
 
@@ -163,27 +156,8 @@ public class OssFileServiceImpl implements OssFileService
         
         return deleteFile(fileKey);
     }
-    
-    @Override
-    public String processContentFlies(String content)
-    {
-        if (!ImageUrlUtils.containsTempImages(content)) {
-            return content;
-        }
-        
-        // 提取所有临时图片URL
-        List<String> tempImageUrls = ImageUrlUtils.extractTempImageUrls(content);
-        
-        // 逐个转换为正式URL
-        String result = content;
-        for (String tempUrl : tempImageUrls) {
-            UploadFileMetaVo fileMetaVo = moveTempToFormal(tempUrl);
-            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, fileMetaVo.getUrl());
-        }
-        
-        return result;
-    }
-    
+
+    //清楚临时文件
     @Override
     public int cleanExpiredTempFiles()
     {
