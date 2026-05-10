@@ -1,21 +1,28 @@
 package com.mengze.service.impl;
 
+import com.google.gson.Gson;
 import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.service.OssFileService;
-import com.mengze.utils.ImageUrlUtils;
 import com.mengze.utils.PathUtils;
 import com.mengze.utils.RedisCache;
 import com.qiniu.common.QiniuException;
+import com.qiniu.http.Response;
 import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
+import com.qiniu.storage.UploadManager;
+import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.storage.model.FileInfo;
 import com.qiniu.util.Auth;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +36,15 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@Data
+@ConfigurationProperties(prefix = "oss")
 public class OssFileServiceImpl implements OssFileService
 {
+    private String accessKey;
+    private String secretKey;
+    private String bucket;
+    private String domain; // OSS访问域名
+
     @Autowired
     private UploadServiceImpl uploadService;
     
@@ -39,7 +53,47 @@ public class OssFileServiceImpl implements OssFileService
     
     private static final String TEMP_FILE_KEY_PREFIX = "temp:file:";
     private static final String TEMP_PATH_PREFIX = "temp/";
+    private static final String FORMAL_PATH_PREFIX = "formal/";
     private static final String DELETED_PATH_PREFIX = "deleted/";
+
+    //将文件上传至oss
+    public String uploadOss(MultipartFile file, String filePath)
+    {
+        //构造一个带指定 Region 对象的配置类
+        Configuration cfg = new Configuration(Region.autoRegion());
+        cfg.resumableUploadAPIVersion = Configuration.ResumableUploadAPIVersion.V2;// 指定分片上传版本
+        //...其他参数参考类注释
+        UploadManager uploadManager = new UploadManager(cfg);
+        //默认不指定key的情况下，以文件内容的hash值作为文件名
+        String key = filePath;
+        try {
+            InputStream inputStream = file.getInputStream();
+            Auth auth = Auth.create(accessKey, secretKey);
+            String upToken = auth.uploadToken(bucket);
+            try {
+                Response response =
+                        uploadManager.put(inputStream,key,upToken,null, null);
+                //解析上传成功的结果
+                DefaultPutRet putRet = new
+                        Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+                System.out.println(putRet.key);
+                System.out.println(putRet.hash);
+                //返回图片的完整URL
+                return domain + key;
+            } catch (QiniuException ex) {
+                Response r = ex.response;
+                System.err.println(r.toString());
+                try {
+                    System.err.println(r.bodyString());
+                } catch (QiniuException ex2) {
+                    //ignore
+                }
+            }
+        } catch (Exception ex) {
+            //ignore
+        }
+        return key;
+    }
     
     /**
      * 获取BucketManager实例
@@ -47,7 +101,7 @@ public class OssFileServiceImpl implements OssFileService
     private BucketManager getBucketManager()
     {
         Configuration cfg = new Configuration(Region.autoRegion());
-        Auth auth = Auth.create(uploadService.getAccessKey(), uploadService.getSecretKey());
+        Auth auth = Auth.create(getAccessKey(), getSecretKey());
         return new BucketManager(auth, cfg);
     }
 
@@ -61,7 +115,7 @@ public class OssFileServiceImpl implements OssFileService
         }
 
         // 已经是正式地址时，直接返回，不重复转正
-        if (!tempFileUrl.contains(TEMP_PATH_PREFIX)) {
+        if (tempFileUrl.contains(FORMAL_PATH_PREFIX)) {
             String filePath = extractKeyFromUrl(tempFileUrl);
             return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl, null, null);
         }
@@ -78,30 +132,30 @@ public class OssFileServiceImpl implements OssFileService
             BucketManager bucketManager = getBucketManager();
             FileInfo tempFileInfo;
             try {
-                tempFileInfo = bucketManager.stat(uploadService.getBucket(), tempKey);
+                tempFileInfo = bucketManager.stat(getBucket(), tempKey);
             } catch (QiniuException e) {
                 log.warn("临时文件已不存在，无法继续转正: {}", tempFileUrl, e);
                 return null;
             }
             
-            // 生成正式文件的key（去掉temp/前缀）
+            // 生成正式文件的key（先去掉“temp/”前缀，再换上“formal/”前缀）
             String fileName = extractFileName(tempKey.replace(TEMP_PATH_PREFIX, ""));
-            String formalKey = PathUtils.generateFilePath(fileName);
+            String formalKey = FORMAL_PATH_PREFIX + PathUtils.generateFilePath(fileName);
             
             // 在OSS上移动文件（实际是复制+删除）
-            bucketManager.copy(uploadService.getBucket(), tempKey, uploadService.getBucket(), formalKey, true);
+            bucketManager.copy(getBucket(), tempKey, getBucket(), formalKey, true);
             
             Long fileSize = tempFileInfo.fsize;
             String mimeType = tempFileInfo.mimeType;
 
             // 删除临时文件
-            bucketManager.delete(uploadService.getBucket(), tempKey);
+            bucketManager.delete(getBucket(), tempKey);
             
             // 删除临时文件时间戳记录
             redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
             
             // 返回正式文件元数据
-            String formalUrl = uploadService.getDomain() + formalKey;
+            String formalUrl = getDomain() + formalKey;
             UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl, fileSize, mimeType);
             log.info("文件转正成功: {} -> {}", tempFileUrl, formalUrl);
             return uploadFileMetaVo;
@@ -130,7 +184,7 @@ public class OssFileServiceImpl implements OssFileService
     {
         try {
             BucketManager bucketManager = getBucketManager();
-            bucketManager.delete(uploadService.getBucket(), fileKey);
+            bucketManager.delete(getBucket(), fileKey);
             log.info("从oss中删除文件成功: {}", fileKey);
             return true;
         } catch (QiniuException e) {
@@ -277,10 +331,10 @@ public class OssFileServiceImpl implements OssFileService
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
-            bucketManager.copy(uploadService.getBucket(), sourceKey, uploadService.getBucket(), targetKey, true);
+            bucketManager.copy(getBucket(), sourceKey, getBucket(), targetKey, true);
             
             // 删除源文件
-            bucketManager.delete(uploadService.getBucket(), sourceKey);
+            bucketManager.delete(getBucket(), sourceKey);
             
             log.info("文件移动到deleted文件夹成功: {} -> {}", sourceKey, targetKey);
             return true;
@@ -336,16 +390,19 @@ public class OssFileServiceImpl implements OssFileService
             
             // 生成恢复后的文件key（去掉deleted/前缀）
             String restoredKey = deletedKey.substring(DELETED_PATH_PREFIX.length());
+            if (!restoredKey.startsWith(FORMAL_PATH_PREFIX)) {
+                restoredKey = FORMAL_PATH_PREFIX + restoredKey;
+            }
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
-            bucketManager.copy(uploadService.getBucket(), deletedKey, uploadService.getBucket(), restoredKey, true);
+            bucketManager.copy(getBucket(), deletedKey, getBucket(), restoredKey, true);
             
             // 删除deleted文件夹中的文件
-            bucketManager.delete(uploadService.getBucket(), deletedKey);
+            bucketManager.delete(getBucket(), deletedKey);
             
             // 返回恢复后的文件URL
-            String restoredUrl = uploadService.getDomain() + restoredKey;
+            String restoredUrl = getDomain() + restoredKey;
             log.info("文件从deleted文件夹恢复成功: {} -> {}", deletedKey, restoredKey);
             return restoredUrl;
             
