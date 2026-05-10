@@ -182,7 +182,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     avatarFile = new SysFile();
                     avatarFile.setName(uploadFileMetaVo.getName());
                     avatarFile.setFileSource(fileSource);
-                    avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
                     avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
                     avatarFile.setUrl(uploadFileMetaVo.getUrl());
                     avatarFile.setSize(uploadFileMetaVo.getSize());
@@ -192,7 +191,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 } else {
                     avatarFile.setName(uploadFileMetaVo.getName());
                     avatarFile.setFileSource(fileSource);
-                    avatarFile.setType(SystemConstants.FILE_TYPE_IMAGE);
                     avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
                     avatarFile.setUrl(uploadFileMetaVo.getUrl());
                     avatarFile.setSize(uploadFileMetaVo.getSize());

@@ -481,7 +481,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
         sysFile.setSize(size);
         sysFile.setMimeType(mimeType);
         sysFile.setFileSource(fileSource);
-        sysFile.setType(SystemConstants.FILE_TYPE_IMAGE);
         sysFileService.save(sysFile);
     }
 

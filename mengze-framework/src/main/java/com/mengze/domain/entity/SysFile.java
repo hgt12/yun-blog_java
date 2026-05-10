@@ -31,8 +31,6 @@ public class SysFile extends Model<SysFile> {
     private String name;
     //文件来源
     private String fileSource;
-    //文件类型（图片，视频，文档等.....）
-    private String type;
     //文件存储路径(用于删除)
     private String filePath;
     //文件URL，图片预览URL

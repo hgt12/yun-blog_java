@@ -23,9 +23,6 @@ public class FileListVo
     @ApiModelProperty(value = "文件来源", example = "用户“里斯啊”的头像图片")
     private String fileSource;
 
-    @ApiModelProperty(value = "文件类型（图片，视频，文档等....）", example = "图片")
-    private String type;
-
     @ApiModelProperty(value = "文件存储路径", example = "文件oss中的存储路径")
     private String filePath;
 

@@ -17,9 +17,6 @@ import javax.validation.constraints.Pattern;
 @ApiModel(description = "文件查询请求对象")
 public class FileListDto {
 
-    @ApiModelProperty(value = "类型", example = "图片")
-    private String type;
-
     @ApiModelProperty(value = "关键字（用于模糊搜索文件名称）", example = "Fluid")
     private String keywords;
 }

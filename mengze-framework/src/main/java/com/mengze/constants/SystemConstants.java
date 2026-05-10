@@ -143,9 +143,4 @@ public class SystemConstants
      *  默认作者名称
      */
     public static final String DEFAULT_AUTHOR = "云梦泽";
-    /**
-     *  文件类型：图片
-     */
-    public static final String FILE_TYPE_IMAGE = "图片";
-
 }
