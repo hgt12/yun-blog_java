@@ -326,8 +326,14 @@ public class OssFileServiceImpl implements OssFileService
                 return true;
             }
             
+            // 删除时去掉 formal/ 前缀，避免出现 deleted/formal/xxx
+            String normalizedSourceKey = sourceKey;
+            if (normalizedSourceKey.startsWith(FORMAL_PATH_PREFIX)) {
+                normalizedSourceKey = normalizedSourceKey.substring(FORMAL_PATH_PREFIX.length());
+            }
+            
             // 生成 deleted key
-            String targetKey = DELETED_PATH_PREFIX + sourceKey;
+            String targetKey = DELETED_PATH_PREFIX + normalizedSourceKey;
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
