@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.LinkedHashSet;
 
 /**
  * 后台文章管理服务实现类
@@ -338,24 +339,25 @@ public class AdminPostsServiceImpl implements AdminPostsService
         {
             Article article = articleService.getById(articleId);
 
-            // 查找需要移动的图片URL
-            List<String> imageUrls = new ArrayList<>();
-            
-            // 查找文章内容中的图片
+            // 查找需要移动的图片URL并去重
+            Set<String> imageUrlSet = new LinkedHashSet<>();
             if (StringUtils.hasText(article.getContent())) {
                 List<String> contentImages = ImageUrlUtils.extractImageUrls(article.getContent());
-                imageUrls.addAll(contentImages);
+                imageUrlSet.addAll(contentImages);
+                log.info("文章ID: {} 内容中提取到的图片URL: {}", articleId, contentImages);
+            }
+            if (StringUtils.hasText(article.getThumbnail())) {
+                imageUrlSet.add(article.getThumbnail());
+                log.info("文章ID: {} 缩略图URL: {}", articleId, article.getThumbnail());
             }
 
-            // 查找缩略图
-            if (StringUtils.hasText(article.getThumbnail())) {
-                imageUrls.add(article.getThumbnail());
-            }
-            
+            List<String> imageUrls = new ArrayList<>(imageUrlSet);
+            log.info("文章ID: {} 去重后的图片URL: {}", articleId, imageUrls);
+
             // 批量移动图片到 deleted 文件夹
             if (!imageUrls.isEmpty()) {
                 int movedCount = ossFileService.batchMoveFilesToDeleted(imageUrls);
-                log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}", 
+                log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}",
                     articleId, movedCount, imageUrls.size());
 
                 // 同步删除文件表记录
