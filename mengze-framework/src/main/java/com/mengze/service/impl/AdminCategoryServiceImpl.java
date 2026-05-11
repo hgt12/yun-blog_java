@@ -219,10 +219,9 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下分类 id 不存在：" + notExistIds);
         }
 
-        //收集所有有文章的分类信息
         StringBuilder errorMsg = new StringBuilder();
 
-        //检查每个分类下是否有文章
+        //收集所有有文章的分类信息并检查每个分类下是否有文章
         for (Long categoryId : idList) {
             LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
             articleQueryWrapper.eq(Article::getCategoryId, categoryId);

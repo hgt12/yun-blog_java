@@ -214,10 +214,9 @@ public class AdminTagServiceImpl implements AdminTagService
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下标签 id 不存在：" + notExistIds);
         }
 
-        //收集所有有文章的标签信息
         StringBuilder errorMsg = new StringBuilder();
 
-        //检查每个标签下是否有文章
+        //收集所有有文章的标签信息并检查每个标签下是否有文章
         for (Long tagId : tagIdList)
         {
             // 通过article_tag关联表查询该标签关联的文章ID列表
