@@ -241,7 +241,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         //如果有分类下存在文章，返回所有错误信息
         if (!errorMsg.isEmpty()) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg.toString() + "，无法删除");
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg + "，无法删除");
         }
 
         //根据分类id列表删除分类
