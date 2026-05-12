@@ -46,11 +46,11 @@ public class SystemConstants
     /**
      *  允许评论
      */
-    public static final String ALLOW_COMMENT = "0";
+    public static final String ALLOW_COMMENT = "1";
     /**
      *  不允许评论
      */
-    public static final String NOT_ALLOWED_COMMENT = "1";
+    public static final String NOT_ALLOWED_COMMENT = "0";
     /**
      *  根评论标识（rootId为-1表示是根评论）
      */
