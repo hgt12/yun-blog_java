@@ -145,7 +145,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             SysUser sysUser = loginUser.getSysUser();
             comment.setUserId(sysUser.getId());
             comment.setNickname(sysUser.getNickname());
-            comment.setEmail(sysUser.getEmail());
+            // 优先使用登录用户邮箱，若登录用户未绑定邮箱则回退使用前端传入的邮箱
+            String email = sysUser.getEmail();
+            if (!StringUtils.hasText(email)) {
+                email = addCommentDto.getEmail();
+            }
+            comment.setEmail(email);
         } else if (SystemConstants.COMMENT_TYPE_MESSAGE.equals(type)) {
             //留言板评论可以不登录
             if (SecurityUtils.isLogin()) {
@@ -154,7 +159,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 SysUser sysUser = loginUser.getSysUser();
                 comment.setUserId(sysUser.getId());
                 comment.setNickname(sysUser.getNickname());
-                comment.setEmail(sysUser.getEmail());
+                // 优先使用登录用户邮箱，若登录用户未绑定邮箱则回退使用前端传入的邮箱
+                String email = sysUser.getEmail();
+                if (!StringUtils.hasText(email)) {
+                    email = addCommentDto.getEmail();
+                }
+                comment.setEmail(email);
             } else {
                 //未登录用户需要填写昵称和邮箱
                 if (!StringUtils.hasText(addCommentDto.getNickname())) {
