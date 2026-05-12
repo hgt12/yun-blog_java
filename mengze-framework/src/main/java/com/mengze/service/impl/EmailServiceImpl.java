@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Map;
 
 //邮件服务类
@@ -161,7 +162,7 @@ public class EmailServiceImpl
             Map<String, String> sensitiveWordsWithSource = SensitiveUtil.findSensitiveWordsWithSource(comment.getContent());
             
             //发送邮件给评论用户，告知需要审核（只显示敏感词，不显示敏感词来源）
-            java.util.List<String> sensitiveWords = new java.util.ArrayList<>(sensitiveWordsWithSource.keySet());
+            java.util.List<String> sensitiveWords = new ArrayList<>(sensitiveWordsWithSource.keySet());
             sendSensitiveWordNotificationToUser(
                     comment.getEmail(),
                     comment.getNickname(),
@@ -506,9 +507,9 @@ public class EmailServiceImpl
                 "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
                 "                    <!-- 头部 -->" +
                 "                    <tr>" +
-                "                        <td style=\"background: rgb(255, 152, 0); padding: 40px 30px; text-align: center;\">" +
-                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
-                "                            <p style=\"color: #fff3e0; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
                 "                        </td>" +
                 "                    </tr>" +
                 "                    <!-- 内容 -->" +
@@ -521,7 +522,7 @@ public class EmailServiceImpl
                 "                            <!-- 提示信息 -->" +
                 "                            <div style=\"background-color: #fff8e1; border-left: 4px solid #ff9800; border-radius: 8px; padding: 25px; margin: 30px 0;\">" +
                 "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
-                "                                    ⚠️ 您的评论需要审核" +
+                "                                    (。•ˇˍˇ•。)  您的评论需要审核" +
                 "                                </p>" +
                 "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
                 "                                    系统检测到您的评论可能包含不当内容，已自动提交审核。审核通过后，您的评论将正常显示。<br><br>" +
@@ -536,11 +537,11 @@ public class EmailServiceImpl
                 "                            <!-- 检测到的敏感词 -->" +
                 "                            <div style=\"background-color: #ffebee; border-left: 4px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;\">" +
                 "                                <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 12px;\">检测到的敏感词</p>" +
-                "                                <div style=\"margin-top: 10px;\">" + sensitiveWordsHtml.toString() + "</div>" +
+                "                                <div style=\"margin-top: 10px;\">" + sensitiveWordsHtml + "</div>" +
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #ff9800 0%, #fb8c00 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(255,152,0,0.3); transition: all 0.3s;\">查看页面</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #30a9de 0%, #2196f3 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(48,169,222,0.3); transition: all 0.3s;\">查看页面</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -596,15 +597,15 @@ public class EmailServiceImpl
                 "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
                 "                    <!-- 头部 -->" +
                 "                    <tr>" +
-                "                        <td style=\"background: rgb(244, 67, 54); padding: 40px 30px; text-align: center;\">" +
-                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
-                "                            <p style=\"color: #ffebee; margin: 10px 0 0 0; font-size: 14px;\">敏感词检测 - 待审核</p>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">敏感词检测 - 待审核</p>" +
                 "                        </td>" +
                 "                    </tr>" +
                 "                    <!-- 内容 -->" +
                 "                    <tr>" +
                 "                        <td style=\"padding: 50px 40px;\">" +
-                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">🔍 检测到敏感词评论</h2>" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">^⎚˕⎚^ 检测到敏感词评论</h2>" +
                 "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
                 "                                系统检测到一条可能包含敏感词的评论，已自动设置为待审核状态，请及时处理。" +
                 "                            </p>" +
@@ -624,12 +625,12 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 检测到的敏感词及来源 -->" +
                 "                            <div style=\"background-color: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; padding: 25px; margin: 30px 0;\">" +
-                "                                <p style=\"color: #718096; margin: 0 0 15px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;\">🔍 检测到的敏感词及来源</p>" +
-                "                                <div>" + sensitiveWordsHtml.toString() + "</div>" +
+                "                                <p style=\"color: #718096; margin: 0 0 15px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;\">敏感词及来源</p>" +
+                "                                <div>" + sensitiveWordsHtml + "</div>" +
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(244,67,54,0.3); transition: all 0.3s; margin-right: 10px;\">查看页面</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #30a9de 0%, #2196f3 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(48,169,222,0.3); transition: all 0.3s;\">查看页面</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -692,7 +693,7 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(82,196,26,0.3); transition: all 0.3s;\">查看回复</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #30a9de 0%, #2196f3 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(48,169,222,0.3); transition: all 0.3s;\">查看回复</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -731,9 +732,9 @@ public class EmailServiceImpl
                 "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
                 "                    <!-- 头部 -->" +
                 "                    <tr>" +
-                "                        <td style=\"background: rgb(82, 196, 26); padding: 40px 30px; text-align: center;\">" +
-                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
-                "                            <p style=\"color: #f6ffed; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">评论审核结果通知</p>" +
                 "                        </td>" +
                 "                    </tr>" +
                 "                    <!-- 内容 -->" +
@@ -761,7 +762,7 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(82,196,26,0.3); transition: all 0.3s;\">查看评论</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #30a9de 0%, #2196f3 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(48,169,222,0.3); transition: all 0.3s;\">查看评论</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
@@ -800,9 +801,9 @@ public class EmailServiceImpl
                 "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
                 "                    <!-- 头部 -->" +
                 "                    <tr>" +
-                "                        <td style=\"background: rgb(244, 67, 54); padding: 40px 30px; text-align: center;\">" +
-                "                            <h1 style=\"color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
-                "                            <p style=\"color: #ffebee; margin: 10px 0 0 0; font-size: 14px;\">评论审核通知</p>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">评论审核结果通知</p>" +
                 "                        </td>" +
                 "                    </tr>" +
                 "                    <!-- 内容 -->" +
@@ -830,7 +831,7 @@ public class EmailServiceImpl
                 "                            </div>" +
                 "                            <!-- 查看按钮 -->" +
                 "                            <div style=\"text-align: center; margin: 30px 0;\">" +
-                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(244,67,54,0.3); transition: all 0.3s;\">查看页面</a>" +
+                "                                <a href=\"" + articleUrl + "\" style=\"display: inline-block; background: linear-gradient(135deg, #30a9de 0%, #2196f3 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 15px rgba(48,169,222,0.3); transition: all 0.3s;\">查看页面</a>" +
                 "                            </div>" +
                 "                        </td>" +
                 "                    </tr>" +
