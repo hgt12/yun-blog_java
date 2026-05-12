@@ -11,10 +11,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
@@ -58,5 +55,14 @@ public class FilesController
     public ResponseResult<PageVo> getFileList(Integer pageNum, Integer pageSize, @Valid FileListDto fileListDto)
     {
         return sysFileService.getFileList(pageNum, pageSize, fileListDto);
+    }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除文件(逻辑删除)")
+    @ApiOperation(value = "删除文件接口（批量逻辑删除）", notes = "删除文件，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "文章id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteFile(@PathVariable Long[] ids)
+    {
+        return sysFileService.deleteFile(ids);
     }
 }

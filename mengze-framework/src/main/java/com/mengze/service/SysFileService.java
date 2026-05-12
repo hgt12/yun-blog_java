@@ -20,5 +20,7 @@ public interface SysFileService extends IService<SysFile> {
     ResponseResult uploadFile(MultipartFile file);
 
     ResponseResult<PageVo> getFileList(Integer pageNum, Integer pageSize, @Valid FileListDto fileListDto);
+
+    ResponseResult deleteFile(Long[] ids);
 }
 
