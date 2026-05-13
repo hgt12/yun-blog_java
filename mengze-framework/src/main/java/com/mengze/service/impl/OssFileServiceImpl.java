@@ -117,7 +117,7 @@ public class OssFileServiceImpl implements OssFileService
         // 已经是正式地址时，直接返回，不重复转正
         if (tempFileUrl.contains(FORMAL_PATH_PREFIX)) {
             String filePath = extractKeyFromUrl(tempFileUrl);
-            return new UploadFileMetaVo(extractFileName(filePath), filePath, tempFileUrl, null, null);
+            return new UploadFileMetaVo(extractOriginalFileName(filePath), filePath, tempFileUrl, null, null);
         }
         
         try {
@@ -139,8 +139,8 @@ public class OssFileServiceImpl implements OssFileService
             }
             
             // 生成正式文件的key（先去掉“temp/”前缀，再换上“formal/”前缀）
-            String fileName = extractFileName(tempKey.replace(TEMP_PATH_PREFIX, ""));
-            String formalKey = FORMAL_PATH_PREFIX + PathUtils.generateFilePath(fileName);
+            String originalFileName = extractOriginalFileName(tempKey.replace(TEMP_PATH_PREFIX, ""));
+            String formalKey = FORMAL_PATH_PREFIX + PathUtils.generateFilePath(originalFileName);
             
             // 在OSS上移动文件（实际是复制+删除）
             bucketManager.copy(getBucket(), tempKey, getBucket(), formalKey, true);
@@ -156,7 +156,7 @@ public class OssFileServiceImpl implements OssFileService
             
             // 返回正式文件元数据
             String formalUrl = getDomain() + formalKey;
-            UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(fileName, formalKey, formalUrl, fileSize, mimeType);
+            UploadFileMetaVo uploadFileMetaVo = new UploadFileMetaVo(originalFileName, formalKey, formalUrl, fileSize, mimeType);
             log.info("文件转正成功: {} -> {}", tempFileUrl, formalUrl);
             return uploadFileMetaVo;
             
@@ -292,14 +292,19 @@ public class OssFileServiceImpl implements OssFileService
         return url;
     }
 
-    private String extractFileName(String filePath)
+    //获取原始文件名
+    private String extractOriginalFileName(String filePath)
     {
         if (!StringUtils.hasText(filePath)) {
             return "";
         }
 
         int lastSlashIndex = filePath.lastIndexOf('/');
-        return lastSlashIndex >= 0 ? filePath.substring(lastSlashIndex + 1) : filePath;
+        String fileName = lastSlashIndex >= 0 ? filePath.substring(lastSlashIndex + 1) : filePath;
+        int underscoreIndex = fileName.indexOf('_');
+        return underscoreIndex >= 0 && underscoreIndex < fileName.length() - 1
+                ? fileName.substring(underscoreIndex + 1)
+                : fileName;
     }
 
     // 正式 > 已删除
