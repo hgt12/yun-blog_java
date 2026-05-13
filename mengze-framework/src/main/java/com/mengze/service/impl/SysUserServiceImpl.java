@@ -7,16 +7,13 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
 import com.mengze.domain.dto.UserRegisterDto;
-import com.mengze.domain.entity.SysRole;
-import com.mengze.domain.entity.SysUser;
-import com.mengze.domain.entity.SysUserRole;
+import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.BloggerInfoVo;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
-import com.mengze.domain.entity.SysFile;
 import com.mengze.service.OssFileService;
 import com.mengze.service.SensitiveUtilService;
 import com.mengze.service.SysFileService;
@@ -232,15 +229,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         boolean nicknameChanged = !updateUserInfoDto.getNickname().equals(oldSysUser.getNickname());
         
         if (avatarChanged || nicknameChanged) {
-            LambdaUpdateWrapper<com.mengze.domain.entity.Comment> commentWrapper = 
-                new LambdaUpdateWrapper<com.mengze.domain.entity.Comment>()
-                    .eq(com.mengze.domain.entity.Comment::getUserId, currentUserId);
+            LambdaUpdateWrapper<Comment> commentWrapper =
+                new LambdaUpdateWrapper<Comment>()
+                    .eq(Comment::getUserId, currentUserId);
             
             if (avatarChanged) {
-                commentWrapper.set(com.mengze.domain.entity.Comment::getAvatar, avatar);
+                commentWrapper.set(Comment::getAvatar, avatar);
             }
             if (nicknameChanged) {
-                commentWrapper.set(com.mengze.domain.entity.Comment::getNickname, updateUserInfoDto.getNickname());
+                commentWrapper.set(Comment::getNickname, updateUserInfoDto.getNickname());
             }
             
             commentMapper.update(null, commentWrapper);
