@@ -30,9 +30,6 @@ public class SysMenuController
     @Autowired
     private SysMenuService sysMenuService;
 
-    /**
-     * 获取当前登录用户可访问的前端路由树
-     */
     @GetMapping("/getRoutes")
     @SystemLog(businessName = "获取当前登录用户可访问的前端路由树")
     @ApiOperation(value = "获取当前用户菜单路由树", notes = "获取当前登录用户可访问的前端路由树", response = RoutersVo.class)
@@ -43,7 +40,7 @@ public class SysMenuController
     @GetMapping
     @SystemLog(businessName = "菜单树列表")
     @ApiOperation(value = "菜单树列表", notes = "获取菜单树列表（不分页）", response = PageVo.class)
-    public ResponseResult getMenuList(@Valid @RequestBody MenuListDto menuListDto)
+    public ResponseResult getMenuList(@Valid MenuListDto menuListDto)
     {
         return sysMenuService.getMenuList(menuListDto);
     }

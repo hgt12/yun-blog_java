@@ -33,8 +33,10 @@ public class CategoryController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "status", value = "状态", dataType = "string", paramType = "query")
     })
-    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, @Valid @RequestBody CategoryListDto categoryListDto)
+    public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, @Valid CategoryListDto categoryListDto)
     {
         return adminCategoryService.getCategoryList(pageNum, pageSize, categoryListDto);
     }

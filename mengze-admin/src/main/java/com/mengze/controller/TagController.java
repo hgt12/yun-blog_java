@@ -36,7 +36,7 @@ public class TagController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
     })
-    public ResponseResult<PageVo> getTagList(Integer pageNum, Integer pageSize, @Valid @RequestBody TagListDto tagListDto)
+    public ResponseResult<PageVo> getTagList(Integer pageNum, Integer pageSize, @Valid TagListDto tagListDto)
     {
         return adminTagService.getTagList(pageNum, pageSize, tagListDto);
     }

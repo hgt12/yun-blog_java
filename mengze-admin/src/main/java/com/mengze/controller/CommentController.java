@@ -43,7 +43,7 @@ public class CommentController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public ResponseResult getCommentList(Integer pageNum, Integer pageSize, @Valid @RequestBody CommentListDto commentListDto)
+    public ResponseResult getCommentList(Integer pageNum, Integer pageSize, @Valid CommentListDto commentListDto)
     {
         return adminCommentService.getCommentList(pageNum, pageSize, commentListDto);
     }

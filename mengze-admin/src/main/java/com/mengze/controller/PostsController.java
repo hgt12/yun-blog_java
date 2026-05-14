@@ -36,7 +36,7 @@ public class PostsController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, @Valid @RequestBody PostsListDto postsListDto)
+    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, @Valid PostsListDto postsListDto)
     {
         return adminPostsService.getPostsList(pageNum, pageSize, postsListDto);
     }

@@ -35,7 +35,7 @@ public class SysRoleController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
     })
-    public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, @Valid @RequestBody RoleListDto roleListDto)
+    public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, @Valid RoleListDto roleListDto)
     {
         return sysRoleService.getRoleList(pageNum, pageSize, roleListDto);
     }

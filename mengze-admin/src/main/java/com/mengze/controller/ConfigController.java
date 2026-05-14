@@ -35,7 +35,7 @@ public class ConfigController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
     })
-    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid @RequestBody ConfigListDto configListDto)
+    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid ConfigListDto configListDto)
     {
         return adminConfigService.getConfigList(pageNum, pageSize, configListDto);
     }
