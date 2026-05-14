@@ -3,7 +3,6 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.vo.ArticleDetailVo;
-import com.mengze.domain.vo.HotArticleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.ArticleService;
 import io.swagger.annotations.Api;
