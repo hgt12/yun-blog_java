@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.dto.RoleListDto;
+import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.service.SysRoleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -11,7 +12,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,5 +38,13 @@ public class SysRoleController
     public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, @Valid RoleListDto roleListDto)
     {
         return sysRoleService.getRoleList(pageNum, pageSize, roleListDto);
+    }
+
+    @GetMapping("/options")
+    @SystemLog(businessName = "角色下拉选项")
+    @ApiOperation(value = "角色下拉选项", notes = "获取角色下拉数据", response = RoleOptionVo.class, responseContainer = "List")
+    public ResponseResult getRoleOptions()
+    {
+        return sysRoleService.getRoleOptions();
     }
 }

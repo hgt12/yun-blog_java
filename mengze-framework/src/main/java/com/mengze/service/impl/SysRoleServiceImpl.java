@@ -3,11 +3,13 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.entity.Link;
 import com.mengze.domain.vo.AdminRoleListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.service.SysRoleService;
@@ -78,6 +80,26 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         PageVo pageVo = new PageVo(roleListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取角色下拉列表
+    @Override
+    public ResponseResult getRoleOptions()
+    {
+        //根据角色id查出所有角色选项
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+
+        //查询粗状态正常的角色并倒序排序
+        wrapper.eq(SysRole::getStatus, SystemConstants.STATUS_NORMAL)
+               .orderByAsc(SysRole::getSort);
+
+        //封装成list
+        List<SysRole> roleList = sysRoleService.list(wrapper);
+
+        //转换成vo
+        List<RoleOptionVo> roleOptionVos = BeanCopyUtils.copyBeanList(roleList, RoleOptionVo.class);
+
+        return ResponseResult.okResult(roleOptionVos);
     }
 }
 
