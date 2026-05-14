@@ -43,10 +43,7 @@ public class SysMenuController
     @GetMapping
     @SystemLog(businessName = "菜单树列表")
     @ApiOperation(value = "菜单树列表", notes = "获取菜单树列表（不分页）", response = PageVo.class)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "keywords", value = "菜单名称关键字", dataType = "string", paramType = "query")
-    })
-    public ResponseResult getMenuList(@Valid MenuListDto menuListDto)
+    public ResponseResult getMenuList(@Valid @RequestBody MenuListDto menuListDto)
     {
         return sysMenuService.getMenuList(menuListDto);
     }
@@ -54,9 +51,7 @@ public class SysMenuController
     @GetMapping("/options")
     @SystemLog(businessName = "菜单下拉选项")
     @ApiOperation(value = "菜单下拉选项", notes = "获取菜单下拉数据", response = MenuOptionVo.class, responseContainer = "List")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "onlyParent", value = "是否只返回目录/菜单父节点", dataType = "boolean", paramType = "query")
-    })
+    @ApiImplicitParam(name = "onlyParent", value = "是否只返回目录/菜单父节点", dataType = "boolean", paramType = "query")
     public ResponseResult getMenuOptions(Boolean onlyParent)
     {
         return sysMenuService.getMenuOptions(onlyParent);
@@ -65,9 +60,7 @@ public class SysMenuController
     @GetMapping("/{id}/form")
     @SystemLog(businessName = "获取菜单表单数据")
     @ApiOperation(value = "获取菜单表单数据", notes = "获取菜单表单数据，用于编辑菜单数据", response = MenuFormDetailVo.class)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "菜单id", dataType = "long", paramType = "path")
-    })
+    @ApiImplicitParam(name = "id", value = "菜单id", dataType = "long", paramType = "path")
     public ResponseResult<MenuFormDetailVo> getMenuFormDetail(@PathVariable Long id)
     {
         return sysMenuService.getMenuFormDetail(id);

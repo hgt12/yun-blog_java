@@ -25,9 +25,9 @@ public class SearchController
     @SystemLog(businessName = "搜索文章")
     @ApiOperation(value = "搜索文章", notes = "根据关键词搜索文章（支持标题和内容搜索）", response = PageVo.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "keyword", value = "搜索关键词", required = true, dataType = "String"),
-            @ApiImplicitParam(name = "pageNum", value = "页码，默认1", defaultValue = "1", dataType = "Integer"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量，默认10", defaultValue = "10", dataType = "Integer")
+            @ApiImplicitParam(name = "keyword", value = "搜索关键词", required = true, dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "pageNum", value = "页码，默认1", defaultValue = "1", dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量，默认10", defaultValue = "10", dataType = "Integer", paramType = "query")
     })
     public ResponseResult search(
             @RequestParam String keyword,

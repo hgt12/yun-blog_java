@@ -34,12 +34,9 @@ public class PostsController
     @ApiOperation(value = "后台文章列表", notes = "分页查询文章列表，支持多条件筛选", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "categoryId", value = "分类id", dataType = "long", paramType = "query"),
-            @ApiImplicitParam(name = "status", value = "文章状态", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, @Valid PostsListDto postsListDto)
+    public ResponseResult<ArticleListVo> getPostsList(Integer pageNum, Integer pageSize, @Valid @RequestBody PostsListDto postsListDto)
     {
         return adminPostsService.getPostsList(pageNum, pageSize, postsListDto);
     }

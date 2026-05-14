@@ -22,7 +22,7 @@ public class UpdateLinkDto {
     private Long id;
 
     @NotBlank(message = "站点名称不能为空")
-    @ApiModelProperty(value = "站点名称", example = "云梦泽的个人博客")
+    @ApiModelProperty(value = "站点名称", required = true, example = "云梦泽的个人博客")
     private String name;
     
     @ApiModelProperty(value = "个人描述", example = "这里是云梦泽的个人博客")

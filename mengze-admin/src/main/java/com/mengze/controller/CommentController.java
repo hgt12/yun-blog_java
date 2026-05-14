@@ -41,15 +41,9 @@ public class CommentController
     @ApiOperation(value = "评论列表", notes = "分页查询评论列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "评论类型", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "status", value = "审核状态", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "articleId", value = "文章ID", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "startTime", value = "开始时间", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public ResponseResult getCommentList(Integer pageNum, Integer pageSize, @Valid CommentListDto commentListDto)
+    public ResponseResult getCommentList(Integer pageNum, Integer pageSize, @Valid @RequestBody CommentListDto commentListDto)
     {
         return adminCommentService.getCommentList(pageNum, pageSize, commentListDto);
     }
@@ -93,15 +87,9 @@ public class CommentController
     @ApiOperation(value = "导出评论数据", notes = "导出评论数据")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "评论类型", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "status", value = "审核状态", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "articleId", value = "文章ID", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "startTime", value = "开始时间", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "endTime", value = "结束时间", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public void exportComment(Integer pageNum, Integer pageSize, @Valid CommentListDto commentListDto, HttpServletResponse response)
+    public void exportComment(Integer pageNum, Integer pageSize, @Valid @RequestBody CommentListDto commentListDto, HttpServletResponse response)
     {
         try {
             //调用服务层获取导出数据

@@ -20,9 +20,6 @@ public class ArchiveController
     @Autowired
     private ArchiveService archiveService;
 
-    /**
-     * 获取归档列表（分页）
-     */
     @SystemLog(businessName = "查询归档列表")
     @GetMapping("/getArchiveList")
     @ApiOperation(value = "归档列表", notes = "获取归档列表（分页，按创建时间倒序）", response = PageVo.class)

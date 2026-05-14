@@ -31,10 +31,10 @@ public class CommentController
     @SystemLog(businessName = "获取评论列表")
     @ApiOperation(value = "评论列表", notes = "获取评论列表", response = PageVo.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "type",value = "评论类型"),
-            @ApiImplicitParam(name = "articleId",value = "文章id"),
-            @ApiImplicitParam(name = "pageNum",value = "页号"),
-            @ApiImplicitParam(name = "pageSize",value = "每页数量")
+            @ApiImplicitParam(name = "type",value = "评论类型", dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "articleId",value = "文章id", dataType = "long", paramType = "query"),
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", defaultValue = "1", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", defaultValue = "20", paramType = "query"),
     })
     public ResponseResult commentList(@RequestParam Integer type,
                                       @RequestParam(required = false) Long articleId,
@@ -55,7 +55,7 @@ public class CommentController
     @SystemLog(businessName = "点赞评论")
     @ApiOperation(value = "点赞评论", notes = "对指定评论进行点赞", response = String.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "commentId", value = "评论id")
+            @ApiImplicitParam(name = "commentId", value = "评论id", dataType = "long", paramType = "query")
     })
     public ResponseResult likeComment(@PathVariable("commentId") Long commentId)
     {

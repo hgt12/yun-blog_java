@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,9 +34,8 @@ public class ConfigController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid ConfigListDto configListDto)
+    public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid @RequestBody ConfigListDto configListDto)
     {
         return adminConfigService.getConfigList(pageNum, pageSize, configListDto);
     }

@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,9 +34,8 @@ public class SysRoleController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "关键字（角色名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, @Valid RoleListDto roleListDto)
+    public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, @Valid @RequestBody RoleListDto roleListDto)
     {
         return sysRoleService.getRoleList(pageNum, pageSize, roleListDto);
     }

@@ -31,7 +31,8 @@ public class UpdateCategoryDto {
     @ApiModelProperty(value = "排序", example = "1")
     private Integer sort;
 
+    @NotBlank(message = "状态不能为空")
     @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
-    @ApiModelProperty(value = "状态（0-正常，1-禁用）", example = "0")
+    @ApiModelProperty(value = "状态（0-正常，1-禁用）", required = true, example = "0")
     private String status;
 }

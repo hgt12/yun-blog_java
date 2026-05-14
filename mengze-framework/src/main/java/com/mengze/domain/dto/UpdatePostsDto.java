@@ -28,7 +28,7 @@ public class UpdatePostsDto {
     private String title;
     
     @NotBlank(message = "文章内容不能为空")
-    @ApiModelProperty(value = "文章内容（HTML格式）", required = true)
+    @ApiModelProperty(value = "文章内容（HTML格式）", required = true, example = "<p>文章内容</p>")
     private String content;
     
     @ApiModelProperty(value = "文章摘要", example = "文章摘要")
@@ -46,13 +46,13 @@ public class UpdatePostsDto {
     private String isTop;
     
     @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
-    @ApiModelProperty(value = "状态（0-已发布，1-草稿）", example = "0")
+    @ApiModelProperty(value = "状态（0-已发布，1-草稿）", required = true, example = "0")
     private String status;
     
     @Pattern(regexp = "^$|^[01]$", message = "是否允许评论只能为0或1")
     @ApiModelProperty(value = "是否允许评论（0-否，1-是）", example = "1")
     private String isComment;
     
-    @ApiModelProperty(value = "标签ID列表")
+    @ApiModelProperty(value = "标签ID列表", example = "[1,2,3]")
     private List<Long> tags;
 }

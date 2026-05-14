@@ -38,19 +38,19 @@ public class AddPostsDto
     @ApiModelProperty(value = "分类ID", required = true, example = "1")
     private Long categoryId;
 
-    @NotBlank(message = "是否置顶不能为空")
     @Pattern(regexp = "^[01]$", message = "是否置顶只能为0或1")
-    @ApiModelProperty(value = "是否置顶（0-否，1-是）", required = true, example = "0")
+    @ApiModelProperty(value = "是否置顶（0-否，1-是）", example = "0")
     private String isTop;
 
+    @NotNull(message = "文章状态不能为空")
     @Pattern(regexp = "^$|^[01]$", message = "状态只能为0或1")
-    @ApiModelProperty(value = "状态（0-已发布，1-草稿）", example = "0")
+    @ApiModelProperty(value = "状态（0-已发布，1-草稿）", required = true, example = "0")
     private String status;
 
     @Pattern(regexp = "^$|^[01]$", message = "是否允许评论只能为0或1")
     @ApiModelProperty(value = "是否允许评论（0-否，1-是）", example = "1")
     private String isComment;
 
-    @ApiModelProperty(value = "标签列表")
+    @ApiModelProperty(value = "标签列表", example = "[1,2,3]")
     private List<Long> tags;
 }

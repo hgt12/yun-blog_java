@@ -33,10 +33,9 @@ public class LinkController
     @ApiOperation(value = "友链列表", notes = "分页查询友链列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "关键字（友链名称）", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, @Valid LinkListDto linkListDto)
+    public ResponseResult<PageVo> getLinkList(Integer pageNum, Integer pageSize, @Valid @RequestBody LinkListDto linkListDto)
     {
         return adminLinkService.getLinkList(pageNum, pageSize, linkListDto);
     }

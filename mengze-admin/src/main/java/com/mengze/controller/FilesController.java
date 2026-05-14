@@ -50,9 +50,8 @@ public class FilesController
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "关键字（文件名称）", dataType = "string", paramType = "query")
     })
-    public ResponseResult<PageVo> getFileList(Integer pageNum, Integer pageSize, @Valid FileListDto fileListDto)
+    public ResponseResult<PageVo> getFileList(Integer pageNum, Integer pageSize, @Valid @RequestBody FileListDto fileListDto)
     {
         return sysFileService.getFileList(pageNum, pageSize, fileListDto);
     }

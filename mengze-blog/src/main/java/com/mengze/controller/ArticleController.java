@@ -68,9 +68,9 @@ public class ArticleController {
     @SystemLog(businessName = "根据标签ID查询文章列表")
     @ApiOperation(value = "根据标签查询文章", notes = "根据标签id分页查询文章列表", response = PageVo.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "tagId", value = "标签id"),
-            @ApiImplicitParam(name = "pageNum", value = "页号"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量")
+            @ApiImplicitParam(name = "tagId", value = "标签id", dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
     })
     public ResponseResult articleListByTagId(@PathVariable("tagId") Long tagId, Integer pageNum, Integer pageSize)
     {
@@ -81,9 +81,7 @@ public class ArticleController {
     @PutMapping("/viewCount/{id}")
     @SystemLog(businessName = "根据根据文章id获取预览量")
     @ApiOperation(value = "预览量", notes = "根据根据文章id获取预览量", response = String.class)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "文章id"),
-    })
+    @ApiImplicitParam(name = "id", value = "id", dataType = "long", paramType = "path")
     public ResponseResult viewCount(@PathVariable("id") Long id)
     {
         return articleService.viewCount(id);
