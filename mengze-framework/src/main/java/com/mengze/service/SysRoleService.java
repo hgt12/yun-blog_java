@@ -21,5 +21,7 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, RoleListDto roleListDto);
 
     ResponseResult getRoleOptions();
+
+    ResponseResult<List<Long>> getRoleMenuList(Long roleId);
 }
 

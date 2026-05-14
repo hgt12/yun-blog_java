@@ -12,10 +12,12 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 角色相关接口
@@ -46,5 +48,13 @@ public class SysRoleController
     public ResponseResult getRoleOptions()
     {
         return sysRoleService.getRoleOptions();
+    }
+
+    @GetMapping("/{roleId}/menu-ids")
+    @SystemLog(businessName = "角色菜单ID集合")
+    @ApiOperation(value = "角色菜单ID集合", notes = "获取角色菜单ID集合", responseContainer = "List")
+    public ResponseResult<List<Long>> getRoleMenuList(@PathVariable Long roleId)
+    {
+        return sysRoleService.getRoleMenuList(roleId);
     }
 }

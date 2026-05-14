@@ -6,16 +6,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RoleListDto;
-import com.mengze.domain.entity.Link;
+import com.mengze.domain.entity.SysRoleMenu;
 import com.mengze.domain.vo.AdminRoleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.RoleOptionVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
+import com.mengze.mapper.SysRoleMenuMapper;
 import com.mengze.service.SysRoleService;
 import com.mengze.utils.BeanCopyUtils;
-import com.mengze.utils.SecurityUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -35,6 +35,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Autowired
     private SysRoleService sysRoleService;
+
+    @Autowired
+    private SysRoleMenuMapper sysRoleMenuMapper;
 
     //根据用户id查询角色信息
     @Override
@@ -100,6 +103,33 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         List<RoleOptionVo> roleOptionVos = BeanCopyUtils.copyBeanList(roleList, RoleOptionVo.class);
 
         return ResponseResult.okResult(roleOptionVos);
+    }
+
+    //获取角色菜单ID集合
+    @Override
+    public ResponseResult<List<Long>> getRoleMenuList(Long roleId)
+    {
+        //获取角色id
+        SysRole sysRole = sysRoleService.getById(roleId);
+        if (sysRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该角色不存在！");
+        }
+
+        //构建查询条件
+        LambdaQueryWrapper<SysRoleMenu> wrapper = new LambdaQueryWrapper<>();
+
+        //根据角色id查出该角色有多少菜单（通过角色菜单联表）
+        wrapper.eq(SysRoleMenu::getRoleId, roleId)
+                .select(SysRoleMenu::getMenuId);
+
+        List<SysRoleMenu> roleMenuList = sysRoleMenuMapper.selectList(wrapper);
+
+        //封装成 菜单id列表
+        List<Long> menuIds = roleMenuList.stream()
+                .map(SysRoleMenu::getMenuId)
+                .toList();
+
+        return ResponseResult.okResult(menuIds);
     }
 }
 
