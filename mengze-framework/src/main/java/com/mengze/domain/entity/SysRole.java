@@ -35,6 +35,8 @@ public class SysRole extends Model<SysRole> {
     private String status;
     //数据权限(1-所有数据 2-部门及子部门数据 3-本部门数据 4-本人数据 5-自定义部门数据)
     private String dataScope;
+    //数据权限标签(接收前端发来的 dataScope 对该字段进行写入)
+    private String dataScopeLabel;
     //备注
     private String remark;
     //删除标记(0-未删除,1-已删除)

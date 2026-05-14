@@ -1,7 +1,10 @@
 package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.entity.SysRole;
+import com.mengze.domain.vo.PageVo;
 
 import java.util.List;
 
@@ -14,5 +17,7 @@ import java.util.List;
 public interface SysRoleService extends IService<SysRole> {
 
     List<String> selectRoleCodeByUserId(Long id);
+
+    ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, RoleListDto roleListDto);
 }
 
