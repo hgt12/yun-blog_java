@@ -13,7 +13,9 @@ import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.CommentMapper;
+import com.mengze.mapper.SysRoleMapper;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.OssFileService;
 import com.mengze.service.SensitiveUtilService;
 import com.mengze.service.SysFileService;
@@ -65,10 +67,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private SysUserMapper sysUserMapper;
 
     @Autowired
-    private com.mengze.mapper.SysUserRoleMapper sysUserRoleMapper;
+    private SysUserRoleMapper sysUserRoleMapper;
 
     @Autowired
-    private com.mengze.mapper.SysRoleMapper sysRoleMapper;
+    private SysRoleMapper sysRoleMapper;
 
     @Autowired
     private SensitiveUtilService sensitiveUtilService;
