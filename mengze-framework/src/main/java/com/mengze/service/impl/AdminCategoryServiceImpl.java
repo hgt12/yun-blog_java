@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -185,11 +186,8 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         Category category = BeanCopyUtils.copyBean(updateCategoryDto, Category.class);
         categoryService.updateById(category);
 
-        if (msg != null) {
-            return ResponseResult.okResult(msg);
-        }
+        return ResponseResult.okResult(Objects.requireNonNullElse(msg, "修改成功"));
 
-        return ResponseResult.okResult();
     }
 
     //批量删除分类（逻辑删除）
