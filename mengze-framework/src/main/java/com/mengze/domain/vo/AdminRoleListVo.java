@@ -30,7 +30,7 @@ public class AdminRoleListVo
     private Integer sort;
 
     @ApiModelProperty(value = "数据权限(1-所有数据 2-部门及子部门数据 3-本部门数据 4-本人数据 5-自定义部门数据)", example = "1")
-    private String dataScope;
+    private Integer dataScope;
 
     @ApiModelProperty(value = "创建日期", example = "2024-01-01 12:00:00")
     private Date createTime;
