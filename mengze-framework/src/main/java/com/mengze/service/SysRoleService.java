@@ -23,5 +23,7 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseResult getRoleOptions();
 
     ResponseResult<List<Long>> getRoleMenuList(Long roleId);
+
+    ResponseResult<Long[]> allocationRoleMenu(Long roleId, Long[] menuIds);
 }
 

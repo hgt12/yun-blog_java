@@ -11,10 +11,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -56,5 +53,13 @@ public class SysRoleController
     public ResponseResult<List<Long>> getRoleMenuList(@PathVariable Long roleId)
     {
         return sysRoleService.getRoleMenuList(roleId);
+    }
+
+    @PutMapping("/{roleId}/menus")
+    @SystemLog(businessName = "分配角色菜单")
+    @ApiOperation(value = "分配角色菜单", notes = "给角色分配菜单（权限）", responseContainer = "List")
+    public ResponseResult allocationRoleMenu(@PathVariable Long roleId, @RequestBody Long[] menuIds)
+    {
+        return sysRoleService.allocationRoleMenu(roleId, menuIds);
     }
 }

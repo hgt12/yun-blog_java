@@ -14,6 +14,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.mapper.SysRoleMenuMapper;
+import com.mengze.service.SysRoleMenuService;
 import com.mengze.service.SysRoleService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private SysRoleService sysRoleService;
 
     @Autowired
-    private SysRoleMenuMapper sysRoleMenuMapper;
+    private SysRoleMenuService sysRoleMenuService;
 
     //根据用户id查询角色信息
     @Override
@@ -122,7 +123,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         wrapper.eq(SysRoleMenu::getRoleId, roleId)
                 .select(SysRoleMenu::getMenuId);
 
-        List<SysRoleMenu> roleMenuList = sysRoleMenuMapper.selectList(wrapper);
+        List<SysRoleMenu> roleMenuList = sysRoleMenuService.list(wrapper);
 
         //封装成 菜单id列表
         List<Long> menuIds = roleMenuList.stream()
@@ -130,6 +131,43 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .toList();
 
         return ResponseResult.okResult(menuIds);
+    }
+
+    //分配角色菜单（权限）
+    @Override
+    public ResponseResult allocationRoleMenu(Long roleId, Long[] menuIds)
+    {
+        //获取角色id
+        SysRole sysRole = sysRoleService.getById(roleId);
+        if (sysRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该角色不存在！");
+        }
+
+        //根据角色id查询出角色关联的菜单id 进行删除
+        LambdaQueryWrapper<SysRoleMenu> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRoleMenu::getRoleId, roleId);
+        sysRoleMenuService.remove(wrapper);
+
+        //如果前端没有传菜单id 说明就是清空该角色权限
+        if (menuIds == null || menuIds.length == 0) {
+            return ResponseResult.okResult();
+        }
+
+        //构建新的角色菜单关系
+        List<SysRoleMenu> roleMenuList = new ArrayList<>();
+        for (Long menuId : menuIds) {
+            SysRoleMenu roleMenu = new SysRoleMenu();
+            roleMenu.setRoleId(roleId);
+            roleMenu.setMenuId(menuId);
+            roleMenuList.add(roleMenu);
+        }
+
+        //保存新的角色菜单关系
+        boolean saveBatch = sysRoleMenuService.saveBatch(roleMenuList);
+        if (!saveBatch) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分配角色菜单失败！");
+        }
+        return ResponseResult.okResult();
     }
 }
 
