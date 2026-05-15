@@ -7,6 +7,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddRoleDto;
 import com.mengze.domain.dto.RoleListDto;
+import com.mengze.domain.dto.UpdateRoleDto;
 import com.mengze.domain.entity.SysRoleDept;
 import com.mengze.domain.entity.SysRoleMenu;
 import com.mengze.domain.vo.AdminRoleListVo;
@@ -275,6 +276,68 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             boolean saveDept = sysRoleDeptService.saveBatch(roleDeptList);
             if (!saveDept) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新增角色部门关联失败！");
+            }
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //编辑角色
+    @Override
+    public ResponseResult updateRole(Long id, UpdateRoleDto updateRoleDto)
+    {
+        //检查角色是否存在
+        SysRole oldRole = sysRoleService.getById(id);
+        if (oldRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该角色不存在！");
+        }
+
+        //检查角色编码是否重复（排除自己）
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRole::getRoleCode, updateRoleDto.getRoleCode())
+               .ne(SysRole::getId, id);
+        SysRole existRole = sysRoleService.getOne(wrapper);
+        if (existRole != null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色编码已存在！");
+        }
+
+        //自定义部门权限时必须选择部门
+        if (updateRoleDto.getDataScope() != null
+                && updateRoleDto.getDataScope().equals(SystemConstants.CUSTOM_DEPT_DATA_SCOPE)
+                && (updateRoleDto.getDeptIds() == null || updateRoleDto.getDeptIds().isEmpty())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "自定义数据权限时必须选择部门！");
+        }
+
+        //更新角色表
+        SysRole sysRole = BeanCopyUtils.copyBean(updateRoleDto, SysRole.class);
+        sysRole.setId(id);
+        boolean update = sysRoleService.updateById(sysRole);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "编辑角色失败！");
+        }
+
+        //先删除旧的角色部门关联
+        LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
+        deptWrapper.eq(SysRoleDept::getRoleId, id);
+        sysRoleDeptService.remove(deptWrapper);
+
+        //如果是自定义部门权限 则保存新的关联关系
+        if (updateRoleDto.getDataScope() != null
+                && updateRoleDto.getDataScope().equals(SystemConstants.CUSTOM_DEPT_DATA_SCOPE)
+                && updateRoleDto.getDeptIds() != null
+                && !updateRoleDto.getDeptIds().isEmpty()) {
+            List<SysRoleDept> roleDeptList = new ArrayList<>();
+            for (Long deptId : updateRoleDto.getDeptIds()) {
+                SysRoleDept roleDept = new SysRoleDept();
+                roleDept.setRoleId(id);
+                roleDept.setDeptId(deptId);
+                roleDeptList.add(roleDept);
+            }
+
+            //将自定义的角色部门关联数据保存到 sys_role_dept 表
+            boolean saveDept = sysRoleDeptService.saveBatch(roleDeptList);
+            if (!saveDept) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "编辑角色部门关联失败！");
             }
         }
 

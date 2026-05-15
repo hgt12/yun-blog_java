@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddRoleDto;
+import com.mengze.domain.dto.UpdateRoleDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.vo.RoleFormDetailVo;
@@ -87,5 +88,14 @@ public class SysRoleController
     public ResponseResult addRole(@Valid @RequestBody AddRoleDto addRoleDto)
     {
         return sysRoleService.addRole(addRoleDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "编辑角色")
+    @ApiOperation(value = "编辑角色接口", notes = "编辑角色信息", response = String.class)
+    @ApiImplicitParam(name = "id", value = "角色ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleDto updateRoleDto)
+    {
+        return sysRoleService.updateRole(id, updateRoleDto);
     }
 }
