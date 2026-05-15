@@ -17,9 +17,12 @@ import com.mengze.mapper.CommentMapper;
 import com.mengze.service.AdminCommentService;
 import com.mengze.service.CommentService;
 import com.mengze.utils.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -38,6 +41,8 @@ import java.util.stream.Collectors;
 @Service
 public class AdminCommentServiceImpl implements AdminCommentService
 {
+    private static final Logger log = LoggerFactory.getLogger(AdminCommentServiceImpl.class);
+
     @Autowired
     private CommentMapper commentMapper;
 
@@ -138,6 +143,7 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
     //审核评论（允许评论发布）
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseResult approveComment(Long[] ids)
     {
         // 参数校验
@@ -173,30 +179,34 @@ public class AdminCommentServiceImpl implements AdminCommentService
         }
 
         //批量更新评论状态为正常
-        commentsToApprove.forEach(comment -> {
-            comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL);
-        });
+        commentsToApprove.forEach(comment -> comment.setStatus(SystemConstants.COMMENT_STATUS_NORMAL));
 
-        //发送审核通过邮件给发布评论的用户
+        //先更新数据库
+        boolean updateResult = commentService.updateBatchById(commentsToApprove);
+        if (!updateResult) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
+        }
+
+        //数据库更新成功后再发送审核通过邮件
         commentsToApprove.forEach(comment -> {
-            if (StringUtils.hasText(comment.getEmail())) {
+            if (!StringUtils.hasText(comment.getEmail())) {
+                return;
+            }
+
+            try {
                 emailService.sendCommentApprovedNotification(comment);
+            } catch (Exception e) {
+                log.error("发送评论审核通过邮件失败，commentId={}, email={}", comment.getId(), comment.getEmail(), e);
             }
         });
 
-        //批量更新到数据库
-        boolean updateResult = commentService.updateBatchById(commentsToApprove);
-
-        if (updateResult) {
-            return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
-                    "成功审核通过 " + commentsToApprove.size() + " 条评论");
-        } else {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
-        }
+        return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
+                "成功审核通过 " + commentsToApprove.size() + " 条评论");
     }
 
     //审核评论（拒绝评论发布）
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseResult rejectComment(Long[] ids)
     {
         // 参数校验
@@ -232,26 +242,29 @@ public class AdminCommentServiceImpl implements AdminCommentService
         }
 
         //批量更新评论状态为审核未通过
-        commentsToReject.forEach(comment -> {
-            comment.setStatus(SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED);
-        });
+        commentsToReject.forEach(comment -> comment.setStatus(SystemConstants.COMMENT_STATUS_REVIEW_NOT_PASSED));
 
-        //发送审核未通过邮件给发布评论的用户
+        //先更新数据库
+        boolean updateResult = commentService.updateBatchById(commentsToReject);
+        if (!updateResult) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
+        }
+
+        //数据库更新成功后再发送审核未通过邮件
         commentsToReject.forEach(comment -> {
-            if (StringUtils.hasText(comment.getEmail())) {
+            if (!StringUtils.hasText(comment.getEmail())) {
+                return;
+            }
+
+            try {
                 emailService.sendCommentRejectedNotification(comment);
+            } catch (Exception e) {
+                log.error("发送评论审核未通过邮件失败，commentId={}, email={}", comment.getId(), comment.getEmail(), e);
             }
         });
 
-        //批量更新到数据库
-        boolean updateResult = commentService.updateBatchById(commentsToReject);
-
-        if (updateResult) {
-            return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
-                    "成功拒绝 " + commentsToReject.size() + " 条评论进行发布");
-        } else {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "审核失败");
-        }
+        return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS.getCode(),
+                "成功拒绝 " + commentsToReject.size() + " 条评论进行发布");
     }
 
     //获取评论统计信息
@@ -343,6 +356,7 @@ public class AdminCommentServiceImpl implements AdminCommentService
 
     //删除评论（逻辑删除）
     @Override
+    @Transactional
     public ResponseResult deleteComment(Long[] ids)
     {
         // 参数校验
