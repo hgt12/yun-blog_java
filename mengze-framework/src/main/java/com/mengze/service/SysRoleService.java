@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddRoleDto;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.domain.vo.PageVo;
@@ -30,5 +31,7 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseResult<RoleFormDetailVo> getRoleFormDetail(Long id);
 
     ResponseResult<List<Long>> getRoleDeptList(Long roleId);
+
+    ResponseResult addRole(AddRoleDto addRoleDto);
 }
 

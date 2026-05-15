@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddRoleDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.vo.RoleFormDetailVo;
@@ -78,5 +79,13 @@ public class SysRoleController
     public ResponseResult<List<Long>> getRoleDeptList(@PathVariable Long roleId)
     {
         return sysRoleService.getRoleDeptList(roleId);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增角色")
+    @ApiOperation(value = "新增角色接口", notes = "新增角色", response = String.class)
+    public ResponseResult addRole(@Valid @RequestBody AddRoleDto addRoleDto)
+    {
+        return sysRoleService.addRole(addRoleDto);
     }
 }

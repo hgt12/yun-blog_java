@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddRoleDto;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.entity.SysRoleDept;
 import com.mengze.domain.entity.SysRoleMenu;
@@ -21,6 +22,7 @@ import com.mengze.service.SysRoleService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -224,6 +226,59 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .toList();
 
         return ResponseResult.okResult(deptIds);
+    }
+
+    //新增角色
+    @Override
+    @Transactional
+    public ResponseResult addRole(AddRoleDto addRoleDto)
+    {
+        //检查角色编码是否重复
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRole::getRoleCode, addRoleDto.getRoleCode());
+        SysRole existRole = sysRoleService.getOne(wrapper);
+        if (existRole != null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色编码已存在！");
+        }
+
+        //如果是自定义部门数据则必须选择部门
+        if (addRoleDto.getDataScope() != null
+                && addRoleDto.getDataScope().equals(SystemConstants.CUSTOM_DEPT_DATA_SCOPE)
+                && (addRoleDto.getDeptIds() == null || addRoleDto.getDeptIds().isEmpty())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "自定义数据权限时必须选择部门！");
+        }
+
+        //转换dto实体
+        SysRole sysRole = BeanCopyUtils.copyBean(addRoleDto, SysRole.class);
+
+        //保存到角色表
+        boolean save = sysRoleService.save(sysRole);
+        if (!save) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新增角色失败！");
+        }
+
+        //如果是自定义的数据权限 则保存角色部门关联数据（条件：dataScope 不为空 且 dataScope=5 为“自定义部门权限” 且 deptIds 不为空 且 deptIds 里面至少有一个部门）
+        if (addRoleDto.getDataScope() != null
+                && addRoleDto.getDataScope().equals(SystemConstants.CUSTOM_DEPT_DATA_SCOPE)
+                && addRoleDto.getDeptIds() != null
+                && !addRoleDto.getDeptIds().isEmpty()) {
+
+            List<SysRoleDept> roleDeptList = new ArrayList<>();
+            for (Long deptId : addRoleDto.getDeptIds()) {
+                SysRoleDept roleDept = new SysRoleDept();
+                roleDept.setRoleId(sysRole.getId());
+                roleDept.setDeptId(deptId);
+                roleDeptList.add(roleDept);
+            }
+
+            //将自定义的角色部门关联数据保存到 sys_role_dept 表
+            boolean saveDept = sysRoleDeptService.saveBatch(roleDeptList);
+            if (!saveDept) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新增角色部门关联失败！");
+            }
+        }
+
+        return ResponseResult.okResult();
     }
 }
 
