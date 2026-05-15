@@ -18,6 +18,7 @@ import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -181,6 +182,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     //新增菜单
     @Override
+    @Transactional
     public ResponseResult addMenu(AddMenuDto addMenuDto)
     {
         //校验父菜单是否存在（如果不是顶级菜单）
@@ -243,6 +245,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     //更新菜单
     @Override
+    @Transactional
     public ResponseResult updateMenu(Long id, UpdateMenuDto updateMenuDto)
     {
 
@@ -301,6 +304,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     //删除菜单
     @Override
+    @Transactional
     public ResponseResult deleteMenu(Long id)
     {
         // 参数校验

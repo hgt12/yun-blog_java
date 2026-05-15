@@ -14,6 +14,7 @@ import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 /**
@@ -65,6 +66,7 @@ public class ResetResetPasswordServiceImpl extends ServiceImpl<SysUserMapper, Sy
 
     //重置密码
     @Override
+    @Transactional
     public ResponseResult resetPassword(ResetPasswordDto dto)
     {
         //邮箱不能为空

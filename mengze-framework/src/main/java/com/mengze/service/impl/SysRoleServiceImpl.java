@@ -151,6 +151,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     //分配角色菜单（权限）
     @Override
+    @Transactional
     public ResponseResult allocationRoleMenu(Long roleId, Long[] menuIds)
     {
         //获取角色id
@@ -292,6 +293,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     //编辑角色
     @Override
+    @Transactional
     public ResponseResult updateRole(Long id, UpdateRoleDto updateRoleDto)
     {
         //检查角色是否存在

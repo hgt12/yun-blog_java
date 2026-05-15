@@ -18,6 +18,7 @@ import com.mengze.utils.BeanCopyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -127,6 +128,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
     //新增分类
     @Override
+    @Transactional
     public ResponseResult addCategory(AddCategoryDto addCategoryDto)
     {
         // 检查分类名称是否已存在
@@ -147,6 +149,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
     //编辑分类
     @Override
+    @Transactional
     public ResponseResult updateCategory(Long id, UpdateCategoryDto updateCategoryDto)
     {
 
@@ -190,6 +193,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
     //批量删除分类（逻辑删除）
     @Override
+    @Transactional
     public ResponseResult deleteCategory(Long[] ids)
     {
         // 参数校验

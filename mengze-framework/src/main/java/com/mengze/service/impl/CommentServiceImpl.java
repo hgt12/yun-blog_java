@@ -25,6 +25,7 @@ import com.mengze.utils.XssUtils;
 import com.mengze.service.SensitiveUtilService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
@@ -85,6 +86,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     //添加评论
     @Override
+    @Transactional
     public ResponseResult addComment(AddCommentDto addCommentDto)
     {
         //校验评论内容

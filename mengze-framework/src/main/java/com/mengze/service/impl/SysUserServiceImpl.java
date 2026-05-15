@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -95,6 +96,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     //更新用户信息
     @Override
+    @Transactional
     public ResponseResult updateUserInfo(UpdateUserInfoDto updateUserInfoDto)
     {
         Long currentUserId = SecurityUtils.getUserId();
@@ -250,6 +252,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     //用户注册
     @Override
+    @Transactional
     public ResponseResult userRegister(UserRegisterDto dto)
     {
         //对用户名和密码进行非空判断

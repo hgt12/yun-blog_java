@@ -16,6 +16,7 @@ import com.mengze.service.LinkService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -132,6 +133,7 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
     //删除友链
     @Override
+    @Transactional
     public ResponseResult deleteLink(Long[] ids)
     {
         // 判断是否有id

@@ -23,6 +23,7 @@ import com.mengze.service.TagService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -139,6 +140,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
     //添加标签
     @Override
+    @Transactional
     public ResponseResult addTag(AddTagDto addTagDto)
     {
         // 检查标签名称是否已存在
@@ -159,6 +161,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
     //更新标签
     @Override
+    @Transactional
     public ResponseResult updateTag(Long id, UpdateTagDto updateTagDto)
     {
         //检查标签是否存在
@@ -186,6 +189,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
     //批量删除标签 （逻辑删除）
     @Override
+    @Transactional
     public ResponseResult deleteTag(Long[] ids)
     {
         // 参数校验
