@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.dto.RoleListDto;
+import com.mengze.domain.vo.RoleFormDetailVo;
 import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.service.SysRoleService;
 import io.swagger.annotations.Api;
@@ -61,5 +62,13 @@ public class SysRoleController
     public ResponseResult allocationRoleMenu(@PathVariable Long roleId, @RequestBody Long[] menuIds)
     {
         return sysRoleService.allocationRoleMenu(roleId, menuIds);
+    }
+
+    @GetMapping("/{id}/form")
+    @SystemLog(businessName = "获取角色表单详情")
+    @ApiOperation(value = "角色表单详情", notes = "获取角色表单详情", response = RoleFormDetailVo.class)
+    public ResponseResult<RoleFormDetailVo> getRoleFormDetail(@PathVariable Long id)
+    {
+        return sysRoleService.getRoleFormDetail(id);
     }
 }

@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RoleListDto;
+import com.mengze.domain.entity.SysRoleDept;
 import com.mengze.domain.entity.SysRoleMenu;
 import com.mengze.domain.vo.AdminRoleListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.RoleFormDetailVo;
 import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.mapper.SysRoleMenuMapper;
+import com.mengze.service.SysRoleDeptService;
 import com.mengze.service.SysRoleMenuService;
 import com.mengze.service.SysRoleService;
 import com.mengze.utils.BeanCopyUtils;
@@ -39,6 +42,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Autowired
     private SysRoleMenuService sysRoleMenuService;
+
+    @Autowired
+    private SysRoleDeptService sysRoleDeptService;
 
     //根据用户id查询角色信息
     @Override
@@ -168,6 +174,30 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分配角色菜单失败！");
         }
         return ResponseResult.okResult();
+    }
+
+    //获取角色表单数据
+    @Override
+    public ResponseResult<RoleFormDetailVo> getRoleFormDetail(Long id)
+    {
+        //根据角色id查询
+        SysRole sysRole = sysRoleService.getById(id);
+        if (sysRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该角色不存在！");
+        }
+
+        //根据角色id查部门id列表
+        RoleFormDetailVo roleFormDetailVo = BeanCopyUtils.copyBean(sysRole, RoleFormDetailVo.class);
+        LambdaQueryWrapper<SysRoleDept> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRoleDept::getRoleId, id)
+                .select(SysRoleDept::getDeptId);
+        List<SysRoleDept> roleDeptList = sysRoleDeptService.list(wrapper);
+        List<Long> deptIds = roleDeptList.stream()
+                .map(SysRoleDept::getDeptId)
+                .toList();
+        roleFormDetailVo.setDeptIds(deptIds);
+
+        return ResponseResult.okResult(roleFormDetailVo);
     }
 }
 

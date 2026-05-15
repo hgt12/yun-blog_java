@@ -143,4 +143,8 @@ public class SystemConstants
      *  默认作者名称
      */
     public static final String DEFAULT_AUTHOR = "云梦泽";
+    /**
+     *  自定义部门数据权限
+     */
+    public static final Integer CUSTOM_DEPT_DATA_SCOPE = 5;
 }

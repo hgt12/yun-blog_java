@@ -5,6 +5,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.entity.SysRole;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.RoleFormDetailVo;
 
 import java.util.List;
 
@@ -25,5 +26,7 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseResult<List<Long>> getRoleMenuList(Long roleId);
 
     ResponseResult<Long[]> allocationRoleMenu(Long roleId, Long[] menuIds);
+
+    ResponseResult<RoleFormDetailVo> getRoleFormDetail(Long id);
 }
 
