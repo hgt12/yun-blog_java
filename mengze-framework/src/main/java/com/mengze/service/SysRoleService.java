@@ -28,5 +28,7 @@ public interface SysRoleService extends IService<SysRole> {
     ResponseResult<Long[]> allocationRoleMenu(Long roleId, Long[] menuIds);
 
     ResponseResult<RoleFormDetailVo> getRoleFormDetail(Long id);
+
+    ResponseResult<List<Long>> getRoleDeptList(Long roleId);
 }
 

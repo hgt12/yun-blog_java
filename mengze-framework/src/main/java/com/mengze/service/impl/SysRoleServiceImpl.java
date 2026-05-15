@@ -15,7 +15,6 @@ import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
-import com.mengze.mapper.SysRoleMenuMapper;
 import com.mengze.service.SysRoleDeptService;
 import com.mengze.service.SysRoleMenuService;
 import com.mengze.service.SysRoleService;
@@ -198,6 +197,33 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         roleFormDetailVo.setDeptIds(deptIds);
 
         return ResponseResult.okResult(roleFormDetailVo);
+    }
+
+    //获取角色部门ID集合
+    @Override
+    public ResponseResult<List<Long>> getRoleDeptList(Long roleId)
+    {
+        //获取角色id
+        SysRole sysRole = sysRoleService.getById(roleId);
+        if (sysRole == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该角色不存在！");
+        }
+
+        //构建查询条件
+        LambdaQueryWrapper<SysRoleDept> wrapper = new LambdaQueryWrapper<>();
+
+        //根据角色id查出该角色有属于哪些部门（通过角色部门联表）
+        wrapper.eq(SysRoleDept::getRoleId, roleId)
+                .select(SysRoleDept::getDeptId);
+
+        List<SysRoleDept> roleDeptList = sysRoleDeptService.list(wrapper);
+
+        //封装成 菜单id列表
+        List<Long> deptIds = roleDeptList.stream()
+                .map(SysRoleDept::getDeptId)
+                .toList();
+
+        return ResponseResult.okResult(deptIds);
     }
 }
 

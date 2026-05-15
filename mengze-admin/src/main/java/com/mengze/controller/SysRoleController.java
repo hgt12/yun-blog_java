@@ -71,4 +71,12 @@ public class SysRoleController
     {
         return sysRoleService.getRoleFormDetail(id);
     }
+
+    @GetMapping("/{roleId}/dept-ids")
+    @SystemLog(businessName = "获取角色部门ID集合")
+    @ApiOperation(value = "角色部门ID集合", notes = "获取角色部门ID集合", responseContainer = "List")
+    public ResponseResult<List<Long>> getRoleDeptList(@PathVariable Long roleId)
+    {
+        return sysRoleService.getRoleDeptList(roleId);
+    }
 }
