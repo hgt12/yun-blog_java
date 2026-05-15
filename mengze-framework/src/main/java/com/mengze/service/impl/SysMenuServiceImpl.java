@@ -245,8 +245,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     @Override
     public ResponseResult updateMenu(Long id, UpdateMenuDto updateMenuDto)
     {
-        //获得菜单id
-        updateMenuDto.setId(id);
 
         //检查菜单是否存在
         SysMenu oldMenu = sysMenuService.getById(id);

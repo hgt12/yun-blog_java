@@ -18,9 +18,6 @@ import javax.validation.constraints.Pattern;
 @ApiModel(description = "更新友链请求对象")
 public class UpdateLinkDto {
 
-    @ApiModelProperty(value = "友链ID", required = true, example = "1")
-    private Long id;
-
     @NotBlank(message = "站点名称不能为空")
     @ApiModelProperty(value = "站点名称", required = true, example = "云梦泽的个人博客")
     private String name;

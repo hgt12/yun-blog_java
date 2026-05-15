@@ -17,10 +17,7 @@ import javax.validation.constraints.Pattern;
 @NoArgsConstructor
 @ApiModel(description = "更新标签请求对象")
 public class UpdateTagDto {
-    
-    @ApiModelProperty(value = "标签ID", required = true, example = "1")
-    private Long id;
-    
+
     @NotBlank(message = "标签名称不能为空")
     @ApiModelProperty(value = "标签名称", required = true, example = "Java")
     private String name;

@@ -149,8 +149,6 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
     @Override
     public ResponseResult updateCategory(Long id, UpdateCategoryDto updateCategoryDto)
     {
-        //获取分类id
-        updateCategoryDto.setId(id);
 
         //检查分类是否存在
         Category oldCategory = categoryService.getById(id);

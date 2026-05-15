@@ -22,9 +22,6 @@ import java.util.List;
 @ApiModel(description = "更新菜单请求对象")
 public class UpdateMenuDto {
 
-    @ApiModelProperty(value = "菜单ID", required = true, example = "1")
-    private Long id;
-
     @NotNull(message = "父菜单ID不能为空")
     @ApiModelProperty(value = "父菜单ID（0表示顶级菜单）", required = true, example = "0")
     private Long parentId;

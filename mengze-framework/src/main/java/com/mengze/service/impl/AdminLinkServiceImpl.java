@@ -106,8 +106,6 @@ public class AdminLinkServiceImpl implements AdminLinkService
     @Override
     public ResponseResult updateLink(Long id, UpdateLinkDto updateLinkDto)
     {
-        //获取友链id
-        updateLinkDto.setId(id);
 
         //检查友链是否存在
         Link oldLink = linkService.getById(id);

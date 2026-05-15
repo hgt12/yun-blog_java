@@ -19,10 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @ApiModel(description = "更新文章请求对象")
 public class UpdatePostsDto {
-    
-    @ApiModelProperty(value = "文章ID", required = true, example = "1")
-    private Long id;
-    
+
     @NotBlank(message = "文章标题不能为空")
     @ApiModelProperty(value = "文章标题", required = true, example = "文章标题")
     private String title;

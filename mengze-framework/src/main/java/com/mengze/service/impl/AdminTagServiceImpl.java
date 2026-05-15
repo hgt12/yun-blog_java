@@ -161,9 +161,6 @@ public class AdminTagServiceImpl implements AdminTagService
     @Override
     public ResponseResult updateTag(Long id, UpdateTagDto updateTagDto)
     {
-        //获取标签id
-        updateTagDto.setId(id);
-
         //检查标签是否存在
         Tag oldTag = tagService.getById(id);
         if (oldTag == null) {

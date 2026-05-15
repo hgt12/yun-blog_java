@@ -17,10 +17,7 @@ import javax.validation.constraints.Pattern;
 @NoArgsConstructor
 @ApiModel(description = "更新分类请求对象")
 public class UpdateCategoryDto {
-    
-    @ApiModelProperty(value = "分类ID", required = true, example = "1")
-    private Long id;
-    
+
     @NotBlank(message = "分类名称不能为空")
     @ApiModelProperty(value = "分类名称", required = true, example = "技术分享")
     private String name;

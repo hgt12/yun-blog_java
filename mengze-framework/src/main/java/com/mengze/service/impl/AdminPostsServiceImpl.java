@@ -218,8 +218,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
     @Transactional
     public ResponseResult updatePosts(Long id, UpdatePostsDto updatePostsDto)
     {
-        // 获取ID
-        updatePostsDto.setId(id);
 
         //检查文章是否存在
         Article oldArticle = articleService.getById(id);
@@ -292,7 +290,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         // 更新标签关联关系
         // 先删除旧的关联关系
         LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
-        deleteWrapper.eq(ArticleTag::getArticleId, updatePostsDto.getId());
+        deleteWrapper.eq(ArticleTag::getArticleId, id);
         articleTagMapper.delete(deleteWrapper);
 
         // 添加新的关联关系
