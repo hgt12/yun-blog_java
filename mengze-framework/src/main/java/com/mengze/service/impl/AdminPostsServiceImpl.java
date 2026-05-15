@@ -365,11 +365,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
                 log.info("文章ID: {} 的图片文件表记录已删除，共 {} 条", articleId, imageUrls.size());
             }
 
-            // 删除文章标签关联关系
-            LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
-            deleteWrapper.eq(ArticleTag::getArticleId, articleId);
-            int deletedCount = articleTagMapper.delete(deleteWrapper);
-            log.info("删除文章ID: {} 的标签关联记录，共 {} 条", articleId, deletedCount);
+            //此段注释掉，逻辑删除文章 + 上删除文章和标签关联关系会破坏逻辑删除的构想，如何后续开发回收站就可以连着关联关系一起删
+//            // 删除文章标签关联关系
+//            LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
+//            deleteWrapper.eq(ArticleTag::getArticleId, articleId);
+//            int deletedCount = articleTagMapper.delete(deleteWrapper);
+//            log.info("删除文章ID: {} 的标签关联记录，共 {} 条", articleId, deletedCount);
         }
 
         // 逻辑删除文章（将 del_flag 从 0 > 1）
