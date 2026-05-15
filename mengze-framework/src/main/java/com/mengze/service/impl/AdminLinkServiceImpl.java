@@ -115,7 +115,7 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
         // 检查友链站点地址是否与其他友链重复（排除自己）
         LambdaQueryWrapper<Link> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Link::getAddress, updateLinkDto.getName())
+        queryWrapper.eq(Link::getAddress, updateLinkDto.getAddress())
                 .ne(Link::getId, id); // 排除当前的站点地址
         long count = linkService.count(queryWrapper);
 
