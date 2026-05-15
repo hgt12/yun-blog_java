@@ -1,7 +1,11 @@
 package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.SysDept;
+import com.mengze.domain.vo.DeptOptionVo;
+
+import java.util.List;
 
 /**
  * 部门表(SysDept)表服务接口
@@ -11,5 +15,6 @@ import com.mengze.domain.entity.SysDept;
  */
 public interface SysDeptService extends IService<SysDept> {
 
+    ResponseResult<List<DeptOptionVo>> getDeptOptions();
 }
 
