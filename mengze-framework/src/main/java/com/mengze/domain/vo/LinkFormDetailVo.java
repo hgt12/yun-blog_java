@@ -31,5 +31,5 @@ public class LinkFormDetailVo
     private String status;
 
     @ApiModelProperty(value = "排序", example = "1")
-    private String sort;
+    private Integer sort;
 }
