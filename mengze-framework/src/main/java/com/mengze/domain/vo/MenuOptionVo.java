@@ -7,12 +7,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Accessors(chain = true)
 @ApiModel(description = "菜单选项")
 public class MenuOptionVo
 {
@@ -32,9 +34,4 @@ public class MenuOptionVo
     @ApiModelProperty(value = "子菜单")
     private List<MenuOptionVo> children;
 
-    //方便链式调用
-    public MenuOptionVo setChildren(List<MenuOptionVo> children) {
-        this.children = children;
-        return this;
-    }
 }
