@@ -10,6 +10,7 @@ import com.mengze.domain.dto.RoleListDto;
 import com.mengze.domain.dto.UpdateRoleDto;
 import com.mengze.domain.entity.SysRoleDept;
 import com.mengze.domain.entity.SysRoleMenu;
+import com.mengze.domain.entity.SysUserRole;
 import com.mengze.domain.vo.AdminRoleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.RoleFormDetailVo;
@@ -17,6 +18,7 @@ import com.mengze.domain.vo.RoleOptionVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysRoleMapper;
 import com.mengze.domain.entity.SysRole;
+import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.SysRoleDeptService;
 import com.mengze.service.SysRoleMenuService;
 import com.mengze.service.SysRoleService;
@@ -28,6 +30,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 角色表(SysRole)表服务实现类
@@ -47,6 +52,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Autowired
     private SysRoleDeptService sysRoleDeptService;
+
+    @Autowired
+    private SysUserRoleMapper sysUserRoleMapper;
 
     //根据用户id查询角色信息
     @Override
@@ -339,6 +347,66 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             if (!saveDept) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "编辑角色部门关联失败！");
             }
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //删除角色（包含批量，逻辑删除）
+    @Override
+    @Transactional
+    public ResponseResult deleteRole(Long[] ids)
+    {
+        // 参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的角色");
+        }
+
+        List<Long> idList = List.of(ids);
+
+        //检查角色是否存在
+        List<SysRole> rolesToDelete = sysRoleService.listByIds(idList);
+        if (rolesToDelete.size() != ids.length) {
+            //找出不存在的角色id
+            Set<Long> existIds = rolesToDelete.stream()
+                    .map(SysRole::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下角色 id 不存在：" + notExistIds);
+        }
+
+        //禁止删除系统内置角色
+        List<String> protectedRoleCodes = List.of(SystemConstants.ROLE_IS_ADMIN);
+        List<Long> protectedRoleIds = rolesToDelete.stream()
+                .filter(role -> protectedRoleCodes.contains(role.getRoleCode()) || Objects.equals(role.getId(), 1L))
+                .map(SysRole::getId)
+                .toList();
+        if (!protectedRoleIds.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：系统内置角色不允许删除：" + protectedRoleIds);
+        }
+
+        //检查该角色是否有用户存在 有则不允许删除
+        LambdaQueryWrapper<SysUserRole> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.in(SysUserRole::getRoleId, idList)
+                .select(SysUserRole::getRoleId);
+        List<SysUserRole> userRoleList = sysUserRoleMapper.selectList(userRoleWrapper);
+        if (!userRoleList.isEmpty()) {
+            List<Long> assignedRoleIds = userRoleList.stream()
+                    .map(SysUserRole::getRoleId)
+                    .distinct()
+                    .toList();
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下角色已分配给用户，不能删除：" + assignedRoleIds);
+        }
+
+        //删除角色（逻辑删除）
+        //注意：不应该将角色和菜单、部门的关联关系也一并删除，避免后续恢复角色时丢失权限配置
+        boolean remove = sysRoleService.removeByIds(idList);
+        if (!remove) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除角色失败！");
         }
 
         return ResponseResult.okResult();

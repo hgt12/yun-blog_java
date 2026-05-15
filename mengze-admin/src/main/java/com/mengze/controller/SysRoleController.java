@@ -98,4 +98,13 @@ public class SysRoleController
     {
         return sysRoleService.updateRole(id, updateRoleDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @SystemLog(businessName = "删除角色(逻辑删除)")
+    @ApiOperation(value = "删除角色接口（批量逻辑删除）", notes = "删除角色，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteRole(@PathVariable Long[] ids)
+    {
+        return sysRoleService.deleteRole(ids);
+    }
 }
