@@ -90,10 +90,12 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         LambdaQueryWrapper<SysFile> queryWrapper = new LambdaQueryWrapper<>();
 
         //根据关键字(文件名字，文件来源)模糊查询文件
-        if (StringUtils.hasText(fileListDto.getKeywords())){
-            queryWrapper.like(SysFile::getName, fileListDto.getKeywords())
+        if (StringUtils.hasText(fileListDto.getKeywords())) {
+            queryWrapper.and(wrapper -> wrapper
+                        .like(SysFile::getName, fileListDto.getKeywords())
                         .or()
-                        .like(SysFile::getFileSource, fileListDto.getKeywords());
+                        .like(SysFile::getFileSource, fileListDto.getKeywords())
+                );
         }
 
         //按创建时间倒序排序
