@@ -26,7 +26,7 @@ public class SiteStatisticsController {
 
     @GetMapping("/siteInfo")
     @SystemLog(businessName = "获取网站统计信息")
-    @ApiOperation(value = "获取网站统计信息", notes = "获取总访问量、总访客数、文章数、分类数、标签数", response = SiteInfoVo.class)
+    @ApiOperation(value = "获取网站统计信息", notes = "获取总访问量、总访客数", response = SiteInfoVo.class)
     public ResponseResult getSiteInfo()
     {
         return siteStatisticsService.getSiteInfo();

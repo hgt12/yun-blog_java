@@ -45,15 +45,6 @@ import java.util.stream.Collectors;
 public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper, SiteStatistics> implements SiteStatisticsService
 {
     @Autowired
-    private ArticleService articleService;
-
-    @Autowired
-    private CategoryMapper categoryMapper;
-
-    @Autowired
-    private TagMapper tagMapper;
-
-    @Autowired
     private RedisCache redisCache;
 
     @Autowired
@@ -74,25 +65,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         Integer cachedVisitors = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
         long totalVisitors = cachedVisitors != null ? cachedVisitors.longValue() : 0L;
 
-        //查询文章总数
-        int articleCount = (int) articleService.count(
-                new LambdaQueryWrapper<Article>()
-                        .eq(Article::getStatus, SystemConstants.STATUS_NORMAL)
-        );
-
-        //查询分类总数
-        int categoryCount = categoryMapper.selectCount(
-                new LambdaQueryWrapper<Category>()
-                        .eq(Category::getStatus, SystemConstants.STATUS_NORMAL)
-        ).intValue();
-
-        //查询标签总数
-        int tagCount = tagMapper.selectCount(
-                new LambdaQueryWrapper<Tag>()
-                        .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
-        ).intValue();
-
-        SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors, articleCount, categoryCount, tagCount);
+        SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors);
         return ResponseResult.okResult(siteInfoVo);
     }
 
