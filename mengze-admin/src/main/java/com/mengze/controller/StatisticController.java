@@ -1,14 +1,15 @@
 package com.mengze.controller;
 
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.RecordVisitDto;
 import com.mengze.service.SiteStatisticsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/statistics")
@@ -31,5 +32,12 @@ public class StatisticController
     @ApiOperation(value = "获取访问概览", notes = "返回今日与总访问统计概览")
     public ResponseResult getVisitOverview() {
         return siteStatisticsService.getVisitOverview();
+    }
+
+    @PostMapping("/visits/recordVisit")
+    @ApiOperation(value = "后台记录访问日志", notes = "记录后台用户访问", response = String.class)
+    public ResponseResult recordVisit(@Valid @RequestBody RecordVisitDto recordVisitDto, HttpServletRequest request)
+    {
+        return siteStatisticsService.recordVisit(recordVisitDto, request);
     }
 }
