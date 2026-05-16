@@ -39,11 +39,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 网站统计表(SiteStatistics)表服务实现类
+ * 网站统计表(SiteStatistics)表服务实现类（前后台共用）
  */
 @Service("siteStatisticsService")
-public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper, SiteStatistics> implements SiteStatisticsService {
-
+public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper, SiteStatistics> implements SiteStatisticsService
+{
     @Autowired
     private ArticleService articleService;
 
@@ -169,6 +169,150 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         }
 
         return ResponseResult.okResult();
+    }
+
+    //获取访问趋势
+    @Override
+    public ResponseResult getVisitTrend(String startDate, String endDate)
+    {
+        //解析日期并校验 确保开始日期 ≤ 结束日期
+        LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE);
+        if (start.isAfter(end)) {
+            throw new SystemException(AppHttpCodeEnum.PARAM_INVALID);
+        }
+
+        //生成日期列表
+        List<LocalDate> dates = new ArrayList<>();
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            dates.add(date);
+        }
+
+        //将日期转换成字符串方便前端显示
+        List<String> dateStrings = dates.stream()
+                .map(d -> d.format(DateTimeFormatter.ISO_LOCAL_DATE))
+                .collect(Collectors.toList());
+
+        //生成每天的开始时间和结束时间
+        List<Date> startTimes = dates.stream()
+                .map(d -> Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                .toList();
+        List<Date> endTimes = dates.stream()
+                .map(d -> Date.from(d.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                .toList();
+
+        //初始化 PV、UV、IP
+        List<Integer> pvList = new ArrayList<>(dates.size());
+        List<Integer> uvList = new ArrayList<>(dates.size());
+        List<Integer> ipList = new ArrayList<>(dates.size());
+
+        //统计每天的 PV、UV、IP
+        for (int i = 0; i < dates.size(); i++)
+        {
+            Date dayStart = startTimes.get(i);
+            Date dayEnd = endTimes.get(i);
+
+            //查询当天所有访问记录数量 PV
+            long pvCount = visitLogMapper.selectCount(new LambdaQueryWrapper<VisitLog>()
+                    .ge(VisitLog::getVisitTime, dayStart)
+                    .lt(VisitLog::getVisitTime, dayEnd));
+            pvList.add((int) pvCount);
+
+            //查询当天所有 IP
+            List<VisitLog> logs = visitLogMapper.selectList(new LambdaQueryWrapper<VisitLog>()
+                    .ge(VisitLog::getVisitTime, dayStart)
+                    .lt(VisitLog::getVisitTime, dayEnd)
+                    .select(VisitLog::getIp));
+
+            //给ip去重并统计UV
+            Set<String> uniqueIpSet = logs.stream()
+                    .map(VisitLog::getIp)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            uvList.add(uniqueIpSet.size());
+            ipList.add(uniqueIpSet.size());
+        }
+
+        //封装成vo并返回结果
+        VisitTrendVo visitTrendVo = new VisitTrendVo(dateStrings, pvList, uvList, ipList);
+        return ResponseResult.okResult(visitTrendVo);
+    }
+
+    //获取浏览量概览
+    @Override
+    public ResponseResult getVisitOverview()
+    {
+        //从 Redis 中获取累计 PV 和 UV
+        Long totalPvCount = getCachedLong(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD);
+        Long totalUvCount = getCachedLong(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
+
+        //计算今天和昨天的时间范围 用于查询今天和昨天的数据
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        Date todayStart = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date tomorrowStart = Date.from(today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date yesterdayStart = Date.from(yesterday.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        //查询今天和昨日天的 PV
+        long todayPvCount = visitLogMapper.selectCount(new LambdaQueryWrapper<VisitLog>()
+                .ge(VisitLog::getVisitTime, todayStart)
+                .lt(VisitLog::getVisitTime, tomorrowStart));
+        long yesterdayPvCount = visitLogMapper.selectCount(new LambdaQueryWrapper<VisitLog>()
+                .ge(VisitLog::getVisitTime, yesterdayStart)
+                .lt(VisitLog::getVisitTime, todayStart));
+
+        //查询今天和昨天的 IP 列表
+        List<VisitLog> todayLogs = visitLogMapper.selectList(new LambdaQueryWrapper<VisitLog>()
+                .ge(VisitLog::getVisitTime, todayStart)
+                .lt(VisitLog::getVisitTime, tomorrowStart)
+                .select(VisitLog::getIp));
+        List<VisitLog> yesterdayLogs = visitLogMapper.selectList(new LambdaQueryWrapper<VisitLog>()
+                .ge(VisitLog::getVisitTime, yesterdayStart)
+                .lt(VisitLog::getVisitTime, todayStart)
+                .select(VisitLog::getIp));
+
+        //查询今天和昨天去重后的 UV
+        long todayUvCount = todayLogs.stream()
+                .map(VisitLog::getIp)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+        long yesterdayUvCount = yesterdayLogs.stream()
+                .map(VisitLog::getIp)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+
+        //计算增长率
+        double pvGrowthRate = calcGrowthRate(todayPvCount, yesterdayPvCount);
+        double uvGrowthRate = calcGrowthRate(todayUvCount, yesterdayUvCount);
+
+        //封装成vo
+        VisitOverviewVo visitOverviewVo = new VisitOverviewVo(
+                todayUvCount,
+                totalUvCount,
+                uvGrowthRate,
+                todayPvCount,
+                totalPvCount,
+                pvGrowthRate
+        );
+
+        return ResponseResult.okResult(visitOverviewVo);
+    }
+
+    //缓存
+    private Long getCachedLong(String key, String field)
+    {
+        Integer value = redisCache.getCacheMapValue(key, field);
+        return value == null ? 0L : value.longValue();
+    }
+
+    //计算增长率方法
+    private double calcGrowthRate(long current, long previous) {
+        if (previous == 0) {
+            return current == 0 ? 0.0 : 100.0;
+        }
+        return Math.round(((current - previous) * 1000.0 / previous)) / 10.0;
     }
 
     //解析设备系统类型

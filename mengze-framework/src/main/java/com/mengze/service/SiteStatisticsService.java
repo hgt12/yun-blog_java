@@ -15,4 +15,8 @@ public interface SiteStatisticsService extends IService<SiteStatistics> {
     ResponseResult getSiteInfo();
     
     ResponseResult recordVisit(RecordVisitDto recordVisitDto, HttpServletRequest request);
+
+    ResponseResult getVisitTrend(String startDate, String endDate);
+
+    ResponseResult getVisitOverview();
 }
