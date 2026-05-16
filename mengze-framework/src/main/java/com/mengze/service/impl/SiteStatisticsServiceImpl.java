@@ -129,6 +129,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         visitLog.setPageUrl(pageUrl);
         visitLog.setPageTitle(recordVisitDto.getPageTitle());
         visitLog.setReferrer(recordVisitDto.getReferrer());
+        visitLog.setMethod(request.getMethod());
         visitLog.setVisitTime(new Date());
         visitLog.setExecutionTime((int) (System.currentTimeMillis() - startTime));
         redisCache.pushToList(SystemConstants.VISIT_LOG_QUEUE, visitLog);
