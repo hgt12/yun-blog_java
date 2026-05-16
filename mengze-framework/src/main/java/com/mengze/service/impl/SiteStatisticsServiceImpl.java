@@ -130,7 +130,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         visitLog.setPageTitle(recordVisitDto.getPageTitle());
         visitLog.setReferrer(recordVisitDto.getReferrer());
         visitLog.setVisitTime(new Date());
-        visitLog.setExecutionTime(System.currentTimeMillis() - startTime);
+        visitLog.setExecutionTime((int) (System.currentTimeMillis() - startTime));
         redisCache.pushToList(SystemConstants.VISIT_LOG_QUEUE, visitLog);
 
         // PV 计数递增
