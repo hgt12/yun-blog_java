@@ -1,6 +1,9 @@
 package com.mengze.domain.entity;
 
 import java.util.Date;
+
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -13,7 +16,7 @@ import java.io.Serializable;
  * 访问日志表(VisitLog)表实体类
  *
  * @author makejava
- * @since 2026-05-16 11:53:24
+ * @since 2026-05-16 15:37:23
  */
 @SuppressWarnings("serial")
 @Data
@@ -44,6 +47,8 @@ public class VisitLog extends Model<VisitLog> {
     private String os;
     //访问时间
     private Date visitTime;
+    //页面执行时间（毫秒）
+    private Long executionTime;
 
 }
 

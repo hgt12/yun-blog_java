@@ -21,6 +21,7 @@ import com.mengze.utils.IpLocationUtils;
 import com.mengze.utils.IpUtils;
 import com.mengze.utils.RedisCache;
 import com.mengze.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * 网站统计表(SiteStatistics)表服务实现类（前后台共用）
  */
 @Service("siteStatisticsService")
+@Slf4j
 public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper, SiteStatistics> implements SiteStatisticsService
 {
     @Autowired
@@ -73,6 +75,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     @Override
     public ResponseResult recordVisit(RecordVisitDto recordVisitDto, HttpServletRequest request)
     {
+        long startTime = System.currentTimeMillis();
         String ip = IpUtils.getIpAddr(request);
         String userAgent = request.getHeader("User-Agent");
         if (userAgent == null) {
@@ -105,7 +108,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
             region = SystemConstants.UNKNOWN;
         }
 
-        // 访问日志写入 Redis 队列，由定时任务批量 flush 到数据库
+        // 访问日志写入 Redis 队列，由定时任务批量保存到数据库
         VisitLog visitLog = new VisitLog();
         visitLog.setIp(maskedIp);
         visitLog.setOperator(operator);
@@ -127,6 +130,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         visitLog.setPageTitle(recordVisitDto.getPageTitle());
         visitLog.setReferrer(recordVisitDto.getReferrer());
         visitLog.setVisitTime(new Date());
+        visitLog.setExecutionTime(System.currentTimeMillis() - startTime);
         redisCache.pushToList(SystemConstants.VISIT_LOG_QUEUE, visitLog);
 
         // PV 计数递增
