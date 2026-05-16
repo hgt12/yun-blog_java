@@ -7,15 +7,20 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RecordVisitDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.SiteInfoVo;
+import com.mengze.domain.vo.VisitOverviewVo;
+import com.mengze.domain.vo.VisitTrendVo;
 import com.mengze.mapper.CategoryMapper;
 import com.mengze.mapper.SiteStatisticsMapper;
 import com.mengze.mapper.TagMapper;
+import com.mengze.mapper.VisitLogMapper;
 import com.mengze.service.ArticleService;
 import com.mengze.service.SiteStatisticsService;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
+import com.mengze.utils.IpLocationUtils;
 import com.mengze.utils.IpUtils;
 import com.mengze.utils.RedisCache;
+import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -24,8 +29,14 @@ import org.springframework.util.DigestUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 网站统计表(SiteStatistics)表服务实现类
@@ -47,6 +58,9 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private VisitLogMapper visitLogMapper;
 
     //获取网站统计信息
     @Override
@@ -75,6 +89,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         //查询标签总数
         int tagCount = tagMapper.selectCount(
                 new LambdaQueryWrapper<Tag>()
+                        .eq(Tag::getStatus, SystemConstants.STATUS_NORMAL)
         ).intValue();
 
         SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors, articleCount, categoryCount, tagCount);
@@ -95,7 +110,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         String rateLimitKey = "rate:recordVisit:" + ip + ":" + (System.currentTimeMillis() / 60000);
         Long count = redisTemplate.opsForValue().increment(rateLimitKey);
         if (count == 1) {
-            // 第一次写入，设置 70 秒过期（略大于 1 分钟，防止边界问题）
+            // 第一次写入，设置 70 秒过期
             redisTemplate.expire(rateLimitKey, 70, java.util.concurrent.TimeUnit.SECONDS);
         }
         if (count > 30) {
@@ -105,15 +120,31 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         // IP 脱敏：保留前三段，末段替换为 *（如 192.168.1.*）
         String maskedIp = maskIp(ip);
 
+        // 判断操作人：登录用户显示用户名，否则显示“游客”
+        String operator = SystemConstants.OPERATOR_IS_VISITOR;
+        if (SecurityUtils.isLogin()) {
+            operator = Objects.requireNonNull(SecurityUtils.getLoginUser()).getUsername();
+        }
+
+        //根据ip获取地区信息
+        String region = IpLocationUtils.getCityByIp(ip);
+        if (region == null || region.isBlank()) {
+            region = SystemConstants.UNKNOWN;
+        }
+
         // 访问日志写入 Redis 队列，由定时任务批量 flush 到数据库
         VisitLog visitLog = new VisitLog();
         visitLog.setIp(maskedIp);
+        visitLog.setOperator(operator);
+        visitLog.setRegion(region);
+
         // 不存原始 UA，只保留解析后的设备信息
         if (!userAgent.isEmpty()) {
             visitLog.setDeviceType(parseDeviceType(userAgent));
             visitLog.setBrowser(parseBrowser(userAgent));
             visitLog.setOs(parseOs(userAgent));
         }
+
         // pageUrl 只保留路径部分，去除查询参数
         String pageUrl = recordVisitDto.getPageUrl();
         if (pageUrl != null && pageUrl.contains("?")) {

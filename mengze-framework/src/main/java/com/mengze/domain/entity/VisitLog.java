@@ -7,12 +7,13 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.io.Serializable;
 
 /**
  * 访问日志表(VisitLog)表实体类
  *
  * @author makejava
- * @since 2026-03-15 19:13:19
+ * @since 2026-05-16 11:53:24
  */
 @SuppressWarnings("serial")
 @Data
@@ -23,8 +24,10 @@ public class VisitLog extends Model<VisitLog> {
     @TableId
     //日志ID
     private Long id;
-    //访问者IP地址（脱敏存储）
+    //访问者IP地址（不明文入库）
     private String ip;
+    //操作人（游客/用户（显示用户名））
+    private String operator;
     //访问的页面URL
     private String pageUrl;
     //页面标题
@@ -33,6 +36,8 @@ public class VisitLog extends Model<VisitLog> {
     private String referrer;
     //设备类型（PC/Mobile/Tablet）
     private String deviceType;
+    //地区（国内外）
+    private String region;
     //浏览器类型
     private String browser;
     //操作系统

@@ -147,4 +147,12 @@ public class SystemConstants
      *  自定义部门数据权限
      */
     public static final Integer CUSTOM_DEPT_DATA_SCOPE = 5;
+    /**
+     *  操作人为y游客
+     */
+    public static final String OPERATOR_IS_VISITOR = "游客";
+    /**
+     *  未知 Unknown
+     */
+    public static final String UNKNOWN = "unknown";
 }
