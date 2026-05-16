@@ -89,7 +89,7 @@ public class CommentController
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
-    public void exportComment(Integer pageNum, Integer pageSize, @Valid @RequestBody CommentListDto commentListDto, HttpServletResponse response)
+    public void exportComment(Integer pageNum, Integer pageSize, @Valid CommentListDto commentListDto, HttpServletResponse response)
     {
         try {
             //调用服务层获取导出数据
