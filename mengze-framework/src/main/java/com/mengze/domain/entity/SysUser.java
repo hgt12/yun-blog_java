@@ -35,6 +35,8 @@ public class SysUser extends Model<SysUser> {
     private String email;
     //账号状态（0 正常，1 停用）
     private String status;
+    //部门id
+    private String deptId;
     //手机号
     private String phone;
     //用户性别，（0 男，1 女，2 隐藏）

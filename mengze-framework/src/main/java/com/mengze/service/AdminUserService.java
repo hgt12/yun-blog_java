@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.SysUser;
 
 /**
@@ -16,5 +17,7 @@ public interface AdminUserService extends IService<SysUser> {
      * 获取用户信息（包含权限和角色）
      */
     ResponseResult getAdminInfo();
+
+    ResponseResult getUserList(Integer pageNum, Integer pageSize, UserListDto userListDto);
 }
 

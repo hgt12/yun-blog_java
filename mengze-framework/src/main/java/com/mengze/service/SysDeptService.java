@@ -16,5 +16,7 @@ import java.util.List;
 public interface SysDeptService extends IService<SysDept> {
 
     ResponseResult<List<DeptOptionVo>> getDeptOptions();
+
+    List<Long> selectDeptAndChildrenIds(Long deptId);
 }
 

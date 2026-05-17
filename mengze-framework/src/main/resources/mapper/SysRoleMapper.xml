@@ -9,4 +9,25 @@
           AND r.`status` = 0
           AND r.del_flag = 0
     </select>
+
+    <select id="selectRoleNameByUserId" resultType="java.lang.String">
+        SELECT r.name
+        FROM sys_user_role ur
+                 LEFT JOIN sys_role r ON ur.role_id = r.id
+        WHERE ur.user_id = #{userId}
+          AND r.`status` = 0
+          AND r.del_flag = 0
+    </select>
+
+    <select id="selectRolesByUserId" resultType="com.mengze.domain.entity.SysRole">
+        SELECT r.id,
+               r.role_code,
+               r.name,
+               r.data_scope
+        FROM sys_user_role ur
+                 LEFT JOIN sys_role r ON ur.role_id = r.id
+        WHERE ur.user_id = #{userId}
+          AND r.`status` = 0
+          AND r.del_flag = 0
+    </select>
 </mapper>

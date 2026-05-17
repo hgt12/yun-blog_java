@@ -70,6 +70,32 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         return getBaseMapper().selectRoleCodeByUserId(id);
     }
 
+    @Override
+    public List<String> selectRoleNameByUserId(Long id)
+    {
+        if (id == 1L) {
+            List<String> roleNames = new ArrayList<>();
+            roleNames.add("系统超级管理员");
+            return roleNames;
+        }
+        return getBaseMapper().selectRoleNameByUserId(id);
+    }
+
+    //查询di为1的用户所拥有的角色列表
+    @Override
+    public List<SysRole> selectRolesByUserId(Long id)
+    {
+        if (id == 1L) {
+            SysRole sysRole = new SysRole();
+            sysRole.setId(1L);
+            sysRole.setRoleCode("admin");
+            sysRole.setName("系统超级管理员");
+            sysRole.setDataScope(1);
+            return List.of(sysRole);
+        }
+        return getBaseMapper().selectRolesByUserId(id);
+    }
+
     //获取角色列表
     @Override
     public ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, RoleListDto roleListDto)

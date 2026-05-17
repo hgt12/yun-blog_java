@@ -21,6 +21,10 @@ public interface SysRoleService extends IService<SysRole> {
 
     List<String> selectRoleCodeByUserId(Long id);
 
+    List<String> selectRoleNameByUserId(Long id);
+
+    List<SysRole> selectRolesByUserId(Long id);
+
     ResponseResult<PageVo> getRoleList(Integer pageNum, Integer pageSize, RoleListDto roleListDto);
 
     ResponseResult getRoleOptions();
