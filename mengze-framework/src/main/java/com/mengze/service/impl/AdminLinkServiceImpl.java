@@ -126,6 +126,7 @@ public class AdminLinkServiceImpl implements AdminLinkService
 
         //更新友链信息
         Link link = BeanCopyUtils.copyBean(updateLinkDto, Link.class);
+        link.setId(id);
         linkService.updateById(link);
 
         return ResponseResult.okResult();

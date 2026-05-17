@@ -182,6 +182,7 @@ public class AdminTagServiceImpl implements AdminTagService
 
         //更新标签信息
         Tag tag = BeanCopyUtils.copyBean(updateTagDto, Tag.class);
+        tag.setId(id);
         tagService.updateById(tag);
 
         return ResponseResult.okResult();

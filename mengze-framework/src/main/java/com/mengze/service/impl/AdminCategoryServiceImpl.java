@@ -185,6 +185,7 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
 
         //更新分类信息
         Category category = BeanCopyUtils.copyBean(updateCategoryDto, Category.class);
+        category.setId(id);
         categoryService.updateById(category);
 
         return ResponseResult.okResult(Objects.requireNonNullElse(msg, "修改成功"));

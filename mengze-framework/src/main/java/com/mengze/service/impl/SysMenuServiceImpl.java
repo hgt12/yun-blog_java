@@ -283,8 +283,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该父菜单下已存在同名菜单！");
         }
 
-        //复制属性
+        //更新菜单信息
         SysMenu menu = BeanCopyUtils.copyBean(updateMenuDto, SysMenu.class);
+        menu.setId(id);
 
         //将routePath的值同时保存到path中
         if (StringUtils.hasText(updateMenuDto.getRoutePath())) {

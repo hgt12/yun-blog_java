@@ -285,6 +285,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         // 更新文章基本信息
         Article article = BeanCopyUtils.copyBean(updatePostsDto, Article.class);
+        article.setId(id);
         articleService.updateById(article);
 
         // 更新标签关联关系
