@@ -24,6 +24,10 @@ public class SiteStatisticsController {
     @Autowired
     private SiteStatisticsService siteStatisticsService;
 
+    //由于前后台系统使用的是同一个网站访问数据统计接口和方法
+    //而这里的网站统计信息又是从 网站访问数据统计接口 中存入 redis 的数据来返回的
+    //所以这个接口返回的数据实际上是 前台 + 后台 两个系统的访问数据的总和
+    //在后台系统中看到的数据也同理
     @GetMapping("/siteInfo")
     @SystemLog(businessName = "获取网站统计信息")
     @ApiOperation(value = "获取网站统计信息", notes = "获取总访问量、总访客数", response = SiteInfoVo.class)

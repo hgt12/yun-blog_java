@@ -28,6 +28,10 @@ public class StatisticController
         return siteStatisticsService.getVisitTrend(startDate, endDate);
     }
 
+    //由于前后台系统使用的是同一个网站访问数据统计接口和方法
+    //而这里的网站统计信息又是从 网站访问数据统计接口 中存入 redis 的数据来返回的
+    //所以这个接口返回的数据实际上是 前台 + 后台 两个系统的访问数据的总和
+    //在前台系统中页脚里看到的数据也同理
     @GetMapping("/visits/overview")
     @ApiOperation(value = "获取访问概览", notes = "返回今日与总访问统计概览")
     public ResponseResult getVisitOverview() {
