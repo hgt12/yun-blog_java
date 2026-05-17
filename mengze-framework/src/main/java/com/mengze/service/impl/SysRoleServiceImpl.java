@@ -337,6 +337,25 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色编码已存在！");
         }
 
+        //系统内置角色保护：禁止修改关键字段
+        //为了方便开发，可以先把这部分先注释掉
+        boolean isProtectedRole = Objects.equals(oldRole.getRoleCode(), SystemConstants.ROLE_IS_ADMIN)
+                || Objects.equals(oldRole.getId(), 1L);
+        if (isProtectedRole) {
+            if (!Objects.equals(oldRole.getRoleCode(), updateRoleDto.getRoleCode())) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "系统内置角色不允许修改角色编码！");
+            }
+            if (!Objects.equals(oldRole.getName(), updateRoleDto.getName())) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "系统内置角色不允许修改角色名称！");
+            }
+            if (updateRoleDto.getStatus() != null && !Objects.equals(updateRoleDto.getStatus(), SystemConstants.STATUS_NORMAL)) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "系统内置角色不允许禁用！");
+            }
+            if (updateRoleDto.getDataScope() != null && !Objects.equals(oldRole.getDataScope(), updateRoleDto.getDataScope())) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "系统内置角色不允许修改数据权限！");
+            }
+        }
+
         //自定义部门权限时必须选择部门
         if (updateRoleDto.getDataScope() != null
                 && updateRoleDto.getDataScope().equals(SystemConstants.CUSTOM_DEPT_DATA_SCOPE)
