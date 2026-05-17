@@ -15,5 +15,7 @@ import com.mengze.domain.vo.PageVo;
 public interface VisitLogService extends IService<VisitLog> {
 
     ResponseResult<PageVo> getLogList(Integer pageNum, Integer pageSize, LogListDto logListDto);
+
+    ResponseResult exportLog(Integer pageNum, Integer pageSize, LogListDto logListDto);
 }
 

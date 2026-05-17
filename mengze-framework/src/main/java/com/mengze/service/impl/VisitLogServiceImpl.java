@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LogListDto;
+import com.mengze.domain.vo.VisitLogExportVo;
 import com.mengze.domain.vo.VisitLogListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.mapper.VisitLogMapper;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,6 +30,9 @@ public class VisitLogServiceImpl extends ServiceImpl<VisitLogMapper, VisitLog> i
 {
     @Autowired
     private VisitLogService visitLogService;
+
+    @Autowired
+    private VisitLogMapper visitLogMapper;
 
     //获取日志列表
     @Override
@@ -57,6 +62,48 @@ public class VisitLogServiceImpl extends ServiceImpl<VisitLogMapper, VisitLog> i
         PageVo pageVo = new PageVo(visitLogListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //导出日志
+    @Override
+    public ResponseResult exportLog(Integer pageNum, Integer pageSize, LogListDto logListDto)
+    {
+        //构建查询条件
+        LambdaQueryWrapper<VisitLog> queryWrapper = new LambdaQueryWrapper<>();
+
+        //根据关键字模糊查询操作人或页面标题
+        if (StringUtils.hasText(logListDto.getKeywords())) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(VisitLog::getOperator, logListDto.getKeywords())
+                    .or()
+                    .like(VisitLog::getPageTitle, logListDto.getKeywords())
+            );
+        }
+
+        //根据访问时间降序排序
+        queryWrapper.orderByDesc(VisitLog::getVisitTime);
+
+        //根据是否传入分页参数决定查询方式
+        List<VisitLog> logs;
+        if (pageNum != null && pageSize != null && pageNum > 0 && pageSize > 0) {
+            //分页查询
+            Page<VisitLog> page = new Page<>(pageNum, pageSize);
+            visitLogMapper.selectPage(page, queryWrapper);
+            logs = page.getRecords();
+        } else {
+            //查询所有符合条件的评论
+            logs = visitLogMapper.selectList(queryWrapper);
+        }
+
+        //转换为导出VO
+        List<VisitLogExportVo> exportData;
+        if (logs == null || logs.isEmpty()) {
+            exportData = new ArrayList<>();
+        } else {
+            exportData = BeanCopyUtils.copyBeanList(logs, VisitLogExportVo.class);
+        }
+
+        return ResponseResult.okResult(exportData);
     }
 }
 
