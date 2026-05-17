@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Pattern;
+import java.util.List;
 
 /**
  * 日志查询请求DTO
@@ -20,9 +20,6 @@ public class LogListDto {
     @ApiModelProperty(value = "关键字（用于模糊搜索）", example = "日志")
     private String keywords;
 
-    @ApiModelProperty(value = "开始时间", example = "2026-04-01 00:00:00")
-    private String startTime;
-
-    @ApiModelProperty(value = "结束时间", example = "2026-04-30 23:59:59")
-    private String endTime;
+    @ApiModelProperty(value = "访问时间", example = "[2026-04-01, 2026-05-15]")
+    private List<String> visitTime;
 }

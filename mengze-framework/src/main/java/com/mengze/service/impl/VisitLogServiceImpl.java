@@ -16,7 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -50,6 +53,22 @@ public class VisitLogServiceImpl extends ServiceImpl<VisitLogMapper, VisitLog> i
             );
         }
 
+        //按访问时间查询
+        if (logListDto.getVisitTime() != null && logListDto.getVisitTime().size() == 2)
+        {
+            //补全当天完整时间，因为前端只传 2026-04-01 不完整
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                Date startTime = sdf.parse(logListDto.getVisitTime().get(0) + " 00:00:00");
+                Date endTime = sdf.parse(logListDto.getVisitTime().get(1) + " 23:59:59");
+
+                queryWrapper.between(VisitLog::getVisitTime, startTime, endTime);
+            } catch (ParseException e) {
+                throw new RuntimeException("访问时间格式不正确", e);
+            }
+        }
+
         //根据访问时间降序排序
         queryWrapper.orderByDesc(VisitLog::getVisitTime);
 
@@ -78,6 +97,22 @@ public class VisitLogServiceImpl extends ServiceImpl<VisitLogMapper, VisitLog> i
                     .or()
                     .like(VisitLog::getPageTitle, logListDto.getKeywords())
             );
+        }
+
+        //按访问时间查询
+        if (logListDto.getVisitTime() != null && logListDto.getVisitTime().size() == 2)
+        {
+            //补全当天完整时间，因为前端只传 2026-04-01 不完整
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                Date startTime = sdf.parse(logListDto.getVisitTime().get(0) + " 00:00:00");
+                Date endTime = sdf.parse(logListDto.getVisitTime().get(1) + " 23:59:59");
+
+                queryWrapper.between(VisitLog::getVisitTime, startTime, endTime);
+            } catch (ParseException e) {
+                throw new RuntimeException("访问时间格式不正确", e);
+            }
         }
 
         //根据访问时间降序排序
