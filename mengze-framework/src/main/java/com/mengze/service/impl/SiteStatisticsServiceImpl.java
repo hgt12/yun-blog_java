@@ -9,11 +9,9 @@ import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.SiteInfoVo;
 import com.mengze.domain.vo.VisitOverviewVo;
 import com.mengze.domain.vo.VisitTrendVo;
-import com.mengze.mapper.CategoryMapper;
 import com.mengze.mapper.SiteStatisticsMapper;
-import com.mengze.mapper.TagMapper;
+import com.mengze.mapper.UniqueVisitorMapper;
 import com.mengze.mapper.VisitLogMapper;
-import com.mengze.service.ArticleService;
 import com.mengze.service.SiteStatisticsService;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
@@ -54,6 +52,9 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
 
     @Autowired
     private VisitLogMapper visitLogMapper;
+
+    @Autowired
+    private UniqueVisitorMapper uniqueVisitorMapper;
 
     //获取网站统计信息
     @Override
@@ -137,13 +138,33 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         // PV 计数递增
         redisCache.incrementCacheMapValue(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD, 1);
 
-        // UV 去重：按月分 key，SADD 返回 true 说明是本月新访客
+        // UV 去重：使用全站统一 key，保证 unique_visitor 统计的是全站唯一访客
         String visitorHash = DigestUtils.md5DigestAsHex((ip + userAgent).getBytes(StandardCharsets.UTF_8));
-        String monthKey = SystemConstants.SITE_VISITOR_SET_PREFIX
-                + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        boolean isNewVisitor = redisCache.addToSet(monthKey, visitorHash);
+        String visitorKey = SystemConstants.SITE_VISITOR_SET_PREFIX;
+
+        // 如果是全站新访客就写入 Redis 和数据库
+        boolean isNewVisitor = redisCache.addToSet(visitorKey, visitorHash);
         if (isNewVisitor) {
             redisCache.incrementCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD, 1);
+
+            UniqueVisitor uniqueVisitor = new UniqueVisitor();
+            uniqueVisitor.setVisitorHash(visitorHash);
+            uniqueVisitor.setIp(ip);
+            uniqueVisitor.setFirstVisitTime(new Date());
+            uniqueVisitor.setLastVisitTime(new Date());
+            uniqueVisitor.setVisitCount(1);
+            uniqueVisitorMapper.insert(uniqueVisitor);
+        } else {
+            // 已存在的全站唯一访客，更新最近访问时间和访问次数
+            UniqueVisitor uniqueVisitor = uniqueVisitorMapper.selectOne(new LambdaQueryWrapper<UniqueVisitor>()
+                    .eq(UniqueVisitor::getVisitorHash, visitorHash)
+                    .last("limit 1"));
+            if (uniqueVisitor != null) {
+                uniqueVisitor.setIp(ip);
+                uniqueVisitor.setLastVisitTime(new Date());
+                uniqueVisitor.setVisitCount(uniqueVisitor.getVisitCount() == null ? 1 : uniqueVisitor.getVisitCount() + 1);
+                uniqueVisitorMapper.updateById(uniqueVisitor);
+            }
         }
 
         return ResponseResult.okResult();

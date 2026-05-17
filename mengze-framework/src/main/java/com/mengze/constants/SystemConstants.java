@@ -80,9 +80,9 @@ public class SystemConstants
      */
     public static final String SITE_TOTAL_VISITORS_FIELD = "total";
     /**
-     *  访客去重 Set key 前缀（按月分 key，格式：site:visitor:set:yyyy-MM）
+     *  全站访客去重 Set key
      */
-    public static final String SITE_VISITOR_SET_PREFIX = "site:visitor:set:";
+    public static final String SITE_VISITOR_SET_PREFIX = "site:visitor:set:all";
     /**
      *  访问日志队列 key
      */
