@@ -288,11 +288,11 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
 
         //封装成vo
         VisitOverviewVo visitOverviewVo = new VisitOverviewVo(
-                todayUvCount,
-                totalUvCount,
+                Math.toIntExact(todayUvCount),
+                Math.toIntExact(totalUvCount),
                 uvGrowthRate,
-                todayPvCount,
-                totalPvCount,
+                Math.toIntExact(todayPvCount),
+                Math.toIntExact(totalPvCount),
                 pvGrowthRate
         );
 
