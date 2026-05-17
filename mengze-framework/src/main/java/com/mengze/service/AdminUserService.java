@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.vo.UserFormDetailVo;
 
 /**
  * 用户表(SysUser)表服务接口(后台)
@@ -19,5 +20,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult getAdminInfo();
 
     ResponseResult getUserList(Integer pageNum, Integer pageSize, UserListDto userListDto);
+
+    ResponseResult<UserFormDetailVo> getUserFormDetail(Long userId);
 }
 

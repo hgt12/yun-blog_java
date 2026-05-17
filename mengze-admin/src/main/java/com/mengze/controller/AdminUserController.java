@@ -5,6 +5,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SysUserInfoVo;
+import com.mengze.domain.vo.UserFormDetailVo;
 import com.mengze.service.AdminUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,5 +45,14 @@ public class AdminUserController
     public ResponseResult getUserList(Integer pageNum, Integer pageSize, @Valid UserListDto userListDto)
     {
         return adminUserService.getUserList(pageNum, pageSize, userListDto);
+    }
+
+    @GetMapping("/{userId}/form")
+    @SystemLog(businessName = "获取用户表单数据")
+    @ApiOperation(value = "获取用户表单数据", notes = "获取用户表单数据，用于编辑用户详情", response = UserFormDetailVo.class)
+    @ApiImplicitParam(name = "userId", value = "用户id", dataType = "long", paramType = "path")
+    public ResponseResult<UserFormDetailVo> getUserFormDetail(@PathVariable Long userId)
+    {
+        return adminUserService.getUserFormDetail(userId);
     }
 }

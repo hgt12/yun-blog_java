@@ -3,18 +3,13 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UserListDto;
-import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.SysDept;
-import com.mengze.domain.entity.SysRole;
-import com.mengze.domain.entity.SysUser;
-import com.mengze.domain.vo.AdminUserInfoVo;
-import com.mengze.domain.vo.AdminUserListVo;
-import com.mengze.domain.vo.PageVo;
-import com.mengze.domain.vo.SysUserInfoVo;
+import com.mengze.domain.entity.*;
+import com.mengze.domain.vo.*;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysUserMapper;
+import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.SecurityUtils;
@@ -28,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 用户表(SysUser)表服务实现类(后台)
@@ -49,6 +45,12 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     @Autowired
     private SysRoleDeptService sysRoleDeptService;
+
+    @Autowired
+    private SysUserRoleMapper sysUserRoleMapper;
+
+    @Autowired
+    private SysUserService sysUserService;
 
 
     @Override
@@ -194,6 +196,45 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         PageVo pageVo = new PageVo(adminUserListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取用户表单数据
+    @Override
+    public ResponseResult<UserFormDetailVo> getUserFormDetail(Long userId)
+    {
+        //检查用户是否存在
+        SysUser sysUser = sysUserService.getById(userId);
+        if (sysUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户不存在！");
+        }
+
+        //转换vo
+        UserFormDetailVo userFormDetailVo = BeanCopyUtils.copyBean(sysUser, UserFormDetailVo.class);
+
+        //填充角色id列表
+        List<Long> roleIds = getRoleIdsByUserId(userId);
+        userFormDetailVo.setRoleIds(roleIds);
+
+        return ResponseResult.okResult(userFormDetailVo);
+    }
+
+
+    /**
+     * 根据用户ID查询角色id列表
+     * @param userId 用户ID
+     * @return 角色ID列表
+     */
+    private List<Long> getRoleIdsByUserId(Long userId)
+    {
+        //查询用户角色关联表
+        LambdaQueryWrapper<SysUserRole> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUserRole::getUserId, userId);
+        List<SysUserRole> UserRoles = sysUserRoleMapper.selectList(queryWrapper);
+
+        //返回角色ID列表
+        return UserRoles.stream()
+                .map(SysUserRole::getRoleId)
+                .collect(Collectors.toList());
     }
 }
 
