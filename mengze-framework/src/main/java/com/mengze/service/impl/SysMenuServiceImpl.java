@@ -99,9 +99,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             queryWrapper.like(SysMenu::getName, menuListDto.getKeywords());
         }
 
-        //只查询可见的菜单
-        queryWrapper.eq(SysMenu::getVisible, SystemConstants.VISIBLE);
-
         //按排序字段升序排列
         queryWrapper.orderByAsc(SysMenu::getSort);
 
@@ -124,9 +121,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     {
         //查询所有菜单选项
         LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
-
-        //查询可见的菜单
-        queryWrapper.eq(SysMenu::getVisible, SystemConstants.VISIBLE);
 
         //如果前端的 onlyParent 为 true，只查询目录和菜单类型（不包含按钮）
         if (onlyParent != null && onlyParent) {
