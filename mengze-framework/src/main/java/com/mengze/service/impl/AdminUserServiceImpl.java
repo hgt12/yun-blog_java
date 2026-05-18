@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
+import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.*;
@@ -17,6 +18,7 @@ import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.ParseException;
@@ -52,7 +54,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     private SysUserRoleMapper sysUserRoleMapper;
 
     @Autowired
-    private SysUserService sysUserService;
+    private AdminUserService adminUserService;
 
 
     @Override
@@ -84,9 +86,12 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //当前登录用户
         LoginUser loginUser = SecurityUtils.getLoginUser();
-        Long currentUserId = loginUser.getSysUser().getId();
+        Long currentUserId = null;
+        if (loginUser != null) {
+            currentUserId = loginUser.getSysUser().getId();
+        }
 
-        //超级管理员直接看全部；普通用户按数据权限限制
+        //超级管理员可以看到全部 普通用户按数据权限限制
         if (!Objects.equals(currentUserId, 1L)) {
             List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
             Integer maxDataScope = roles.stream()
@@ -95,7 +100,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     .min(Integer::compareTo)
                     .orElse(4);
 
-            // 1-全部数据，直接不加限制
+            //全部数据
             if (!Objects.equals(maxDataScope, 1))
             {
                 if (Objects.equals(maxDataScope, 2)) {
@@ -205,7 +210,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     public ResponseResult<UserFormDetailVo> getUserFormDetail(Long userId)
     {
         //检查用户是否存在
-        SysUser sysUser = sysUserService.getById(userId);
+        SysUser sysUser = adminUserService.getById(userId);
         if (sysUser == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户不存在！");
         }
@@ -227,18 +232,18 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //检查用户名是否已经存在
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SysUser::getUsername, addUserDto.getUsername());
-        long count = sysUserService.count(queryWrapper);
+        long count = adminUserService.count(queryWrapper);
         if (count > 0) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户名重复，请使用其他用户名！");
+            return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_EXIST, "用户名重复，请使用其他用户名！");
         }
 
         //检查手机号是否已经存在 因为手机号和邮箱不是必填项 所以用 StringUtils.hasText() 来防止查空数据
         if (StringUtils.hasText(addUserDto.getMobile())) {
             queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(SysUser::getPhone, addUserDto.getMobile());
-            count = sysUserService.count(queryWrapper);
+            count = adminUserService.count(queryWrapper);
             if (count > 0) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号重复，请使用其他手机号！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "手机号重复，请使用其他手机号！");
             }
         }
 
@@ -246,9 +251,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         if (StringUtils.hasText(addUserDto.getEmail())) {
             queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(SysUser::getEmail, addUserDto.getEmail());
-            count = sysUserService.count(queryWrapper);
+            count = adminUserService.count(queryWrapper);
             if (count > 0) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱重复，请使用其他邮箱！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_EXIST, "邮箱重复，请使用其他邮箱！");
             }
         }
 
@@ -281,7 +286,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         SysUser user = BeanCopyUtils.copyBean(addUserDto, SysUser.class);
         user.setPassword(new BCryptPasswordEncoder().encode("user123456"));
 
-        boolean save = sysUserService.save(user);
+        boolean save = adminUserService.save(user);
         if (!save) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新增用户失败！");
         }
@@ -291,6 +296,116 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                 .map(roleId -> {
                     SysUserRole userRole = new SysUserRole();
                     userRole.setUserId(user.getId());
+                    userRole.setRoleId(roleId);
+                    userRole.setCreateTime(new Date());
+                    return userRole;
+                })
+                .collect(Collectors.toList());
+
+        for (SysUserRole userRole : userRoles) {
+            sysUserRoleMapper.insert(userRole);
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //更新用户
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult updateUser(Long id, UpdateUserDto updateUserDto)
+    {
+        //当前登录用户
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        Long currentUserId = null;
+        if (loginUser != null) {
+            currentUserId = loginUser.getSysUser().getId();
+        }
+
+        //检查用户是否存在
+        SysUser oldUser = adminUserService.getById(id);
+        if (oldUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户不存在！");
+        }
+
+        //超级管理员只能由自己修改自己的信息
+        if (Objects.equals(oldUser.getId(), 1L) && !Objects.equals(currentUserId, 1L)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "只有超级管理员本人可以修改超级管理员信息！");
+        }
+
+        //检查用户名是否已经存在(除了自己)
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getUsername, updateUserDto.getUsername())
+                .ne(SysUser::getId, id);
+        long count = adminUserService.count(queryWrapper);
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_EXIST, "用户名重复，请使用其他用户名！");
+        }
+
+        //检查手机号是否被其他用户使用
+        if (StringUtils.hasText(updateUserDto.getMobile())) {
+            LambdaQueryWrapper<SysUser> phoneWrapper = new LambdaQueryWrapper<>();
+            phoneWrapper.eq(SysUser::getPhone, updateUserDto.getMobile())
+                    .ne(SysUser::getId, id);
+            SysUser existSysUser = adminUserService.getOne(phoneWrapper);
+            if (existSysUser != null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "该手机号已被占用！");
+            }
+        }
+
+        //检查邮箱是否被其他用户使用
+        if (StringUtils.hasText(updateUserDto.getEmail())) {
+            LambdaQueryWrapper<SysUser> emailWrapper = new LambdaQueryWrapper<>();
+            emailWrapper.eq(SysUser::getEmail, updateUserDto.getEmail())
+                    .ne(SysUser::getId, id);
+            SysUser existSysUser = adminUserService.getOne(emailWrapper);
+            if (existSysUser != null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_EXIST, "该邮箱已被占用!");
+            }
+        }
+
+        //检查部门是否存在
+        SysDept dept = null;
+        if (StringUtils.hasText(updateUserDto.getDeptId())) {
+            try {
+                dept = sysDeptService.getById(Long.valueOf(updateUserDto.getDeptId()));
+            } catch (NumberFormatException e) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门ID格式不正确");
+            }
+        }
+        if (dept == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门不存在！");
+        }
+
+        //检查角色是否存在，且不能包含系统超级管理员角色
+        for (Long roleId : updateUserDto.getRoleIds())
+        {
+            SysRole role = sysRoleService.getById(roleId);
+            if (role == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色不存在！");
+            }
+            if (Objects.equals(role.getId(), 1L)) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "不能分配系统超级管理员角色！");
+            }
+        }
+
+        //更新用户信息
+        SysUser user = BeanCopyUtils.copyBean(updateUserDto, SysUser.class);
+        user.setId(id);
+        boolean update = adminUserService.updateById(user);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新用户失败！");
+        }
+
+        //删除原有角色关联
+        LambdaQueryWrapper<SysUserRole> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(SysUserRole::getUserId, id);
+        sysUserRoleMapper.delete(deleteWrapper);
+
+        //新增角色关联
+        List<SysUserRole> userRoles = updateUserDto.getRoleIds().stream()
+                .map(roleId -> {
+                    SysUserRole userRole = new SysUserRole();
+                    userRole.setUserId(id);
                     userRole.setRoleId(roleId);
                     userRole.setCreateTime(new Date());
                     return userRole;

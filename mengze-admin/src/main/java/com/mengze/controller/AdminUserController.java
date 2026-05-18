@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
+import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SysUserInfoVo;
@@ -60,5 +61,14 @@ public class AdminUserController
     public ResponseResult addUser(@Valid @RequestBody AddUserDto addUserDto)
     {
         return adminUserService.addUser(addUserDto);
+    }
+
+    @PutMapping("/{id}")
+    @SystemLog(businessName = "修改用户信息")
+    @ApiOperation(value = "修改用户接口", notes = "修改用户信息", response = String.class)
+    @ApiImplicitParam(name = "id", value = "用户ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserDto updateUserDto)
+    {
+        return adminUserService.updateUser(id, updateUserDto);
     }
 }
