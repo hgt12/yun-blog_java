@@ -150,17 +150,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
-        //检查昵称是否被其他用户使用
-        if (StringUtils.hasText(updateUserInfoDto.getNickname())) {
-            LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(SysUser::getNickname, updateUserInfoDto.getNickname())
-                    .ne(SysUser::getId, currentUserId);
-            SysUser existSysUser = getOne(queryWrapper);
-            if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_OCCUPIED, "这个昵称和别人的重复啦！");
-            }
-        }
-
         //获取更新前的用户信息，用于判断头像和昵称是否变化
         SysUser oldSysUser = getById(currentUserId);
         
