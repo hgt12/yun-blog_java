@@ -135,7 +135,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     .ne(SysUser::getId, currentUserId);
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_OCCUPIED, "你用别人的电话号码干嘛？");
+                return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "你用别人的电话号码干嘛？");
             }
         }
 
@@ -146,7 +146,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     .ne(SysUser::getId, currentUserId);
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_OCCUPIED, "你用别人的邮箱干嘛？");
+                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_EXIST, "你用别人的邮箱干嘛？");
             }
         }
 
@@ -290,7 +290,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             queryWrapper.eq(SysUser::getUsername, dto.getUsername());
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_OCCUPIED, "用户名已被占用！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_EXIST, "用户名已被占用！");
             }
         }
         if (StringUtils.hasText(dto.getPhone())) {
@@ -298,7 +298,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             queryWrapper.eq(SysUser::getPhone, dto.getPhone());
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_OCCUPIED, "该手机号已被注册！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "该手机号已被注册！");
             }
         }
         if (StringUtils.hasText(dto.getEmail())) {
@@ -306,7 +306,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             queryWrapper.eq(SysUser::getEmail, dto.getEmail());
             SysUser existSysUser = getOne(queryWrapper);
             if (existSysUser != null) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_OCCUPIED, "该邮箱已被注册！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_EXIST, "该邮箱已被注册！");
             }
         }
         
