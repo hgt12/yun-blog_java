@@ -2,6 +2,7 @@ package com.mengze.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.UserFormDetailVo;
@@ -22,5 +23,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult getUserList(Integer pageNum, Integer pageSize, UserListDto userListDto);
 
     ResponseResult<UserFormDetailVo> getUserFormDetail(Long userId);
+
+    ResponseResult addUser(AddUserDto addUserDto);
 }
 

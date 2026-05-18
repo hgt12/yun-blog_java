@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SysUserInfoVo;
@@ -12,10 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -54,5 +52,13 @@ public class AdminUserController
     public ResponseResult<UserFormDetailVo> getUserFormDetail(@PathVariable Long userId)
     {
         return adminUserService.getUserFormDetail(userId);
+    }
+
+    @PostMapping
+    @SystemLog(businessName = "新增用户")
+    @ApiOperation(value = "新增用户接口", notes = "新增用户", response = ResponseResult.class)
+    public ResponseResult addUser(@Valid @RequestBody AddUserDto addUserDto)
+    {
+        return adminUserService.addUser(addUserDto);
     }
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.*;
@@ -14,6 +15,7 @@ import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -216,6 +218,90 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         userFormDetailVo.setRoleIds(roleIds);
 
         return ResponseResult.okResult(userFormDetailVo);
+    }
+
+    //添加用户
+    @Override
+    public ResponseResult addUser(AddUserDto addUserDto)
+    {
+        //检查用户名是否已经存在
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getUsername, addUserDto.getUsername());
+        long count = sysUserService.count(queryWrapper);
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户名重复，请使用其他用户名！");
+        }
+
+        //检查手机号是否已经存在 因为手机号和邮箱不是必填项 所以用 StringUtils.hasText() 来防止查空数据
+        if (StringUtils.hasText(addUserDto.getMobile())) {
+            queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysUser::getPhone, addUserDto.getMobile());
+            count = sysUserService.count(queryWrapper);
+            if (count > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号重复，请使用其他手机号！");
+            }
+        }
+
+        //检查邮箱是否已经存在
+        if (StringUtils.hasText(addUserDto.getEmail())) {
+            queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysUser::getEmail, addUserDto.getEmail());
+            count = sysUserService.count(queryWrapper);
+            if (count > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱重复，请使用其他邮箱！");
+            }
+        }
+
+        //检查部门是否存在
+        SysDept dept = null;
+        if (StringUtils.hasText(addUserDto.getDeptId())) {
+            try {
+                dept = sysDeptService.getById(Long.valueOf(addUserDto.getDeptId()));
+            } catch (NumberFormatException e) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门ID格式不正确");
+            }
+        }
+        if (dept == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门不存在！");
+        }
+
+        //检查角色是否存在，且不能包含系统超级管理员角色
+        for (Long roleId : addUserDto.getRoleIds())
+        {
+            SysRole role = sysRoleService.getById(roleId);
+            if (role == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色不存在！");
+            }
+            if (Objects.equals(role.getId(), 1L)) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "不能分配系统超级管理员角色！");
+            }
+        }
+
+        //新增用户并设置默认密码并加密后入库
+        SysUser user = BeanCopyUtils.copyBean(addUserDto, SysUser.class);
+        user.setPassword(new BCryptPasswordEncoder().encode("user123456"));
+
+        boolean save = sysUserService.save(user);
+        if (!save) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新增用户失败！");
+        }
+
+        //保存用户角色关联
+        List<SysUserRole> userRoles = addUserDto.getRoleIds().stream()
+                .map(roleId -> {
+                    SysUserRole userRole = new SysUserRole();
+                    userRole.setUserId(user.getId());
+                    userRole.setRoleId(roleId);
+                    userRole.setCreateTime(new Date());
+                    return userRole;
+                })
+                .collect(Collectors.toList());
+
+        for (SysUserRole userRole : userRoles) {
+            sysUserRoleMapper.insert(userRole);
+        }
+
+        return ResponseResult.okResult();
     }
 
 
