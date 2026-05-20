@@ -3,6 +3,7 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
@@ -55,6 +56,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     @Autowired
     private AdminUserService adminUserService;
+
+    @Autowired
+    private EmailServiceImpl emailService;
 
 
     @Override
@@ -384,7 +388,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "角色不存在！");
             }
             if (Objects.equals(role.getId(), 1L)) {
-                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "不能分配系统超级管理员角色！");
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "管理员是神圣不可侵犯的！");
             }
         }
 
@@ -394,6 +398,17 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         boolean update = adminUserService.updateById(user);
         if (!update) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新用户失败！");
+        }
+
+        //如果用户态发生变化，在用户有邮箱的前提下，会发送通知邮件（账号封禁或解封）
+        boolean statusChanged = !Objects.equals(oldUser.getStatus(), user.getStatus());
+        boolean statusSwitchToNormalOrDisabled = Objects.equals(oldUser.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL) || Objects.equals(user.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL);
+        if (statusChanged && statusSwitchToNormalOrDisabled && StringUtils.hasText(oldUser.getEmail())) {
+            if (Objects.equals(user.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL)) {
+                emailService.sendUserEnabledNotification(oldUser.getEmail(), oldUser.getNickname(), oldUser.getUsername());
+            } else {
+                emailService.sendUserDisabledNotification(oldUser.getEmail(), oldUser.getNickname(), oldUser.getUsername());
+            }
         }
 
         //删除原有角色关联

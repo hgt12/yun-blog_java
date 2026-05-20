@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginByEmailOrPhoneDto;
 import com.mengze.domain.dto.LoginDto;
@@ -231,6 +232,11 @@ public class BlogLoginServiceImpl implements BlogLoginService
             sysUserInfoVo.setAvatar(GravatarUtils.getGravatarUrl(sysUser.getEmail()));
         }
         
+        // 禁用账号不允许登录
+        if (!SystemConstants.USER_STATUS_NORMAL.equals(sysUser.getStatus())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.ACCOUNT_DISABLED);
+        }
+
         // 查询用户角色
         List<String> roles = sysRoleMapper.selectRoleCodeByUserId(sysUser.getId());
         if (roles == null || roles.isEmpty()) {

@@ -1,18 +1,15 @@
 package com.mengze.domain.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.mengze.constants.SystemConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
@@ -63,6 +60,6 @@ public class LoginUser implements UserDetails
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return sysUser == null || SystemConstants.USER_STATUS_NORMAL.equals(sysUser.getStatus());
     }
 }

@@ -46,6 +46,48 @@ public class EmailServiceImpl
         sendVerificationEmail(to, code, "登录", "您正在进行登录操作，请使用以下验证码完成登录。");
     }
     
+    //发送用户禁用通知邮件
+    @Async("asyncExecutor")
+    public void sendUserDisabledNotification(String toEmail, String nickname, String username)
+    {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(from);
+            helper.setTo(toEmail);
+            helper.setSubject("【云梦泽的个人博客】您的账号已被禁用");
+
+            String htmlContent = buildUserDisabledNotificationHtml(nickname, username);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //发送用户解封通知邮件
+    @Async("asyncExecutor")
+    public void sendUserEnabledNotification(String toEmail, String nickname, String username)
+    {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(from);
+            helper.setTo(toEmail);
+            helper.setSubject("【云梦泽的个人博客】您的账号已恢复正常使用");
+
+            String htmlContent = buildUserEnabledNotificationHtml(nickname, username);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+    
     //发送注册验证码邮件
     @Async("asyncExecutor")
     public void sendVerificationCodeByRegister(String to, String code)
@@ -844,6 +886,106 @@ public class EmailServiceImpl
                 "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">" +
                 "                                © " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved" +
                 "                            </p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                </table>" +
+                "            </td>" +
+                "        </tr>" +
+                "    </table>" +
+                "</body>" +
+                "</html>";
+    }
+
+    //用户账号封禁通知邮件
+    private String buildUserDisabledNotificationHtml(String nickname, String username)
+    {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; background: linear-gradient(135deg, #a5dff9 0%, #008c9e 100%); font-family: 'Segoe UI', Arial, sans-serif;\">" +
+                "    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding: 40px 20px;\">" +
+                "        <tr>" +
+                "            <td align=\"center\">" +
+                "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
+                "                    <tr>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">账号状态变更通知</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"padding: 50px 40px;\">" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">您好，" + (StringUtils.hasText(nickname) ? nickname : username) + "！</h2>" +
+                "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
+                "                                由于您在平台中的不正当行为，我们已将您的账号进行封禁处理，您此后不允许使用该账号在我们平台上登录。 " +
+                "                            </p>" +
+                "                            <div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%); border-left: 4px solid #f44336; border-radius: 8px; padding: 25px; margin: 30px 0; box-shadow: 0 2px 8px rgba(244,67,54,0.1);\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
+                "                                    （╯－＿－）╯╧╧  账号被封禁" +
+                "                                </p>" +
+                "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
+                "                                    您的账号（" + username + "）当前状态：<strong style=\"color: #f44336;\">已被禁用</strong>" +
+                "                                </p>" +
+                "                            </div>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"background: linear-gradient(135deg, #f8f9fa 0%, #eaecef 100%); padding: 30px; text-align: center; border-top: 1px solid #eaecef;\">" +
+                "                            <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px;\">此邮件由系统自动发送，请勿直接回复</p>" +
+                "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">© " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                </table>" +
+                "            </td>" +
+                "        </tr>" +
+                "    </table>" +
+                "</body>" +
+                "</html>";
+    }
+
+    //用户账号解封通知邮件
+    private String buildUserEnabledNotificationHtml(String nickname, String username)
+    {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; background: linear-gradient(135deg, #a5dff9 0%, #008c9e 100%); font-family: 'Segoe UI', Arial, sans-serif;\">" +
+                "    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding: 40px 20px;\">" +
+                "        <tr>" +
+                "            <td align=\"center\">" +
+                "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
+                "                    <tr>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">账号解封通知</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"padding: 50px 40px;\">" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">您好，" + (StringUtils.hasText(nickname) ? nickname : username) + "！</h2>" +
+                "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
+                "                                您的账号已解封，您可以继续在平台中使用该账号。" +
+                "                            </p>" +
+                "                            <div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%); border-left: 4px solid #52c41a; border-radius: 8px; padding: 25px; margin: 30px 0; box-shadow: 0 2px 8px rgba(82,196,26,0.1);\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
+                "                                      - ̗̀ ෆ( ˶’ᵕ’˶)ෆ ̖́-  账号解封" +
+                "                                </p>" +
+                "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
+                "                                    您的账号（" + username + "）当前状态：<strong style=\"color: #52c41a;\">已恢复正常使用</strong>" +
+                "                                </p>" +
+                "                            </div>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"background: linear-gradient(135deg, #f8f9fa 0%, #eaecef 100%); padding: 30px; text-align: center; border-top: 1px solid #eaecef;\">" +
+                "                            <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px;\">此邮件由系统自动发送，请勿直接回复</p>" +
+                "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">© " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved</p>" +
                 "                        </td>" +
                 "                    </tr>" +
                 "                </table>" +

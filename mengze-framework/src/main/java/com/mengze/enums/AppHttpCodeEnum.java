@@ -34,7 +34,9 @@ public enum AppHttpCodeEnum {
     CAPTCHA_EXPIRED(1020, "图形验证码已过期"),
     COMMENT_SENSITIVE_PENDING_REVIEW(1021, "检测到违规元素，您的评论已提交审核系统，请耐心等待审核通过，届时我们会发送邮箱通知您该条评论的状态  ૮₍ ྀི∩៸៸៸∩ ྀི₎ა" ),
     FILE_NULL(1022, "上传文件为空！"),
-    PARAM_INVALID(1023, "起始日期 不能晚于 终止日期");
+    PARAM_INVALID(1023, "起始日期 不能晚于 终止日期"),
+    ACCOUNT_DISABLED(1024, "账号已被封禁"),
+    ;
     int code;
     String msg;
 

@@ -155,4 +155,12 @@ public class SystemConstants
      *  未知 Unknown
      */
     public static final String UNKNOWN = "unknown";
+    /**
+     *  用户状态：正常
+     */
+    public static final String USER_STATUS_NORMAL = "0";
+    /**
+     *  用户状态：已封禁
+     */
+    public static final String USER_STATUS_BANNED = "1";
 }

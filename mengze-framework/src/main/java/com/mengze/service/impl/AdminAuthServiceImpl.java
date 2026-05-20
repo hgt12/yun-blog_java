@@ -14,6 +14,7 @@ import com.mengze.utils.JwtUtil;
 import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -67,7 +68,13 @@ public class AdminAuthServiceImpl implements AdminAuthService
 
         UsernamePasswordAuthenticationToken authenticationToken = 
             new UsernamePasswordAuthenticationToken(sysUser.getUsername(), sysUser.getPassword());
-        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
+        Authentication authenticate;
+        try {
+            authenticate = authenticationManager.authenticate(authenticationToken);
+        } catch (DisabledException e) {
+            //如果账号为被封禁，则提示
+            throw new SystemException(AppHttpCodeEnum.ACCOUNT_DISABLED);
+        }
         
         //判断是否认证通过
         if (Objects.isNull(authenticate)) {
