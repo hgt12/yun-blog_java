@@ -76,4 +76,14 @@ public class AdminUserController
     {
         return adminUserService.updateUser(id, updateUserDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:user:delete')")
+    @SystemLog(businessName = "删除用户(逻辑删除)")
+    @ApiOperation(value = "删除用户接口（批量逻辑删除）", notes = "删除用户，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteUser(@PathVariable Long[] ids)
+    {
+        return adminUserService.deleteUser(ids);
+    }
 }

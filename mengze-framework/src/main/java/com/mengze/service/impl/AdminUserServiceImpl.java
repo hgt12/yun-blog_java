@@ -24,10 +24,7 @@ import org.springframework.util.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -430,6 +427,53 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         for (SysUserRole userRole : userRoles) {
             sysUserRoleMapper.insert(userRole);
         }
+
+        return ResponseResult.okResult();
+    }
+
+    //删除用户
+    @Override
+    @Transactional
+    public ResponseResult deleteUser(Long[] ids)
+    {
+        //判断用户是否存在
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的用户");
+        }
+
+        //不允许删除系统管理员用户
+        List<Long> userIdList = Arrays.asList(ids);
+        List<SysUser> usersToDelete = adminUserService.listByIds(userIdList);
+        List<Long> adminUserIds = usersToDelete.stream()
+                .map(SysUser::getId)
+                .filter(id -> Objects.equals(id, 1L))
+                .toList();
+        if (!adminUserIds.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "系统管理员用户不能删除！");
+        }
+
+        //获取用户id列表
+        if (usersToDelete.size() != ids.length)
+        {
+            //找出不存在的 用户id
+            Set<Long> existIds = usersToDelete.stream()
+                    .map(SysUser::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = userIdList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下用户 id 不存在：" + notExistIds);
+        }
+
+        boolean removed = adminUserService.removeByIds(userIdList);
+        if (!removed) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除用户失败");
+        }
+
+        //执行删除
+        adminUserService.removeByIds(userIdList);
 
         return ResponseResult.okResult();
     }

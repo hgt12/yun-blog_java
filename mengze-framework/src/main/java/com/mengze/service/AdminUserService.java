@@ -28,5 +28,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult addUser(AddUserDto addUserDto);
 
     ResponseResult updateUser(Long id, UpdateUserDto updateUserDto);
+
+    ResponseResult deleteUser(Long[] ids);
 }
 

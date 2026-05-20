@@ -58,6 +58,7 @@ public class SysUser extends Model<SysUser> {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
     //最后登录时间
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date lastLoginTime;
 
 }
