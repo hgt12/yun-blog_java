@@ -30,5 +30,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult updateUser(Long id, UpdateUserDto updateUserDto);
 
     ResponseResult deleteUser(Long[] ids);
+
+    ResponseResult updateResetUserPassword(Long id, String password);
 }
 

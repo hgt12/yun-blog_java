@@ -5,6 +5,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.enums.AppHttpCodeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -23,7 +24,8 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class ContentTypeValidationFilter extends OncePerRequestFilter {
+public class ContentTypeValidationFilter extends OncePerRequestFilter
+{
 
     /**
      * 需要验证Content-Type的请求方法
@@ -43,7 +45,8 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter {
      * 白名单路径（不需要验证Content-Type）
      */
     private static final List<String> WHITELIST_PATHS = Arrays.asList(
-            "/auth/refreshToken",   // 刷新验证码接口
+            "/users/*/password/reset",   // 重置密码接口
+            "/auth/refreshToken",   // 刷新token接口
             "/comment/like",    // 点赞接口
             "/auth/logout",     // 退出登录
             "/upload",           // 文件上传接口
@@ -51,6 +54,8 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter {
             "/v2/api-docs",      // Swagger API文档
             "/v3/api-docs"       // Swagger API文档
     );
+
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
@@ -101,7 +106,7 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter {
      * 检查路径是否在白名单中
      */
     private boolean isWhitelistPath(String path) {
-        return WHITELIST_PATHS.stream().anyMatch(path::startsWith);
+        return WHITELIST_PATHS.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
     }
 
     /**
@@ -111,7 +116,7 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("application/json;charset=UTF-8");
         
-        ResponseResult result = ResponseResult.errorResult(
+        ResponseResult<?> result = ResponseResult.errorResult(
             AppHttpCodeEnum.SYSTEM_ERROR.getCode(), 
             message
         );

@@ -102,6 +102,27 @@ public class EmailServiceImpl
         sendVerificationEmail(to, code, "重置密码", "您正在进行密码重置操作，请使用以下验证码完成密码重置。");
     }
 
+    //发送用户密码重置通知邮件
+    @Async("asyncExecutor")
+    public void sendResetPasswordNotification(String toEmail, String nickname, String username, String newPassword)
+    {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(from);
+            helper.setTo(toEmail);
+            helper.setSubject("【云梦泽的个人博客】您的登录密码已重置");
+
+            String htmlContent = buildResetPasswordNotificationHtml(nickname, username, newPassword);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
     //发送新评论通知邮件（有人评论了你的文章）
     @Async("asyncExecutor")
     public void sendNewCommentNotification(String articleTitle, String commenterNickname, String commentContent, String articleUrl)
@@ -978,6 +999,64 @@ public class EmailServiceImpl
                 "                                </p>" +
                 "                                <p style=\"color: #718096; line-height: 1.8; margin: 0; font-size: 14px;\">" +
                 "                                    您的账号（" + username + "）当前状态：<strong style=\"color: #52c41a;\">已恢复正常使用</strong>" +
+                "                                </p>" +
+                "                            </div>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"background: linear-gradient(135deg, #f8f9fa 0%, #eaecef 100%); padding: 30px; text-align: center; border-top: 1px solid #eaecef;\">" +
+                "                            <p style=\"color: #718096; margin: 0 0 10px 0; font-size: 13px;\">此邮件由系统自动发送，请勿直接回复</p>" +
+                "                            <p style=\"color: #a7a9ad; margin: 0; font-size: 12px;\">© " + LocalDate.now().getYear() + " 云梦泽的个人博客 · All rights reserved</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                </table>" +
+                "            </td>" +
+                "        </tr>" +
+                "    </table>" +
+                "</body>" +
+                "</html>";
+    }
+
+    //用户密码重置通知邮件
+    private String buildResetPasswordNotificationHtml(String nickname, String username, String newPassword)
+    {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "</head>" +
+                "<body style=\"margin: 0; padding: 0; background: linear-gradient(135deg, #a5dff9 0%, #008c9e 100%); font-family: 'Segoe UI', Arial, sans-serif;\">" +
+                "    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding: 40px 20px;\">" +
+                "        <tr>" +
+                "            <td align=\"center\">" +
+                "                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5fffa; border-radius: 12px; box-shadow: 0 12px 15px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); overflow: hidden;\">" +
+                "                    <tr>" +
+                "                        <td style=\"background: rgb(125, 182, 191); padding: 40px 30px; text-align: center;\">" +
+                "                            <h1 style=\"color: #2c3e50; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: 1px;\">云梦泽的个人博客</h1>" +
+                "                            <p style=\"color: #546e7a; margin: 10px 0 0 0; font-size: 14px;\">密码重置通知</p>" +
+                "                        </td>" +
+                "                    </tr>" +
+                "                    <tr>" +
+                "                        <td style=\"padding: 50px 40px;\">" +
+                "                            <h2 style=\"color: #3c4858; margin: 0 0 20px 0; font-size: 22px; font-weight: 600;\">您好，" + (StringUtils.hasText(nickname) ? nickname : username) + "！</h2>" +
+                "                            <p style=\"color: #718096; line-height: 1.8; margin: 0 0 30px 0; font-size: 15px;\">" +
+                "                                您的登录密码已被管理员重置，请尽快使用下方新密码进行登录" +
+                "                            </p>" +
+                "                            <div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%); border-left: 4px solid #30a9de; border-radius: 8px; padding: 25px; margin: 30px 0; box-shadow: 0 2px 8px rgba(48,169,222,0.1);\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0 0 15px 0; font-size: 15px; font-weight: 600;\">" +
+                "                                   ( ⩌⤚⩌) 健忘的家伙，密码已经帮你重置好了" +
+                "                                </p>" +
+                "                                <p style=\"color: #718096; line-height: 1.8; margin: 0 0 12px 0; font-size: 14px;\">" +
+                "                                    您的账号（" + username + "）新密码为：" +
+                "                                </p>" +
+                "                                <div style=\"background-color: #ffffff; border-radius: 8px; padding: 16px 20px; text-align: center; border: 1px dashed #30a9de;\">" +
+                "                                    <span style=\"font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #30a9de; font-family: 'Courier New', monospace;\">" + newPassword + "</span>" +
+                "                                </div>" +
+                "                            </div>" +
+                "                            <div style=\"background-color: #fff8e1; border-left: 4px solid #ffc107; border-radius: 8px; padding: 20px; margin: 25px 0;\">" +
+                "                                <p style=\"color: #3c4858; line-height: 1.8; margin: 0; font-size: 14px;\">" +
+                "                                    请及时使用新密码登录，并在登录后立即修改为您自己的安全密码。" +
                 "                                </p>" +
                 "                            </div>" +
                 "                        </td>" +

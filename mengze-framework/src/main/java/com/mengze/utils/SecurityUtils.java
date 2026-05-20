@@ -45,10 +45,13 @@ public class SecurityUtils
     }
 
     /**
-     *  用户是管理员
+     * 判断当前用户是否为管理员
      */
     public static boolean isAdmin() {
-        Long userId = getLoginUser().getSysUser().getId();
-        return userId != null && userId.equals(1L);
+        LoginUser loginUser = getLoginUser();
+        if (loginUser == null || loginUser.getSysUser() == null || loginUser.getSysUser().getId() == null) {
+            return false;
+        }
+        return loginUser.getSysUser().getId().equals(1L);
     }
 }

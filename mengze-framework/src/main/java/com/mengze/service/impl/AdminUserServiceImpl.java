@@ -397,9 +397,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新用户失败！");
         }
 
-        //如果用户态发生变化，在用户有邮箱的前提下，会发送通知邮件（账号封禁或解封）
+        //如果用户状态发生变化，在用户有邮箱的前提下，会发送通知邮件（账号封禁或解封）
         boolean statusChanged = !Objects.equals(oldUser.getStatus(), user.getStatus());
-        boolean statusSwitchToNormalOrDisabled = Objects.equals(oldUser.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL) || Objects.equals(user.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL);
+        boolean statusSwitchToNormalOrDisabled = Objects.equals(oldUser.getStatus(), SystemConstants.USER_STATUS_NORMAL) || Objects.equals(user.getStatus(), SystemConstants.USER_STATUS_NORMAL);
         if (statusChanged && statusSwitchToNormalOrDisabled && StringUtils.hasText(oldUser.getEmail())) {
             if (Objects.equals(user.getStatus(), SystemConstants.ARTICLE_STATUS_NORMAL)) {
                 emailService.sendUserEnabledNotification(oldUser.getEmail(), oldUser.getNickname(), oldUser.getUsername());
@@ -472,8 +472,40 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除用户失败");
         }
 
-        //执行删除
-        adminUserService.removeByIds(userIdList);
+        return ResponseResult.okResult();
+    }
+
+    //重置用户密码
+    @Override
+    public ResponseResult updateResetUserPassword(Long id, String password)
+    {
+        //检查用户是否存在
+        SysUser user = adminUserService.getById(id);
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户不存在！");
+        }
+
+        //管理员密码只能由管理员本人重置
+        if (Objects.equals(user.getId(), 1L) && !SecurityUtils.isAdmin()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "管理员密码只能由管理员本人重置！");
+        }
+
+        //重置密码并加密入库
+        user.setPassword(new BCryptPasswordEncoder().encode(password));
+        boolean update = adminUserService.updateById(user);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "重置密码失败！");
+        }
+
+        //如果用户有邮箱，则发送重置密码通知邮件给用户
+        if (StringUtils.hasText(user.getEmail())) {
+            emailService.sendResetPasswordNotification(
+                    user.getEmail(),
+                    user.getNickname(),
+                    user.getUsername(),
+                    password
+            );
+        }
 
         return ResponseResult.okResult();
     }

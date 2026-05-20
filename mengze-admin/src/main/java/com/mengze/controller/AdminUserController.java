@@ -5,6 +5,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
+import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.domain.vo.UserFormDetailVo;
@@ -85,5 +86,15 @@ public class AdminUserController
     public ResponseResult deleteUser(@PathVariable Long[] ids)
     {
         return adminUserService.deleteUser(ids);
+    }
+
+    @PutMapping("/{id}/password/reset")
+    @PreAuthorize("@ps.hasPermission('sys:user:reset-password')")
+    @SystemLog(businessName = "重置用户密码")
+    @ApiOperation(value = "重置用户密码接口", notes = "重置用户密码", response = String.class)
+    @ApiImplicitParam(name = "id", value = "用户ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateResetUserPassword(@PathVariable Long id, String password)
+    {
+        return adminUserService.updateResetUserPassword(id, password);
     }
 }
