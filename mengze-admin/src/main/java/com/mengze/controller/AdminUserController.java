@@ -1,15 +1,19 @@
 package com.mengze.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
-import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.vo.AdminUserListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SysUserInfoVo;
 import com.mengze.domain.vo.UserFormDetailVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminUserService;
+import com.mengze.utils.ExcelExportUtil;
+import com.mengze.utils.WebUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -18,7 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -96,5 +104,13 @@ public class AdminUserController
     public ResponseResult updateResetUserPassword(@PathVariable Long id, String password)
     {
         return adminUserService.updateResetUserPassword(id, password);
+    }
+
+    @GetMapping("/template")
+    @SystemLog(businessName = "下载导入用户模板")
+    @ApiOperation(value = "下载导入用户模板接口", notes = "下载导入用户的Excel模板")
+    public void downloadImportUsersTemplate(HttpServletResponse response)
+    {
+        adminUserService.downloadImportUsersTemplate(response);
     }
 }

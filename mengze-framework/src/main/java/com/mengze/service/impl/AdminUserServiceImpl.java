@@ -15,8 +15,10 @@ import com.mengze.mapper.SysUserMapper;
 import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.ExcelExportUtil;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -508,6 +510,34 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         return ResponseResult.okResult();
+    }
+
+    //下载导入用户模板
+    @Override
+    public void downloadImportUsersTemplate(HttpServletResponse response)
+    {
+        //生成初始数据
+        try {
+            List<UserImportTemplateVo> templateData = Collections.singletonList(
+                    new UserImportTemplateVo(
+                            "云梦泽",
+                            "云梦泽",
+                            "弟弟",
+                            "2962933152@qq.com",
+                            "18329384753",
+                            "总部门",
+                            "系统管理员",
+                            "正常",
+                            new Date()
+                    )
+            );
+
+            //下载的文件命名
+            String fileName = "用户导入模板_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            ExcelExportUtil.exportExcel(response, templateData, UserImportTemplateVo.class, fileName, "用户导入模板");
+        } catch (Exception e) {
+            throw new RuntimeException("下载用户模板失败: " + e.getMessage(), e);
+        }
     }
 
 
