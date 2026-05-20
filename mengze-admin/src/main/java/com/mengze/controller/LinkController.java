@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -29,6 +30,7 @@ public class LinkController
     private AdminLinkService adminLinkService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('blog:link:query')")
     @SystemLog(businessName = "后台分页查询友链列表")
     @ApiOperation(value = "友链列表", notes = "分页查询友链列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -41,6 +43,7 @@ public class LinkController
     }
 
     @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:link:update')")
     @SystemLog(businessName = "获取友链表单数据")
     @ApiOperation(value = "获取友链表单数据", notes = "获取友链表单数据，用于编辑友链详情", response = LinkFormDetailVo.class)
     @ApiImplicitParams({
@@ -52,6 +55,7 @@ public class LinkController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:link:create')")
     @SystemLog(businessName = "新增友链")
     @ApiOperation(value = "新增友链接口", notes = "新增友链", response = String.class)
     public ResponseResult addLink(@Valid @RequestBody AddLinkDto addLinkDto)
@@ -60,6 +64,7 @@ public class LinkController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:link:update')")
     @SystemLog(businessName = "修改友链")
     @ApiOperation(value = "修改友链接口", notes = "修改友链", response = String.class)
     @ApiImplicitParam(name = "id", value = "友链ID", dataType = "long", paramType = "path", required = true)
@@ -69,6 +74,7 @@ public class LinkController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:link:delete')")
     @SystemLog(businessName = "删除友链(逻辑删除)")
     @ApiOperation(value = "删除友链接口（批量逻辑删除）", notes = "删除友链，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "友链id", dataType = "Long", paramType = "path", required = true)

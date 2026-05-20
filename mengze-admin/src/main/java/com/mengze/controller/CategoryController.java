@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -28,13 +29,12 @@ public class CategoryController
     private AdminCategoryService adminCategoryService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('blog:category:query')")
     @SystemLog(businessName = "分页查询分类列表")
     @ApiOperation(value = "分类列表", notes = "分页查询分类列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字", dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "status", value = "状态", dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
     })
     public ResponseResult getCategoryList(Integer pageNum, Integer pageSize, @Valid CategoryListDto categoryListDto)
     {
@@ -50,6 +50,7 @@ public class CategoryController
     }
 
     @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:category:update')")
     @SystemLog(businessName = "获取分类表单数据")
     @ApiOperation(value = "获取分类表单数据", notes = "获取分类表单数据，用于编辑分类详情", response = CategoryFormDetailVo.class)
     @ApiImplicitParams({
@@ -61,6 +62,7 @@ public class CategoryController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:category:create')")
     @SystemLog(businessName = "新增分类")
     @ApiOperation(value = "新增分类接口", notes = "新增分类", response = String.class)
     public ResponseResult addCategory(@Valid @RequestBody AddCategoryDto addCategoryDto)
@@ -69,6 +71,7 @@ public class CategoryController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:category:update')")
     @SystemLog(businessName = "编辑分类")
     @ApiOperation(value = "编辑分类接口", notes = "编辑分类", response = String.class)
     @ApiImplicitParam(name = "id", value = "分类ID", dataType = "long", paramType = "path", required = true)
@@ -78,6 +81,7 @@ public class CategoryController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:category:delete')")
     @SystemLog(businessName = "删除分类(逻辑删除)")
     @ApiOperation(value = "删除分类接口（批量逻辑删除）", notes = "删除分类，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)

@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -35,6 +36,7 @@ public class AdminUserController
     }
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('sys:user:query')")
     @SystemLog(businessName = "分页查询用户列表")
     @ApiOperation(value = "获取用户列表", notes = "分页查询用户列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -47,6 +49,7 @@ public class AdminUserController
     }
 
     @GetMapping("/{userId}/form")
+    @PreAuthorize("@ps.hasPermission('sys:user:update')")
     @SystemLog(businessName = "获取用户表单数据")
     @ApiOperation(value = "获取用户表单数据", notes = "获取用户表单数据，用于编辑用户详情", response = UserFormDetailVo.class)
     @ApiImplicitParam(name = "userId", value = "用户id", dataType = "long", paramType = "path")
@@ -56,6 +59,7 @@ public class AdminUserController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('sys:user:create')")
     @SystemLog(businessName = "新增用户")
     @ApiOperation(value = "新增用户接口", notes = "新增用户", response = ResponseResult.class)
     public ResponseResult addUser(@Valid @RequestBody AddUserDto addUserDto)
@@ -64,6 +68,7 @@ public class AdminUserController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('sys:user:update')")
     @SystemLog(businessName = "修改用户信息")
     @ApiOperation(value = "修改用户接口", notes = "修改用户信息", response = String.class)
     @ApiImplicitParam(name = "id", value = "用户ID", dataType = "long", paramType = "path", required = true)

@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -30,6 +31,7 @@ public class TagController
     private AdminTagService adminTagService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('blog:tag:query')")
     @SystemLog(businessName = "后台分页查询标签列表")
     @ApiOperation(value = "标签列表", notes = "分页查询标签列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -50,6 +52,7 @@ public class TagController
     }
 
     @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:tag:update')")
     @SystemLog(businessName = "获取标签表单数据")
     @ApiOperation(value = "获取标签表单数据", notes = "获取标签表单数据，用于编辑标签详情", response = TagFormDetailVo.class)
     @ApiImplicitParams({
@@ -62,6 +65,7 @@ public class TagController
 
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:tag:create')")
     @SystemLog(businessName = "新增标签")
     @ApiOperation(value = "新增标签接口", notes = "新增标签", response = String.class)
     public ResponseResult addTag(@Valid @RequestBody AddTagDto addTagDto)
@@ -70,6 +74,7 @@ public class TagController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:tag:update')")
     @SystemLog(businessName = "修改标签")
     @ApiOperation(value = "修改标签接口", notes = "修改标签", response = String.class)
     @ApiImplicitParam(name = "id", value = "标签ID", dataType = "long", paramType = "path", required = true)
@@ -79,6 +84,7 @@ public class TagController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:tag:delete')")
     @SystemLog(businessName = "删除标签(逻辑删除)")
     @ApiOperation(value = "删除标签接口（批量逻辑删除）", notes = "删除标签，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "标签id", dataType = "Long", paramType = "path", required = true)

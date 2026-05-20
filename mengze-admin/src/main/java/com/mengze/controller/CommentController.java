@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -37,6 +38,7 @@ public class CommentController
     private AdminCommentService adminCommentService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('blog:comment:query')")
     @SystemLog(businessName = "分页查询评论列表")
     @ApiOperation(value = "评论列表", notes = "分页查询评论列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -49,6 +51,7 @@ public class CommentController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:comment:reply')")
     @SystemLog(businessName = "回复评论")
     @ApiOperation(value = "回复评论", notes = "管理员回复评论", response = String.class)
     public ResponseResult replyComment(@RequestBody @Valid ReplyCommentDto replyCommentDto)
@@ -57,6 +60,7 @@ public class CommentController
     }
 
     @PutMapping("/{ids}/approve")
+    @PreAuthorize("@ps.hasPermission('blog:comment:approve')")
     @SystemLog(businessName = "审核评论（允许评论发布）")
     @ApiOperation(value = "审核评论接口（允许评论发布）", notes = "审核评论（允许评论发布）", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
@@ -66,6 +70,7 @@ public class CommentController
     }
 
     @PutMapping("/{ids}/reject")
+    @PreAuthorize("@ps.hasPermission('blog:comment:approve')")
     @SystemLog(businessName = "审核评论（拒绝评论发布）")
     @ApiOperation(value = "审核评论接口（拒绝评论发布）", notes = "审核评论（拒绝评论发布）", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论ID", dataType = "long", paramType = "path", required = true)
@@ -83,6 +88,7 @@ public class CommentController
     }
 
     @GetMapping("/export")
+    @PreAuthorize("@ps.hasPermission('blog:comment:export')")
     @SystemLog(businessName = "导出评论数据")
     @ApiOperation(value = "导出评论数据", notes = "导出评论数据")
     @ApiImplicitParams({
@@ -139,6 +145,7 @@ public class CommentController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:comment:delete')")
     @SystemLog(businessName = "删除评论(逻辑删除)")
     @ApiOperation(value = "删除评论接口（批量逻辑删除）", notes = "删除评论，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "评论id", dataType = "Long", paramType = "path", required = true)

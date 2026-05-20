@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +30,7 @@ public class ConfigController
     AdminConfigService adminConfigService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('sys:config:query')")
     @SystemLog(businessName = "配置分页列表")
     @ApiOperation(value = "配置列表", notes = "配置分页列表", response = PageVo.class)
     @ApiImplicitParams({

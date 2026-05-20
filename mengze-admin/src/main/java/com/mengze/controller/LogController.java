@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,6 +50,7 @@ public class LogController
     }
 
     @GetMapping("/export")
+    @PreAuthorize("@ps.hasPermission('sys:log:export')")
     @SystemLog(businessName = "导出日志数据")
     @ApiOperation(value = "导出日志数据接口", notes = "导出日志数据")
     @ApiImplicitParams({

@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +38,7 @@ public class FilesController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('sys:file:upload')")
     @SystemLog(businessName = "上传文件（包括图片）")
     @ApiOperation(value = "上传文件", notes = "上传包括图片等文件", response = String.class)
     public ResponseResult uploadFile(MultipartFile file)
@@ -45,6 +47,7 @@ public class FilesController
     }
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('sys:file:query')")
     @SystemLog(businessName = "分页查询文件列表")
     @ApiOperation(value = "文件列表", notes = "分页查询文件列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -57,6 +60,7 @@ public class FilesController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('sys:file:delete')")
     @SystemLog(businessName = "删除文件(逻辑删除)")
     @ApiOperation(value = "删除文件接口（批量逻辑删除）", notes = "删除文件，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "文章id", dataType = "Long", paramType = "path", required = true)

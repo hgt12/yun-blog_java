@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -31,6 +32,7 @@ public class SysRoleController
     private SysRoleService sysRoleService;
 
     @GetMapping
+    @PreAuthorize("@ps.hasPermission('sys:role:query')")
     @SystemLog(businessName = "后台分页查询角色列表")
     @ApiOperation(value = "角色列表", notes = "分页查询角色列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -59,6 +61,7 @@ public class SysRoleController
     }
 
     @PutMapping("/{roleId}/menus")
+    @PreAuthorize("@ps.hasPermission('sys:role:assign')")
     @SystemLog(businessName = "分配角色菜单")
     @ApiOperation(value = "分配角色菜单", notes = "给角色分配菜单（权限）", responseContainer = "List")
     public ResponseResult allocationRoleMenu(@PathVariable Long roleId, @RequestBody Long[] menuIds)
@@ -67,6 +70,7 @@ public class SysRoleController
     }
 
     @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('sys:role:update')")
     @SystemLog(businessName = "获取角色表单详情")
     @ApiOperation(value = "角色表单详情", notes = "获取角色表单详情", response = RoleFormDetailVo.class)
     public ResponseResult<RoleFormDetailVo> getRoleFormDetail(@PathVariable Long id)
@@ -83,6 +87,7 @@ public class SysRoleController
     }
 
     @PostMapping
+    @PreAuthorize("@ps.hasPermission('sys:role:create')")
     @SystemLog(businessName = "新增角色")
     @ApiOperation(value = "新增角色接口", notes = "新增角色", response = String.class)
     public ResponseResult addRole(@Valid @RequestBody AddRoleDto addRoleDto)
@@ -91,6 +96,7 @@ public class SysRoleController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('sys:role:update')")
     @SystemLog(businessName = "编辑角色")
     @ApiOperation(value = "编辑角色接口", notes = "编辑角色信息", response = String.class)
     @ApiImplicitParam(name = "id", value = "角色ID", dataType = "long", paramType = "path", required = true)
@@ -100,6 +106,7 @@ public class SysRoleController
     }
 
     @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('sys:role:delete')")
     @SystemLog(businessName = "删除角色(逻辑删除)")
     @ApiOperation(value = "删除角色接口（批量逻辑删除）", notes = "删除角色，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "分类id", dataType = "Long", paramType = "path", required = true)

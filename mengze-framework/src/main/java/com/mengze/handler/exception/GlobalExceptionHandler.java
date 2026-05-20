@@ -5,6 +5,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -135,6 +136,13 @@ public class GlobalExceptionHandler
         return ResponseResult.errorResult(AppHttpCodeEnum.LOGIN_ERROR.getCode(), "用户名或密码错误");
     }
 
+    //处理权限不足异常
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseResult handleAccessDeniedException(AccessDeniedException exception)
+    {
+        log.warn("权限不足：{}", exception.getMessage());
+        return ResponseResult.errorResult(AppHttpCodeEnum.NO_OPERATOR_AUTH.getCode(), "你没有该操作权限");
+    }
 
     //对其他异常进行处理
     @ExceptionHandler(Exception.class)
