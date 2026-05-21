@@ -17,16 +17,24 @@ import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.ExcelExportUtil;
 import com.mengze.utils.SecurityUtils;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -515,32 +523,6 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return ResponseResult.okResult();
     }
 
-    //下载导入用户模板
-    @Override
-    public void downloadImportUsersTemplate(HttpServletResponse response)
-    {
-        //生成初始数据
-        try {
-            List<UserImportTemplateVo> templateData = Collections.singletonList(
-                    new UserImportTemplateVo(
-                            "云梦泽",
-                            "云梦泽",
-                            "弟弟",
-                            "2962933152@qq.com",
-                            "18329384753",
-                            "总部门",
-                            "系统管理员"
-                    )
-            );
-
-            //下载的文件命名
-            String fileName = "用户导入模板_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            ExcelExportUtil.exportExcel(response, templateData, UserImportTemplateVo.class, fileName, "用户导入模板");
-        } catch (Exception e) {
-            throw new RuntimeException("下载用户模板失败: " + e.getMessage(), e);
-        }
-    }
-
     //导出用户数据
     @Override
     public ResponseResult exportUser(Integer pageNum, Integer pageSize, UserListDto userListDto)
@@ -687,6 +669,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return ResponseResult.okResult(userExportVos);
     }
 
+    //转换性别
     private String convertSex(String sex)
     {
         if (Objects.equals(sex, SystemConstants.SEX_MAN)) {
@@ -701,6 +684,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return sex;
     }
 
+    //转换用户状态
     private String convertUserStatus(String status)
     {
         if (Objects.equals(status, SystemConstants.USER_STATUS_NORMAL)) {

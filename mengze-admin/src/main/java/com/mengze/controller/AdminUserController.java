@@ -18,10 +18,12 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -108,7 +110,24 @@ public class AdminUserController
     @ApiOperation(value = "下载导入用户模板接口", notes = "下载导入用户的Excel模板")
     public void downloadImportUsersTemplate(HttpServletResponse response)
     {
-        adminUserService.downloadImportUsersTemplate(response);
+        //生成初始数据
+        try {
+            List<UserImportTemplateVo> templateData = Collections.singletonList(
+                    new UserImportTemplateVo(
+                            "云梦泽",
+                            "云梦泽",
+                            "弟弟",
+                            "2962933152@qq.com",
+                            "18329384753"
+                    )
+            );
+
+            //下载的文件命名
+            String fileName = "用户导入模板_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            ExcelExportUtil.exportExcel(response, templateData, UserImportTemplateVo.class, fileName, "用户导入模板");
+        } catch (Exception e) {
+            throw new RuntimeException("下载用户模板失败: " + e.getMessage(), e);
+        }
     }
 
     @GetMapping("/export")
