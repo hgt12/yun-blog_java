@@ -33,6 +33,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -218,8 +219,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         
         //如果头像或昵称发生变化，同步更新评论表中该用户的所有评论
-        boolean avatarChanged = !avatar.equals(oldSysUser.getAvatar());
-        boolean nicknameChanged = !updateUserInfoDto.getNickname().equals(oldSysUser.getNickname());
+        boolean avatarChanged = !Objects.equals(avatar, oldSysUser.getAvatar());
+        boolean nicknameChanged = !Objects.equals(updateUserInfoDto.getNickname(), oldSysUser.getNickname());
         
         if (avatarChanged || nicknameChanged) {
             LambdaUpdateWrapper<Comment> commentWrapper =
