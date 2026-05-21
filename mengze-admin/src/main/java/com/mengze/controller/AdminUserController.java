@@ -196,4 +196,14 @@ public class AdminUserController
     {
         return adminUserService.importUsers(file);
     }
+
+    @DeleteMapping("/{id}/dismiss/avatar")
+    @PreAuthorize("@ps.hasPermission('sys:user:dismiss-avatar')")
+    @SystemLog(businessName = "驳回用户头像(实际是逻辑删除该头像的源文件)")
+    @ApiOperation(value = "驳回用户头像", notes = "驳回用户头像(实际是逻辑删除该头像的源文件)", response = String.class)
+    @ApiImplicitParam(name = "id", value = "用户id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult dismissUserAvatar(@PathVariable Long id)
+    {
+        return adminUserService.dismissUserAvatar(id);
+    }
 }

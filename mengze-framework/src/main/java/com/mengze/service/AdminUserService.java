@@ -38,5 +38,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult exportUser(Integer pageNum, Integer pageSize, UserListDto userListDto);
 
     ResponseResult importUsers(MultipartFile file);
+
+    ResponseResult dismissUserAvatar(Long id);
 }
 

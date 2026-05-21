@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
@@ -19,6 +20,7 @@ import com.mengze.utils.SecurityUtils;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ import java.util.stream.Collectors;
  * @since 2026-01-14 15:21:53
  */
 @Service("adminUserService")
+@Slf4j
 public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements AdminUserService
 {
     @Autowired
@@ -65,7 +68,13 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     private EmailServiceImpl emailService;
 
     @Autowired
+    private SysFileService sysFileService;
+
+    @Autowired
     private SysUserMapper sysUserMapper;
+
+    @Autowired
+    private OssFileService ossFileService;
 
 
     @Override
@@ -743,6 +752,59 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         result.put("invalidCount", invalidCount.get());
         result.put("messageList", messageList);
         return ResponseResult.okResult(result);
+    }
+
+    //驳回用户头像
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult dismissUserAvatar(Long id)
+    {
+        //检查用户是否存在
+        SysUser user = adminUserService.getById(id);
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户不存在！");
+        }
+
+        //没有头像时无需驳回
+        if (!StringUtils.hasText(user.getAvatar())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该用户没有头像可驳回！");
+        }
+
+        //先保存原头像地址
+        String avatarUrl = user.getAvatar();
+
+        //清空用户头像
+        LambdaUpdateWrapper<SysUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysUser::getId, id)
+                .set(SysUser::getAvatar, null);
+        boolean update = adminUserService.update(updateWrapper);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "驳回头像失败！");
+        }
+
+        //发送头像驳回邮件
+        if (StringUtils.hasText(user.getEmail())) {
+            emailService.sendUserAvatarDismissedNotification(user.getEmail(), user.getNickname(), user.getUsername());
+        }
+
+        //将正式文件移动到 deleted/
+        try {
+            ossFileService.moveFileToDeleted(avatarUrl);
+        } catch (Exception e) {
+            log.warn("驳回用户头像时移动文件到删除区失败, userId={}, avatarUrl={}", id, avatarUrl, e);
+        }
+
+        //如果数据库中存在对应文件记录，则删除文件元数据
+        SysFile file = sysFileService.getOne(
+                new LambdaQueryWrapper<SysFile>()
+                        .eq(SysFile::getUrl, avatarUrl)
+                        .last("limit 1")
+        );
+        if (file != null) {
+            sysFileService.removeById(file.getId());
+        }
+
+        return ResponseResult.okResult();
     }
 
     //判断导入的规格和内容

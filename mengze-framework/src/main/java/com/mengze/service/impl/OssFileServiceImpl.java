@@ -331,7 +331,7 @@ public class OssFileServiceImpl implements OssFileService
                 return true;
             }
             
-            // 删除时去掉 formal/ 前缀，避免出现 deleted/formal/xxx
+            // 删除时去掉 formal/ 前缀
             String normalizedSourceKey = sourceKey;
             if (normalizedSourceKey.startsWith(FORMAL_PATH_PREFIX)) {
                 normalizedSourceKey = normalizedSourceKey.substring(FORMAL_PATH_PREFIX.length());
