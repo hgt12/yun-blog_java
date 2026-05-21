@@ -6,10 +6,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
-import com.mengze.domain.vo.AdminUserListVo;
-import com.mengze.domain.vo.PageVo;
-import com.mengze.domain.vo.SysUserInfoVo;
-import com.mengze.domain.vo.UserFormDetailVo;
+import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminUserService;
 import com.mengze.utils.ExcelExportUtil;
@@ -112,5 +109,62 @@ public class AdminUserController
     public void downloadImportUsersTemplate(HttpServletResponse response)
     {
         adminUserService.downloadImportUsersTemplate(response);
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("@ps.hasPermission('sys:user:export')")
+    @SystemLog(businessName = "导出评论数据")
+    @ApiOperation(value = "导出评论数据", notes = "导出评论数据")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
+    })
+    public void exportUser(Integer pageNum, Integer pageSize, @Valid UserListDto userListDto, HttpServletResponse response)
+    {
+        try {
+            //调用服务层获取导出数据
+            ResponseResult result = adminUserService.exportUser(pageNum, pageSize, userListDto);
+
+            //检查结果
+            if (result.getCode() != 200 || result.getData() == null) {
+                throw new RuntimeException("获取导出数据失败");
+            }
+
+            //获取导出数据列表
+            @SuppressWarnings("unchecked")
+            List<UserExportVo> exportData = (List<UserExportVo>) result.getData();
+
+            //检查数据是否为空
+            if (exportData.isEmpty()) {
+                throw new RuntimeException("没有可导出的数据");
+            }
+
+            //生成文件名+时间（格式：评论数据_20260503_143056）
+            String fileName = "用户数据_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+            //使用工具类导出Excel
+            ExcelExportUtil.exportExcel(response, exportData, UserExportVo.class, fileName, "用户数据");
+
+        } catch (Exception e) {
+            //异常处理：只有在响应流未被写入时才能返回JSON错误
+            e.printStackTrace();
+
+            //检查响应是否已提交
+            if (!response.isCommitted()) {
+                try {
+                    response.reset();
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("utf-8");
+
+                    ResponseResult result = ResponseResult.errorResult(
+                            AppHttpCodeEnum.SYSTEM_ERROR.getCode(),
+                            "导出失败: " + e.getMessage()
+                    );
+                    WebUtils.renderString(response, JSON.toJSONString(result));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 }

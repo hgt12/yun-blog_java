@@ -59,6 +59,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     @Autowired
     private EmailServiceImpl emailService;
 
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
 
     @Override
     public ResponseResult getAdminInfo()
@@ -526,9 +529,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                             "2962933152@qq.com",
                             "18329384753",
                             "总部门",
-                            "系统管理员",
-                            "正常",
-                            new Date()
+                            "系统管理员"
                     )
             );
 
@@ -538,6 +539,177 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         } catch (Exception e) {
             throw new RuntimeException("下载用户模板失败: " + e.getMessage(), e);
         }
+    }
+
+    //导出用户数据
+    @Override
+    public ResponseResult exportUser(Integer pageNum, Integer pageSize, UserListDto userListDto)
+    {
+        //构建查询条件
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+
+        //当前登录用户
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        Long currentUserId = null;
+        if (loginUser != null) {
+            currentUserId = loginUser.getSysUser().getId();
+        }
+
+        //超级管理员可以看到全部 普通用户按数据权限限制
+        if (!Objects.equals(currentUserId, 1L)) {
+            List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
+            Integer maxDataScope = roles.stream()
+                    .map(SysRole::getDataScope)
+                    .filter(Objects::nonNull)
+                    .min(Integer::compareTo)
+                    .orElse(4);
+
+            //全部数据
+            if (!Objects.equals(maxDataScope, 1))
+            {
+                if (Objects.equals(maxDataScope, 2)) {
+                    //部门及子部门数据
+                    List<Long> deptIds = sysDeptService.selectDeptAndChildrenIds(Long.valueOf(loginUser.getSysUser().getDeptId()));
+                    queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
+                } else if (Objects.equals(maxDataScope, 3)) {
+                    //本部门数据
+                    queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
+                } else if (Objects.equals(maxDataScope, 4)) {
+                    //本人数据
+                    queryWrapper.eq(SysUser::getCreateBy, currentUserId);
+                } else if (Objects.equals(maxDataScope, 5)) {
+                    //自定义部门数据
+                    List<Long> deptIds = new ArrayList<>();
+                    for (SysRole role : roles) {
+                        if (Objects.equals(role.getDataScope(), 5)) {
+                            LambdaQueryWrapper<com.mengze.domain.entity.SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
+                            deptWrapper.eq(com.mengze.domain.entity.SysRoleDept::getRoleId, role.getId())
+                                    .select(com.mengze.domain.entity.SysRoleDept::getDeptId);
+                            List<com.mengze.domain.entity.SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
+                            deptIds.addAll(roleDeptList.stream().map(com.mengze.domain.entity.SysRoleDept::getDeptId).toList());
+                        }
+                    }
+                    if (!deptIds.isEmpty()) {
+                        queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
+                    }
+                }
+            }
+        }
+
+        //根据关键子查询（用户名，昵称，手机号）
+        if (StringUtils.hasText(userListDto.getKeywords())) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(SysUser::getUsername, userListDto.getKeywords())
+                    .or()
+                    .like(SysUser::getNickname, userListDto.getKeywords())
+                    .or()
+                    .like(SysUser::getPhone, userListDto.getKeywords())
+            );
+        }
+
+        //根据状态筛选
+        if (StringUtils.hasText(userListDto.getStatus())){
+            queryWrapper.eq(SysUser::getStatus, userListDto.getStatus());
+        }
+
+        //按部门id查询
+        if (StringUtils.hasText(userListDto.getDeptId())) {
+            queryWrapper.eq(SysUser::getDeptId, userListDto.getDeptId());
+        }
+
+        //按创建时间查询
+        if (userListDto.getCreateTime() != null && userListDto.getCreateTime().size() == 2)
+        {
+            //补全当天完整时间，因为前端只传 2026-04-01 不完整
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                Date startTime = sdf.parse(userListDto.getCreateTime().get(0) + " 00:00:00");
+                Date endTime = sdf.parse(userListDto.getCreateTime().get(1) + " 23:59:59");
+
+                queryWrapper.between(SysUser::getCreateTime, startTime, endTime);
+            } catch (ParseException e) {
+                throw new RuntimeException("创建时间格式不正确", e);
+            }
+        }
+
+        //根据创建时间降序排序
+        queryWrapper.orderByDesc(SysUser::getCreateTime);
+
+        //根据是否传入分页参数决定查询方式
+        List<SysUser> users;
+        if (pageNum != null && pageSize != null && pageNum > 0 && pageSize > 0) {
+            //分页查询
+            Page<SysUser> page = new Page<>(pageNum, pageSize);
+            sysUserMapper.selectPage(page, queryWrapper);
+            users = page.getRecords();
+        } else {
+            //查询所有符合条件的用户
+            users = sysUserMapper.selectList(queryWrapper);
+        }
+
+        //转换为导出VO
+        List<UserExportVo> userExportVos = new ArrayList<>();
+        if (users != null && !users.isEmpty()) {
+            userExportVos = users.stream()
+                    .map(sysUser -> {
+                        UserExportVo vo = BeanCopyUtils.copyBean(sysUser, UserExportVo.class);
+
+                        //填充性别
+                        vo.setSex(convertSex(sysUser.getSex()));
+
+                        //填充用户状态
+                        vo.setStatus(convertUserStatus(sysUser.getStatus()));
+
+                        //填充部门信息
+                        if (StringUtils.hasText(sysUser.getDeptId())) {
+                            try {
+                                SysDept dept = sysDeptService.getById(Long.valueOf(sysUser.getDeptId()));
+                                if (dept != null) {
+                                    vo.setDeptName(dept.getName());
+                                }
+                            } catch (NumberFormatException ignored) {
+                                vo.setDeptName(sysUser.getDeptId());
+                            }
+                        }
+
+                        //填充角色信息
+                        List<String> roleNames = sysRoleService.selectRoleNameByUserId(sysUser.getId());
+                        if (roleNames != null && !roleNames.isEmpty()) {
+                            vo.setRoleNames(String.join(",", roleNames));
+                        }
+
+                        return vo;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return ResponseResult.okResult(userExportVos);
+    }
+
+    private String convertSex(String sex)
+    {
+        if (Objects.equals(sex, SystemConstants.SEX_MAN)) {
+            return "弟弟";
+        }
+        if (Objects.equals(sex, SystemConstants.SEX_WOMEN)) {
+            return "妹妹";
+        }
+        if (Objects.equals(sex, SystemConstants.SEX_HIDE)) {
+            return "隐藏";
+        }
+        return sex;
+    }
+
+    private String convertUserStatus(String status)
+    {
+        if (Objects.equals(status, SystemConstants.USER_STATUS_NORMAL)) {
+            return "正常";
+        }
+        if (Objects.equals(status, SystemConstants.USER_STATUS_BANNED)) {
+            return "已封禁";
+        }
+        return status;
     }
 
 

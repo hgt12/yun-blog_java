@@ -6,6 +6,7 @@ import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.vo.AdminUserListVo;
 import com.mengze.domain.vo.UserFormDetailVo;
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,5 +36,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult updateResetUserPassword(Long id, String password);
 
     void downloadImportUsersTemplate(HttpServletResponse response);
+
+    ResponseResult exportUser(Integer pageNum, Integer pageSize, UserListDto userListDto);
 }
 

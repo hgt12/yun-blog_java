@@ -163,4 +163,16 @@ public class SystemConstants
      *  用户状态：已封禁
      */
     public static final String USER_STATUS_BANNED = "1";
+    /**
+     *  性别：弟弟
+     */
+    public static final String SEX_MAN = "0";
+    /**
+     *  性别：妹妹
+     */
+    public static final String SEX_WOMEN = "1";
+    /**
+     *  性别：隐藏
+     */
+    public static final String SEX_HIDE = "2";
 }
