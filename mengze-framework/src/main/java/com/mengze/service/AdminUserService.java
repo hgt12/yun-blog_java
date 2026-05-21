@@ -8,6 +8,7 @@ import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.AdminUserListVo;
 import com.mengze.domain.vo.UserFormDetailVo;
+import com.mengze.domain.vo.UserProfileVo;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -40,5 +41,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult importUsers(MultipartFile file);
 
     ResponseResult dismissUserAvatar(Long id);
+
+    ResponseResult<UserProfileVo> getUserProfile();
 }
 

@@ -219,7 +219,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     }
                     return vo;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         PageVo pageVo = new PageVo(adminUserListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
@@ -805,6 +805,39 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         return ResponseResult.okResult();
+    }
+
+    //获取用户个人中心信息
+    @Override
+    public ResponseResult<UserProfileVo> getUserProfile()
+    {
+        //获取当前用户id
+        Long userId = SecurityUtils.getUserId();
+
+        //根据用户id查询用户信息
+        SysUser user = adminUserService.getById(userId);
+        if (user == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在！");
+        }
+
+        //封装成vo
+        UserProfileVo profileVo = BeanCopyUtils.copyBean(user, UserProfileVo.class);
+
+        //回填部门名称
+        if (StringUtils.hasText(user.getDeptId()))
+        {
+            try {
+                SysDept dept = sysDeptService.getById(Long.valueOf(user.getDeptId()));
+                if (dept != null) {
+                    profileVo.setDeptName(dept.getName());
+                }
+            } catch (NumberFormatException ignored) {
+                profileVo.setDeptName(user.getDeptId());
+            }
+        }
+
+        //返回
+        return ResponseResult.okResult(profileVo);
     }
 
     //判断导入的规格和内容

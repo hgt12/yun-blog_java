@@ -206,4 +206,12 @@ public class AdminUserController
     {
         return adminUserService.dismissUserAvatar(id);
     }
+
+    @GetMapping("/profile")
+    @SystemLog(businessName = "获取个人中心信息接口")
+    @ApiOperation(value = "获取个人中心信息", notes = "获取个用户人中心信息", response = UserProfileVo.class)
+    public ResponseResult<UserProfileVo> getUserProfile()
+    {
+        return adminUserService.getUserProfile();
+    }
 }
