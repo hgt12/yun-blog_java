@@ -669,6 +669,147 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return ResponseResult.okResult(userExportVos);
     }
 
+    //导入用户数据
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult importUsers(MultipartFile file)
+    {
+        //判断导入的文件是否为空
+        if (file == null || file.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要导入的Excel文件");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (!StringUtils.hasText(originalFilename)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "文件名不能为空");
+        }
+
+        //验证文件格式
+        String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
+        if (!(lowerFilename.endsWith(".xls") || lowerFilename.endsWith(".xlsx"))) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "只允许导入 .xls 或 .xlsx 格式的文件");
+        }
+
+        //验证文件大小不能超过1m
+        long maxSize = 1024L * 1024L;
+        if (file.getSize() > maxSize) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "文件大小不能超过 1MB");
+        }
+
+        List<String> messageList = new ArrayList<>();
+        AtomicInteger validCount = new AtomicInteger();
+        AtomicInteger invalidCount = new AtomicInteger();
+
+        //读取每一行表格数据并校验每条用户数据
+        try (InputStream inputStream = file.getInputStream())
+        {
+            EasyExcel.read(inputStream, UserImportTemplateVo.class, new AnalysisEventListener<UserImportTemplateVo>() {
+                //在读取 Excel 表头时触发
+                @Override
+                public void invokeHead(Map<Integer, com.alibaba.excel.metadata.data.ReadCellData<?>> headMap, AnalysisContext context) {
+                    //只触发但不执行操作
+                }
+                @Override
+                public void invoke(UserImportTemplateVo data, AnalysisContext context)
+                {
+                    //校验导入数据的规格和内容
+                    int rowNum = context.readRowHolder().getRowIndex() + 1;
+                    String validationError = validateImportRow(data);
+                    if (StringUtils.hasText(validationError)) {
+                        invalidCount.incrementAndGet();
+                        messageList.add("第" + rowNum + "行：" + validationError);
+                        return;
+                    }
+
+                    //保存用户信息
+                    ResponseResult importResult = saveImportedUser(data);
+                    if (importResult.getCode() == 200) {
+                        validCount.incrementAndGet();
+                    } else {
+                        invalidCount.incrementAndGet();
+                        messageList.add("第" + rowNum + "行：" + importResult.getMsg());
+                    }
+                }
+
+                //在整份 Excel 全部读取完成后触发
+                @Override
+                public void doAfterAllAnalysed(AnalysisContext context) {
+                    //只触发但不执行操作
+                }
+            }).sheet().doRead();
+        } catch (IOException e) {
+            throw new RuntimeException("导入文件读取失败", e);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("validCount", validCount.get());
+        result.put("invalidCount", invalidCount.get());
+        result.put("messageList", messageList);
+        return ResponseResult.okResult(result);
+    }
+
+    //判断导入的规格和内容
+    private String validateImportRow(UserImportTemplateVo data)
+    {
+        if (data == null) {
+            return "导入数据为空";
+        }
+        if (!StringUtils.hasText(data.getUsername())) {
+            return "用户名不能为空";
+        }
+        if (!StringUtils.hasText(data.getNickname())) {
+            return "昵称不能为空";
+        }
+        if (StringUtils.hasText(data.getPhone()) && !data.getPhone().matches("^1[3-9]\\d{9}$")) {
+            return "手机号格式不正确";
+        }
+        if (StringUtils.hasText(data.getEmail()) && !data.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return "邮箱格式不正确";
+        }
+        return null;
+    }
+
+    //保存导入的角色并设置默认密码
+    private ResponseResult saveImportedUser(UserImportTemplateVo data)
+    {
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getUsername, data.getUsername());
+        if (adminUserService.count(queryWrapper) > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.USERNAME_EXIST, "用户名已存在");
+        }
+
+        if (StringUtils.hasText(data.getPhone())) {
+            queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysUser::getPhone, data.getPhone());
+            if (adminUserService.count(queryWrapper) > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "手机号已存在");
+            }
+        }
+
+        if (StringUtils.hasText(data.getEmail())) {
+            queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysUser::getEmail, data.getEmail());
+            if (adminUserService.count(queryWrapper) > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_EXIST, "邮箱已存在");
+            }
+        }
+
+        SysUser user = new SysUser();
+        user.setUsername(data.getUsername());
+        user.setNickname(data.getNickname());
+        user.setSex(StringUtils.hasText(data.getSex()) ? data.getSex() : SystemConstants.SEX_HIDE);
+        user.setEmail(data.getEmail());
+        user.setPhone(data.getPhone());
+        user.setPassword(new BCryptPasswordEncoder().encode("user123456"));
+        user.setStatus(SystemConstants.USER_STATUS_NORMAL);
+        boolean save = adminUserService.save(user);
+        if (!save) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "保存用户失败");
+        }
+
+        return ResponseResult.okResult();
+    }
+
     //转换性别
     private String convertSex(String sex)
     {

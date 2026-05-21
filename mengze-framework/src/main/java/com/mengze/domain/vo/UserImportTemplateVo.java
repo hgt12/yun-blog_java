@@ -34,8 +34,8 @@ public class UserImportTemplateVo
     @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER)
     private String nickname;
 
-    @ColumnWidth(10)
-    @ExcelProperty("性别")
+    @ColumnWidth(20)
+    @ExcelProperty("性别(男-0,女-1,隐藏-2)")
     @ApiModelProperty(value = "用户性别，（0 男，1 女，2 隐藏）", example = "0")
     @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER)
     private String sex;

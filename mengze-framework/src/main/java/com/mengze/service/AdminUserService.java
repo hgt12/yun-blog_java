@@ -36,5 +36,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult updateResetUserPassword(Long id, String password);
 
     ResponseResult exportUser(Integer pageNum, Integer pageSize, UserListDto userListDto);
+
+    ResponseResult importUsers(MultipartFile file);
 }
 

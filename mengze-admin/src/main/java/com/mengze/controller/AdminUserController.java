@@ -116,7 +116,7 @@ public class AdminUserController
                     new UserImportTemplateVo(
                             "云梦泽",
                             "云梦泽",
-                            "弟弟",
+                            "1",
                             "2962933152@qq.com",
                             "18329384753"
                     )
@@ -185,5 +185,15 @@ public class AdminUserController
                 }
             }
         }
+    }
+
+    @PostMapping(value = "/import")
+    @PreAuthorize("@ps.hasPermission('sys:user:import')")
+    @SystemLog(businessName = "用户导入")
+    @ApiOperation(value = "用户导入接口", notes = "用户导入", response = ResponseResult.class)
+    @ApiImplicitParam(name = "file", value = "Excel导入文件", dataType = "file", paramType = "form")
+    public ResponseResult importUsers(@RequestPart("file") MultipartFile file)
+    {
+        return adminUserService.importUsers(file);
     }
 }
