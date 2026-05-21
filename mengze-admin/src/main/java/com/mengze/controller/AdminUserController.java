@@ -3,10 +3,7 @@ package com.mengze.controller;
 import com.alibaba.fastjson.JSON;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AddUserDto;
-import com.mengze.domain.dto.UpdateUserDto;
-import com.mengze.domain.dto.UpdateUserProfileDto;
-import com.mengze.domain.dto.UserListDto;
+import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminUserService;
@@ -222,5 +219,13 @@ public class AdminUserController
     public ResponseResult updateUserProfile(@Valid @RequestBody UpdateUserProfileDto updateUserProfileDto)
     {
         return adminUserService.updateUserProfile(updateUserProfileDto);
+    }
+
+    @PutMapping("/password")
+    @SystemLog(businessName = "修改个人密码接口")
+    @ApiOperation(value = "修改个人密码接口", notes = "修改个人密码", response = String.class)
+    public ResponseResult updateIndividualPassword(@Valid @RequestBody UpdateIndividualPasswordDto updateIndividualPasswordDto)
+    {
+        return adminUserService.updateIndividualPassword(updateIndividualPasswordDto);
     }
 }

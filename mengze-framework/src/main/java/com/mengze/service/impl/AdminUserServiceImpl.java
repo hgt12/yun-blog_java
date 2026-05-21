@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AddUserDto;
-import com.mengze.domain.dto.UpdateUserDto;
-import com.mengze.domain.dto.UpdateUserProfileDto;
-import com.mengze.domain.dto.UserListDto;
+import com.mengze.domain.dto.*;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -26,6 +23,7 @@ import com.mengze.utils.XssUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -84,6 +82,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     @Autowired
     private CommentMapper commentMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public ResponseResult getAdminInfo()
@@ -957,6 +958,65 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
             }
 
             commentMapper.update(null, commentWrapper);
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //修改个人密码
+    @Override
+    @Transactional
+    public ResponseResult updateIndividualPassword(UpdateIndividualPasswordDto updateIndividualPasswordDto)
+    {
+        //验证用户是否登录
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //验证用户是否存在
+        SysUser sysUser = sysUserMapper.selectById(currentUserId);
+        if (sysUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+
+        //新密码不能为空
+        if (!StringUtils.hasText(updateIndividualPasswordDto.getNewPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL);
+        }
+
+        //新密码至少8位
+        if (updateIndividualPasswordDto.getNewPassword().length() < 8) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码至少8位");
+        }
+
+        //判断旧密码是否正确
+        if (!passwordEncoder.matches(updateIndividualPasswordDto.getOldPassword(), sysUser.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "旧密码错误");
+        }
+
+        //判断新密码和确认密码是否一样
+        if (!Objects.equals(updateIndividualPasswordDto.getNewPassword(), updateIndividualPasswordDto.getConfirmPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "两次输入的密码不一致");
+        }
+
+        //旧密码不能和新密码相同
+        if (passwordEncoder.matches(updateIndividualPasswordDto.getNewPassword(), sysUser.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "新密码不能与旧密码相同");
+        }
+
+        //加密新密码
+        String encodePassword = passwordEncoder.encode(updateIndividualPasswordDto.getNewPassword());
+
+        //更新密码
+        LambdaUpdateWrapper<SysUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysUser::getId, sysUser.getId())
+                .set(SysUser::getPassword, encodePassword);
+
+        int result = sysUserMapper.update(null, updateWrapper);
+
+        if (result == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码重置失败");
         }
 
         return ResponseResult.okResult();
