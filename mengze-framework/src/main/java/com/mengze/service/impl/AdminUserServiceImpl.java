@@ -8,10 +8,12 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
+import com.mengze.domain.dto.UpdateUserProfileDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
+import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
 import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.*;
@@ -20,6 +22,7 @@ import com.mengze.utils.SecurityUtils;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.mengze.utils.XssUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -76,6 +79,11 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     @Autowired
     private OssFileService ossFileService;
 
+    @Autowired
+    private SensitiveUtilService sensitiveUtilService;
+
+    @Autowired
+    private CommentMapper commentMapper;
 
     @Override
     public ResponseResult getAdminInfo()
@@ -838,6 +846,120 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //返回
         return ResponseResult.okResult(profileVo);
+    }
+
+    //修改用户个人中心信息
+    @Override
+    @Transactional
+    public ResponseResult updateUserProfile(UpdateUserProfileDto updateUserProfileDto)
+    {
+        //检测用户是否登录
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //昵称不能为空
+        if (!StringUtils.hasText(updateUserProfileDto.getNickname())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NICKNAME_NOT_NULL, "昵称不能为空");
+        }
+
+        //XSS防护：转义昵称
+        String safeNickname = XssUtils.escapeHtml(updateUserProfileDto.getNickname());
+        updateUserProfileDto.setNickname(safeNickname);
+
+        //敏感词检测 - 昵称
+        if (sensitiveUtilService.checkSensitiveWordsSimple(updateUserProfileDto.getNickname())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "昵称包含敏感词，请修改后重试");
+        }
+
+        //获取更新前的用户信息，用于判断头像和昵称是否变化
+        SysUser oldSysUser = getById(currentUserId);
+
+        //处理头像：如果是临时文件，转为正式文件
+        String avatar = updateUserProfileDto.getAvatar();
+        if (StringUtils.hasText(avatar) && avatar.contains("temp/"))
+        {
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(avatar);
+            avatar = uploadFileMetaVo.getUrl();
+
+            //根据当前用户和头像来源查找文件记录，存在则更新，不存在则新增
+            if (StringUtils.hasText(avatar))
+            {
+                LambdaQueryWrapper<SysFile> fileQueryWrapper = new LambdaQueryWrapper<>();
+                String fileSource = "用户“" + oldSysUser.getUsername() + "”的头像图片";
+                fileQueryWrapper.eq(SysFile::getCreateBy, currentUserId)
+                        .eq(SysFile::getFileSource, fileSource)
+                        .last("LIMIT 1");
+                SysFile avatarFile = sysFileService.getOne(fileQueryWrapper);
+
+                if (avatarFile == null) {
+                    avatarFile = new SysFile();
+                    avatarFile.setName(uploadFileMetaVo.getName());
+                    avatarFile.setFileSource(fileSource);
+                    avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
+                    avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setSize(uploadFileMetaVo.getSize());
+                    avatarFile.setMimeType(uploadFileMetaVo.getMimeType());
+                    avatarFile.setCreateBy(currentUserId);
+                    sysFileService.save(avatarFile);
+                } else {
+                    avatarFile.setName(uploadFileMetaVo.getName());
+                    avatarFile.setFileSource(fileSource);
+                    avatarFile.setFilePath(uploadFileMetaVo.getFilePath());
+                    avatarFile.setUrl(uploadFileMetaVo.getUrl());
+                    avatarFile.setSize(uploadFileMetaVo.getSize());
+                    avatarFile.setMimeType(uploadFileMetaVo.getMimeType());
+                    avatarFile.setUpdateBy(currentUserId);
+                    sysFileService.updateById(avatarFile);
+                }
+            }
+        }
+
+        //如果头像发生变化，删除OSS上的旧头像
+        String oldAvatar = oldSysUser.getAvatar();
+        if (StringUtils.hasText(avatar) && StringUtils.hasText(oldAvatar)
+                && !avatar.equals(oldAvatar)) {
+            try {
+                ossFileService.deleteFileByUrl(oldAvatar);
+                log.info("从oss中删除旧头像成功: {}", oldAvatar);
+            } catch (Exception e) {
+                log.warn("从oss中删除旧头像失败: {}, 错误: {}", oldAvatar, e.getMessage()); //删除失败不影响更新流程，只记录日志
+            }
+        }
+
+        //使用LambdaUpdateWrapper条件更新
+        LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<SysUser>()
+                .eq(SysUser::getId, currentUserId)
+                .set(SysUser::getNickname, updateUserProfileDto.getNickname())
+                .set(SysUser::getSex, updateUserProfileDto.getSex())
+                .set(SysUser::getAvatar, avatar);
+
+        boolean success = update(null, wrapper);
+        if (!success) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新用户信息失败");
+        }
+
+        //如果头像或昵称发生变化，同步更新评论表中该用户的所有评论
+        boolean avatarChanged = !Objects.equals(avatar, oldSysUser.getAvatar());
+        boolean nicknameChanged = !Objects.equals(updateUserProfileDto.getNickname(), oldSysUser.getNickname());
+
+        if (avatarChanged || nicknameChanged) {
+            LambdaUpdateWrapper<Comment> commentWrapper =
+                    new LambdaUpdateWrapper<Comment>()
+                            .eq(Comment::getUserId, currentUserId);
+
+            if (avatarChanged) {
+                commentWrapper.set(Comment::getAvatar, avatar);
+            }
+            if (nicknameChanged) {
+                commentWrapper.set(Comment::getNickname, updateUserProfileDto.getNickname());
+            }
+
+            commentMapper.update(null, commentWrapper);
+        }
+
+        return ResponseResult.okResult();
     }
 
     //判断导入的规格和内容

@@ -5,6 +5,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddUserDto;
 import com.mengze.domain.dto.UpdateUserDto;
+import com.mengze.domain.dto.UpdateUserProfileDto;
 import com.mengze.domain.dto.UserListDto;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -213,5 +214,13 @@ public class AdminUserController
     public ResponseResult<UserProfileVo> getUserProfile()
     {
         return adminUserService.getUserProfile();
+    }
+
+    @PutMapping("/profile")
+    @SystemLog(businessName = "修改个人中心信息接口")
+    @ApiOperation(value = "修改个人中心信息接口", notes = "修改个人中心信息", response = String.class)
+    public ResponseResult updateUserProfile(@Valid @RequestBody UpdateUserProfileDto updateUserProfileDto)
+    {
+        return adminUserService.updateUserProfile(updateUserProfileDto);
     }
 }
