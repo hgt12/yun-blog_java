@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 /**
- * 公用密码接口服务类
+ * 密码接口服务类
  */
 @Service
 public class ResetResetPasswordServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements ResetPasswordService
@@ -84,9 +84,9 @@ public class ResetResetPasswordServiceImpl extends ServiceImpl<SysUserMapper, Sy
             return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL);
         }
 
-        //新密码至少6位
-        if (dto.getNewPassword().length() < 6) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码至少6位");
+        //新密码至少8位
+        if (dto.getNewPassword().length() < 8) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码至少8位");
         }
 
         //从Redis获取验证码

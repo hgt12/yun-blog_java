@@ -30,7 +30,7 @@ public class ResetPasswordDto {
     private String code;
     
     @NotBlank(message = "新密码不能为空")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,20}$", 
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&.]{8,20}$",
              message = "密码必须包含大小写字母和数字，长度8-20位")
     @ApiModelProperty(value = "新密码", required = true, example = "NewPass123")
     private String newPassword;
