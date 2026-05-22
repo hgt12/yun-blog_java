@@ -49,5 +49,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult getMobileCode(String mobile);
 
     ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto);
+
+    ResponseResult unbindPhone(String password);
 }
 

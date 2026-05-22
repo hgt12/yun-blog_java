@@ -1147,6 +1147,50 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return ResponseResult.okResult();
     }
 
+    //解绑手机号
+    @Override
+    public ResponseResult unbindPhone(String password)
+    {
+        //检测用户是否登录
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //验证当前用户是否存在
+        SysUser currentUser = adminUserService.getById(currentUserId);
+        if (currentUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+
+        //检测当前手机号是否被绑定
+        if (!StringUtils.hasText(currentUser.getPhone())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "当前用户未绑定手机号");
+        }
+
+        //密码不能为空
+        if (!StringUtils.hasText(password)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL, "密码不能为空");
+        }
+
+        //校验当前密码
+        if (!passwordEncoder.matches(password, currentUser.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码错误");
+        }
+
+        //解绑手机号
+        LambdaUpdateWrapper<SysUser> unbindPhoneWrapper = new LambdaUpdateWrapper<>();
+        unbindPhoneWrapper.eq(SysUser::getId, currentUser.getId())
+                .set(SysUser::getPhone, null);
+
+        boolean success = adminUserService.update(unbindPhoneWrapper);
+        if (!success) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "解绑手机号失败");
+        }
+
+        return ResponseResult.okResult();
+    }
+
     private String generateCode()
     {
         Random random = new Random();

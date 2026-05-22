@@ -236,6 +236,7 @@ public class AdminUserController
     @PostMapping("/mobile/code")
     @SystemLog(businessName = "获取手机验证码接口")
     @ApiOperation(value = "获取手机验证码接口", notes = "用户解绑手机时获取手机验证码", response = String.class)
+    @ApiImplicitParam(name = "mobile", value = "手机号", dataType = "String", paramType = "query", required = true)
     public ResponseResult getMobileCode(String mobile)
     {
         return adminUserService.getMobileCode(mobile);
@@ -247,5 +248,14 @@ public class AdminUserController
     public ResponseResult updateOrBindPhone(@Valid @RequestBody UpdateOrBindPhoneDto updateOrBindPhoneDto)
     {
         return adminUserService.updateOrBindPhone(updateOrBindPhoneDto);
+    }
+
+    @DeleteMapping("/mobile")
+    @SystemLog(businessName = "解绑手机号接口")
+    @ApiOperation(value = "解绑手机号接口", notes = "用户解绑手机号", response = String.class)
+    @ApiImplicitParam(name = "password", value = "当前密码", dataType = "String", paramType = "query", required = true)
+    public ResponseResult unbindPhone(String password)
+    {
+        return adminUserService.unbindPhone(password);
     }
 }
