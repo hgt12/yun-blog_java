@@ -267,4 +267,12 @@ public class AdminUserController
     {
         return adminUserService.getEmailCode(email);
     }
+
+    @PutMapping("/email")
+    @SystemLog(businessName = "绑定或更换邮箱接口")
+    @ApiOperation(value = "绑定或更换邮箱接口", notes = "个人中心绑定或更换邮箱", response = String.class)
+    public ResponseResult updateOrBindEmail(@Valid @RequestBody UpdateOrBindEmailDto updateOrBindEmailDto)
+    {
+        return adminUserService.updateOrBindEmail(updateOrBindEmailDto);
+    }
 }

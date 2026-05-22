@@ -1058,13 +1058,13 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //获得验证码并存入redis
         String code = generateCode();
-        String redisKey = saveCodeToRedis(SystemConstants.CODE_TYPE_MOBILE, mobile, code, clientIp);
+        String redisKey = saveCodeToRedis(mobile, code, clientIp);
 
         try {
             aliyunSmsServiceImpl.sendVerificationCode(mobile, code);
         } catch (Exception e) {
             redisCache.deleteObject(redisKey);
-            redisCache.deleteObject(String.format("admin:mobile:send:time:%s", mobile));
+            redisCache.deleteObject(String.format("admin:send:time:%s", mobile));
             log.error("发送手机验证码失败, mobile={}, error={}", mobile, e.getMessage(), e);
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
         }
@@ -1111,7 +1111,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         //校验验证码
-        String redisKey = String.format("admin:mobile:code:%s", mobile);
+        String redisKey = String.format("admin:code:%s", mobile);
         String cacheCode = redisCache.getCacheObject(redisKey);
         if (!StringUtils.hasText(cacheCode)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码已过期，请重新获取");
@@ -1145,7 +1145,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //删除验证码缓存
         redisCache.deleteObject(redisKey);
-        redisCache.deleteObject(String.format("admin:mobile:send:time:%s", mobile));
+        redisCache.deleteObject(String.format("admin:send:time:%s", mobile));
 
         return ResponseResult.okResult();
     }
@@ -1219,16 +1219,94 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //获得验证码并存入redis
         String code = generateCode();
-        String redisKey = saveCodeToRedis(SystemConstants.CODE_TYPE_EMAIL, email, code, clientIp);
+        String redisKey = saveCodeToRedis(email, code, clientIp);
 
         try {
             emailServiceImpl.sendVerificationCodeByUpdateOrBind(email, code);
         } catch (Exception e) {
             redisCache.deleteObject(redisKey);
-            redisCache.deleteObject(String.format("admin:email:send:time:%s", email));
-            log.error("发送手机验证码失败, email={}, error={}", email, e.getMessage(), e);
+            redisCache.deleteObject(String.format("admin:send:time:%s", email));
+            log.error("发送邮箱验证码失败, email={}, error={}", email, e.getMessage(), e);
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
         }
+
+        return ResponseResult.okResult();
+    }
+
+    //绑定或更换邮箱
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult updateOrBindEmail(UpdateOrBindEmailDto updateOrBindEmailDto)
+    {
+        //检测用户是否登录
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //校验邮箱格式
+        String email = updateOrBindEmailDto.getEmail() == null ? null : updateOrBindEmailDto.getEmail().trim();
+        if (!StringUtils.hasText(email)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱不能为空");
+        }
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
+        }
+
+        //验证码不能为空
+        String code = updateOrBindEmailDto.getCode() == null ? null : updateOrBindEmailDto.getCode().trim();
+        if (!StringUtils.hasText(code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+
+        //密码不能为空
+        String password = updateOrBindEmailDto.getPassword() == null ? null : updateOrBindEmailDto.getPassword().trim();
+        if (!StringUtils.hasText(password)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL, "密码不能为空");
+        }
+
+        //验证当前用户是否存在
+        SysUser currentUser = adminUserService.getById(currentUserId);
+        if (currentUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+
+        //校验验证码
+        String redisKey = String.format("admin:code:%s", email);
+        String cacheCode = redisCache.getCacheObject(redisKey);
+        if (!StringUtils.hasText(cacheCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码已过期，请重新获取");
+        }
+        if (!Objects.equals(cacheCode, code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码错误");
+        }
+
+        //校验当前密码
+        if (!passwordEncoder.matches(password, currentUser.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码错误");
+        }
+
+        //邮箱不能被其他用户占用
+        LambdaQueryWrapper<SysUser> emailWrapper = new LambdaQueryWrapper<>();
+        emailWrapper.eq(SysUser::getEmail, email)
+                .ne(SysUser::getId, currentUserId);
+        SysUser existUser = adminUserService.getOne(emailWrapper);
+        if (existUser != null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "该邮箱已被其他用户绑定");
+        }
+
+        //更新邮箱
+        LambdaUpdateWrapper<SysUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysUser::getId, currentUserId)
+                .set(SysUser::getEmail, email);
+        boolean update = adminUserService.update(updateWrapper);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "绑定邮箱失败");
+        }
+
+        //删除验证码缓存
+        redisCache.deleteObject(redisKey);
+        redisCache.deleteObject(String.format("admin:send:time:%s", email));
 
         return ResponseResult.okResult();
     }
@@ -1260,28 +1338,28 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     private ResponseResult checkCodeLimit(String target, String clientIp)
     {
         //检查IP日发送次数限制
-        String dayKey = String.format("admin:mobile:ip:limit:day:%s", clientIp);
+        String dayKey = String.format("admin:ip:limit:day:%s", clientIp);
         Integer dayCount = redisCache.getCacheObject(dayKey);
         if (dayCount != null && dayCount >= 50) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "系统检测到异常行为，请24小时后再试或联系管理员");
         }
 
         //检查同账号发送频率限制
-        String sendTimeKey = String.format("admin:mobile:send:time:%s", target);
+        String sendTimeKey = String.format("admin:send:time:%s", target);
         String lastSendTime = redisCache.getCacheObject(sendTimeKey);
         if (StringUtils.hasText(lastSendTime)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SMS_SEND_FREQUENTLY, "验证码发送过于频繁，请1分钟后再试");
         }
 
         //检查IP发送频率限制
-        String minuteKey = String.format("admin:mobile:ip:limit:minute:%s", clientIp);
+        String minuteKey = String.format("admin:ip:limit:minute:%s", clientIp);
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         if (minuteCount != null && minuteCount >= 5) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1分钟后再试");
         }
 
         //检测每小时发送频率
-        String hourKey = String.format("admin:mobile:ip:limit:hour:%s", clientIp);
+        String hourKey = String.format("admin:ip:limit:hour:%s", clientIp);
         Integer hourCount = redisCache.getCacheObject(hourKey);
         if (hourCount != null && hourCount >= 20) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1小时后再试");
@@ -1291,13 +1369,13 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     }
 
     //保存记录到redis
-    private String saveCodeToRedis(String type, String target, String code, String clientIp)
+    private String saveCodeToRedis(String target, String code, String clientIp)
     {
-        String redisKey = String.format("admin:mobile:code:%s", target);
-        String sendTimeKey = String.format("admin:mobile:send:time:%s", target);
-        String minuteKey = String.format("admin:mobile:ip:limit:minute:%s", clientIp);
-        String hourKey = String.format("admin:mobile:ip:limit:hour:%s", clientIp);
-        String dayKey = String.format("admin:mobile:ip:limit:day:%s", clientIp);
+        String redisKey = String.format("admin:code:%s", target);
+        String sendTimeKey = String.format("admin:send:time:%s", target);
+        String minuteKey = String.format("admin:ip:limit:minute:%s", clientIp);
+        String hourKey = String.format("admin:ip:limit:hour:%s", clientIp);
+        String dayKey = String.format("admin:ip:limit:day:%s", clientIp);
 
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         Integer hourCount = redisCache.getCacheObject(hourKey);
