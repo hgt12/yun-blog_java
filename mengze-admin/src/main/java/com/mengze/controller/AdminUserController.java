@@ -7,6 +7,7 @@ import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminUserService;
+import com.mengze.service.AuthService;
 import com.mengze.utils.ExcelExportUtil;
 import com.mengze.utils.WebUtils;
 import io.swagger.annotations.Api;
@@ -32,6 +33,9 @@ public class AdminUserController
 {
     @Autowired
     private AdminUserService adminUserService;
+
+    @Autowired
+    private AuthService authService;
 
     @GetMapping("/info")
     @SystemLog(businessName = "获取后台用户信息")
@@ -227,5 +231,13 @@ public class AdminUserController
     public ResponseResult updateIndividualPassword(@Valid @RequestBody UpdateIndividualPasswordDto updateIndividualPasswordDto)
     {
         return adminUserService.updateIndividualPassword(updateIndividualPasswordDto);
+    }
+
+    @PostMapping("/mobile/code")
+    @SystemLog(businessName = "获取手机验证码接口")
+    @ApiOperation(value = "获取手机验证码接口", notes = "用户解绑手机时获取手机验证码", response = String.class)
+    public ResponseResult getMobileCode(String mobile)
+    {
+        return adminUserService.getMobileCode(mobile);
     }
 }

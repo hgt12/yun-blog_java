@@ -14,12 +14,10 @@ import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
 import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.*;
-import com.mengze.utils.BeanCopyUtils;
-import com.mengze.utils.SecurityUtils;
+import com.mengze.utils.*;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.mengze.utils.XssUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,13 +25,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -85,6 +87,12 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RedisCache redisCache;
+
+    @Autowired
+    private AliyunSmsServiceImpl aliyunSmsServiceImpl;
 
     @Override
     public ResponseResult getAdminInfo()
@@ -1020,6 +1028,124 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         return ResponseResult.okResult();
+    }
+
+    //发送手机验证码
+    @Override
+    public ResponseResult getMobileCode(String mobile)
+    {
+        //校验手机号不能为空
+        if (!StringUtils.hasText(mobile)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
+        }
+
+        mobile = mobile.trim();
+
+        //校验手机号格式
+        if (!mobile.matches("^1[3-9]\\d{9}$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
+        }
+
+        //记录IP地址
+        String clientIp = getClientIp();
+        ResponseResult limitResult = checkCodeLimit(mobile, clientIp);
+        if (limitResult != null) {
+            return limitResult;
+        }
+
+        //获得验证码并存入redis
+        String code = generateCode();
+        String redisKey = saveCodeToRedis(SystemConstants.CODE_TYPE_MOBILE, mobile, code, clientIp);
+
+        try {
+            aliyunSmsServiceImpl.sendVerificationCode(mobile, code);
+        } catch (Exception e) {
+            redisCache.deleteObject(redisKey);
+            redisCache.deleteObject(String.format("admin:mobile:send:time:%s", mobile));
+            log.error("发送手机验证码失败, mobile={}, error={}", mobile, e.getMessage(), e);
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    private String generateCode()
+    {
+        Random random = new Random();
+        return String.valueOf(random.nextInt(900000) + 100000);
+    }
+
+    //获取ip地址
+    private String getClientIp()
+    {
+        String clientIp = "unknown";
+        try {
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                clientIp = IpUtils.getIpAddr(request);
+            }
+        } catch (Exception e) {
+            log.warn("获取客户端IP失败: {}", e.getMessage());
+        }
+        return clientIp;
+    }
+
+    //对验证码发送次数进行限制
+    private ResponseResult checkCodeLimit(String target, String clientIp)
+    {
+        //检查IP日发送次数限制
+        String dayKey = String.format("admin:mobile:ip:limit:day:%s", clientIp);
+        Integer dayCount = redisCache.getCacheObject(dayKey);
+        if (dayCount != null && dayCount >= 50) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "系统检测到异常行为，请24小时后再试或联系管理员");
+        }
+
+        //检查同账号发送频率限制
+        String sendTimeKey = String.format("admin:mobile:send:time:%s", target);
+        String lastSendTime = redisCache.getCacheObject(sendTimeKey);
+        if (StringUtils.hasText(lastSendTime)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SMS_SEND_FREQUENTLY, "验证码发送过于频繁，请1分钟后再试");
+        }
+
+        //检查IP发送频率限制
+        String minuteKey = String.format("admin:mobile:ip:limit:minute:%s", clientIp);
+        Integer minuteCount = redisCache.getCacheObject(minuteKey);
+        if (minuteCount != null && minuteCount >= 5) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1分钟后再试");
+        }
+
+        //检测每小时发送频率
+        String hourKey = String.format("admin:mobile:ip:limit:hour:%s", clientIp);
+        Integer hourCount = redisCache.getCacheObject(hourKey);
+        if (hourCount != null && hourCount >= 20) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1小时后再试");
+        }
+
+        return null;
+    }
+
+    //保存记录到redis
+    private String saveCodeToRedis(String type, String target, String code, String clientIp)
+    {
+        String redisKey = String.format("admin:mobile:code:%s", target);
+        String sendTimeKey = String.format("admin:mobile:send:time:%s", target);
+        String minuteKey = String.format("admin:mobile:ip:limit:minute:%s", clientIp);
+        String hourKey = String.format("admin:mobile:ip:limit:hour:%s", clientIp);
+        String dayKey = String.format("admin:mobile:ip:limit:day:%s", clientIp);
+
+        Integer minuteCount = redisCache.getCacheObject(minuteKey);
+        Integer hourCount = redisCache.getCacheObject(hourKey);
+        Integer dayCount = redisCache.getCacheObject(dayKey);
+
+        redisCache.setCacheObject(redisKey, code, 5, TimeUnit.MINUTES);
+        redisCache.setCacheObject(sendTimeKey, String.valueOf(System.currentTimeMillis()), 1, TimeUnit.MINUTES);
+        redisCache.setCacheObject(minuteKey, minuteCount == null ? 1 : minuteCount + 1, 1, TimeUnit.MINUTES);
+        redisCache.setCacheObject(hourKey, hourCount == null ? 1 : hourCount + 1, 1, TimeUnit.HOURS);
+        redisCache.setCacheObject(dayKey, dayCount == null ? 1 : dayCount + 1, 1, TimeUnit.DAYS);
+
+        return redisKey;
     }
 
     //判断导入的规格和内容
