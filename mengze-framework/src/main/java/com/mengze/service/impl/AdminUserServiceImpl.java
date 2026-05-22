@@ -124,53 +124,8 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //构建查询条件
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
 
-        //当前登录用户
-        LoginUser loginUser = SecurityUtils.getLoginUser();
-        Long currentUserId = null;
-        if (loginUser != null) {
-            currentUserId = loginUser.getSysUser().getId();
-        }
-
-        //超级管理员可以看到全部 普通用户按数据权限限制
-        if (!Objects.equals(currentUserId, 1L)) {
-            List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
-            Integer maxDataScope = roles.stream()
-                    .map(SysRole::getDataScope)
-                    .filter(Objects::nonNull)
-                    .min(Integer::compareTo)
-                    .orElse(4);
-
-            //全部数据
-            if (!Objects.equals(maxDataScope, 1))
-            {
-                if (Objects.equals(maxDataScope, 2)) {
-                    //部门及子部门数据
-                    List<Long> deptIds = sysDeptService.selectDeptAndChildrenIds(Long.valueOf(loginUser.getSysUser().getDeptId()));
-                    queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
-                } else if (Objects.equals(maxDataScope, 3)) {
-                    //本部门数据
-                    queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
-                } else if (Objects.equals(maxDataScope, 4)) {
-                    //本人数据
-                    queryWrapper.eq(SysUser::getId, currentUserId);
-                } else if (Objects.equals(maxDataScope, 5)) {
-                    //自定义部门数据
-                    List<Long> deptIds = new ArrayList<>();
-                    for (SysRole role : roles) {
-                        if (Objects.equals(role.getDataScope(), 5)) {
-                            LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                            deptWrapper.eq(SysRoleDept::getRoleId, role.getId())
-                                    .select(SysRoleDept::getDeptId);
-                            List<SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
-                            deptIds.addAll(roleDeptList.stream().map(SysRoleDept::getDeptId).toList());
-                        }
-                    }
-                    if (!deptIds.isEmpty()) {
-                        queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
-                    }
-                }
-            }
-        }
+        //获取当前用户拥有的数据权限范围
+        applyDataScopeFilter(queryWrapper);
 
         //根据关键子查询（用户名，昵称，手机号）
         if (StringUtils.hasText(userListDto.getKeywords())) {
@@ -556,53 +511,8 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //构建查询条件
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
 
-        //当前登录用户
-        LoginUser loginUser = SecurityUtils.getLoginUser();
-        Long currentUserId = null;
-        if (loginUser != null) {
-            currentUserId = loginUser.getSysUser().getId();
-        }
-
-        //超级管理员可以看到全部 普通用户按数据权限限制
-        if (!Objects.equals(currentUserId, 1L)) {
-            List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
-            Integer maxDataScope = roles.stream()
-                    .map(SysRole::getDataScope)
-                    .filter(Objects::nonNull)
-                    .min(Integer::compareTo)
-                    .orElse(4);
-
-            //全部数据
-            if (!Objects.equals(maxDataScope, 1))
-            {
-                if (Objects.equals(maxDataScope, 2)) {
-                    //部门及子部门数据
-                    List<Long> deptIds = sysDeptService.selectDeptAndChildrenIds(Long.valueOf(loginUser.getSysUser().getDeptId()));
-                    queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
-                } else if (Objects.equals(maxDataScope, 3)) {
-                    //本部门数据
-                    queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
-                } else if (Objects.equals(maxDataScope, 4)) {
-                    //本人数据
-                    queryWrapper.eq(SysUser::getId, currentUserId);
-                } else if (Objects.equals(maxDataScope, 5)) {
-                    //自定义部门数据
-                    List<Long> deptIds = new ArrayList<>();
-                    for (SysRole role : roles) {
-                        if (Objects.equals(role.getDataScope(), 5)) {
-                            LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                            deptWrapper.eq(SysRoleDept::getRoleId, role.getId())
-                                    .select(SysRoleDept::getDeptId);
-                            List<SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
-                            deptIds.addAll(roleDeptList.stream().map(SysRoleDept::getDeptId).toList());
-                        }
-                    }
-                    if (!deptIds.isEmpty()) {
-                        queryWrapper.in(SysUser::getDeptId, deptIds.stream().map(String::valueOf).toList());
-                    }
-                }
-            }
-        }
+        //获取当前用户拥有的数据权限范围
+        applyDataScopeFilter(queryWrapper);
 
         //根据关键子查询（用户名，昵称，手机号）
         if (StringUtils.hasText(userListDto.getKeywords())) {
@@ -1362,6 +1272,25 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //构建查询条件
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
 
+        //获取当前用户拥有的数据权限范围
+        applyDataScopeFilter(queryWrapper);
+
+        //获取用户id
+        //查询状态正常的用户，并按 id 倒序排序
+        queryWrapper.eq(SysUser::getStatus, SystemConstants.STATUS_NORMAL)
+                    .orderByDesc(SysUser::getId);
+
+        List<SysUser> users = adminUserService.list(queryWrapper);
+
+        //封装成vo
+        List<UserOptionVo> userOptionVos = BeanCopyUtils.copyBeanList(users, UserOptionVo.class);
+
+        return ResponseResult.okResult(userOptionVos);
+    }
+
+    //获取当前用户拥有的数据权限范围
+    private void applyDataScopeFilter(LambdaQueryWrapper<SysUser> queryWrapper)
+    {
         //当前登录用户
         LoginUser loginUser = SecurityUtils.getLoginUser();
         Long currentUserId = null;
@@ -1390,7 +1319,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
                 } else if (Objects.equals(maxDataScope, 4)) {
                     //本人数据
-                    queryWrapper.eq(SysUser::getId, currentUserId);
+                    queryWrapper.eq(SysUser::getCreateBy, currentUserId);
                 } else if (Objects.equals(maxDataScope, 5)) {
                     //自定义部门数据
                     List<Long> deptIds = new ArrayList<>();
@@ -1409,18 +1338,6 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                 }
             }
         }
-
-        //获取用户id
-        //查询状态正常的用户，并按 id 倒序排序
-        queryWrapper.eq(SysUser::getStatus, SystemConstants.STATUS_NORMAL)
-                    .orderByDesc(SysUser::getId);
-
-        List<SysUser> users = adminUserService.list(queryWrapper);
-
-        //封装成vo
-        List<UserOptionVo> userOptionVos = BeanCopyUtils.copyBeanList(users, UserOptionVo.class);
-
-        return ResponseResult.okResult(userOptionVos);
     }
 
     private String generateCode()
