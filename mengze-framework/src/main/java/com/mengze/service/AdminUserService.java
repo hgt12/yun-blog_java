@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.*;
 import com.mengze.domain.entity.SysUser;
-import com.mengze.domain.vo.AdminUserListVo;
 import com.mengze.domain.vo.UserFormDetailVo;
 import com.mengze.domain.vo.UserProfileVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +49,7 @@ public interface AdminUserService extends IService<SysUser> {
 
     ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto);
 
-    ResponseResult unbindPhone(String password);
+    ResponseResult unbindPhone(UnbindPhoneDto unbindPhoneDto);
 
     ResponseResult getEmailCode(String email);
 }

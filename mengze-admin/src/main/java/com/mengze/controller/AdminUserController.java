@@ -87,7 +87,7 @@ public class AdminUserController
         return adminUserService.updateUser(id, updateUserDto);
     }
 
-    @DeleteMapping("/{ids}")
+    @DeleteMapping("/batch/{ids}")
     @PreAuthorize("@ps.hasPermission('blog:user:delete')")
     @SystemLog(businessName = "删除用户(逻辑删除)")
     @ApiOperation(value = "删除用户接口（批量逻辑删除）", notes = "删除用户，支持批量删除", response = String.class)
@@ -254,9 +254,9 @@ public class AdminUserController
     @SystemLog(businessName = "解绑手机号接口")
     @ApiOperation(value = "解绑手机号接口", notes = "用户解绑手机号", response = String.class)
     @ApiImplicitParam(name = "password", value = "当前密码", dataType = "String", paramType = "query", required = true)
-    public ResponseResult unbindPhone(@RequestParam String password)
+    public ResponseResult unbindPhone(@Valid @RequestBody UnbindPhoneDto unbindPhoneDto)
     {
-        return adminUserService.unbindPhone(password);
+        return adminUserService.unbindPhone(unbindPhoneDto);
     }
 
     @PostMapping("/email/code")

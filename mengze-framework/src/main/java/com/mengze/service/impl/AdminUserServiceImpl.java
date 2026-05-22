@@ -1152,7 +1152,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     //解绑手机号
     @Override
-    public ResponseResult unbindPhone(String password)
+    public ResponseResult unbindPhone(UnbindPhoneDto unbindPhoneDto)
     {
         //检测用户是否登录
         Long currentUserId = SecurityUtils.getUserId();
@@ -1172,12 +1172,12 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         //密码不能为空
-        if (!StringUtils.hasText(password)) {
+        if (!StringUtils.hasText(unbindPhoneDto.getPassword())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL, "密码不能为空");
         }
 
         //校验当前密码
-        if (!passwordEncoder.matches(password, currentUser.getPassword())) {
+        if (!passwordEncoder.matches(unbindPhoneDto.getPassword(), currentUser.getPassword())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码错误");
         }
 
