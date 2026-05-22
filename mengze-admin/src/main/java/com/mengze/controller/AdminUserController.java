@@ -240,4 +240,12 @@ public class AdminUserController
     {
         return adminUserService.getMobileCode(mobile);
     }
+
+    @PutMapping("/mobile")
+    @SystemLog(businessName = "绑定或更换手机号接口")
+    @ApiOperation(value = "绑定或更换手机号接口", notes = "个人中心绑定或更换手机号", response = String.class)
+    public ResponseResult updateOrBindPhone(@Valid @RequestBody UpdateOrBindPhoneDto updateOrBindPhoneDto)
+    {
+        return adminUserService.updateOrBindPhone(updateOrBindPhoneDto);
+    }
 }

@@ -1069,6 +1069,84 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         return ResponseResult.okResult();
     }
 
+    //绑定或更换手机号
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto)
+    {
+        //检测用户是否登录
+        Long currentUserId = SecurityUtils.getUserId();
+        if (currentUserId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //校验手机号格式
+        String mobile = updateOrBindPhoneDto.getMobile() == null ? null : updateOrBindPhoneDto.getMobile().trim();
+        if (!StringUtils.hasText(mobile)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
+        }
+        if (!mobile.matches("^1[3-9]\\d{9}$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
+        }
+
+        //验证码不能为空
+        String code = updateOrBindPhoneDto.getCode() == null ? null : updateOrBindPhoneDto.getCode().trim();
+        if (!StringUtils.hasText(code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码不能为空");
+        }
+
+        //密码不能为空
+        String password = updateOrBindPhoneDto.getPassword() == null ? null : updateOrBindPhoneDto.getPassword().trim();
+        if (!StringUtils.hasText(password)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PASSWORD_NOT_NULL, "密码不能为空");
+        }
+
+        //验证当前用户是否存在
+        SysUser currentUser = adminUserService.getById(currentUserId);
+        if (currentUser == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "用户不存在");
+        }
+
+        //校验验证码
+        String redisKey = String.format("admin:mobile:code:%s", mobile);
+        String cacheCode = redisCache.getCacheObject(redisKey);
+        if (!StringUtils.hasText(cacheCode)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码已过期，请重新获取");
+        }
+        if (!Objects.equals(cacheCode, code)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码错误");
+        }
+
+        //校验当前密码
+        if (!passwordEncoder.matches(password, currentUser.getPassword())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "密码错误");
+        }
+
+        //手机号不能被其他用户占用
+        LambdaQueryWrapper<SysUser> phoneWrapper = new LambdaQueryWrapper<>();
+        phoneWrapper.eq(SysUser::getPhone, mobile)
+                .ne(SysUser::getId, currentUserId);
+        SysUser existUser = adminUserService.getOne(phoneWrapper);
+        if (existUser != null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONENUMBER_EXIST, "该手机号已被其他用户绑定");
+        }
+
+        //更新手机号
+        LambdaUpdateWrapper<SysUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SysUser::getId, currentUserId)
+                .set(SysUser::getPhone, mobile);
+        boolean update = adminUserService.update(updateWrapper);
+        if (!update) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "绑定手机号失败");
+        }
+
+        //删除验证码缓存
+        redisCache.deleteObject(redisKey);
+        redisCache.deleteObject(String.format("admin:mobile:send:time:%s", mobile));
+
+        return ResponseResult.okResult();
+    }
+
     private String generateCode()
     {
         Random random = new Random();

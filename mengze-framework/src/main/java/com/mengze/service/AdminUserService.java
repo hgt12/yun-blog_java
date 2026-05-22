@@ -47,5 +47,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult updateIndividualPassword(UpdateIndividualPasswordDto updateIndividualPasswordDto);
 
     ResponseResult getMobileCode(String mobile);
+
+    ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto);
 }
 
