@@ -49,7 +49,7 @@ public interface AdminUserService extends IService<SysUser> {
 
     ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto);
 
-    ResponseResult unbindPhone(UnbindPhoneDto unbindPhoneDto);
+    ResponseResult unbindPhone(UnbindPhoneOrEmailDto unbindPhoneOrEmailDto);
 
     ResponseResult getEmailCode(String email);
 

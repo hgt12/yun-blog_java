@@ -254,9 +254,9 @@ public class AdminUserController
     @SystemLog(businessName = "解绑手机号接口")
     @ApiOperation(value = "解绑手机号接口", notes = "用户解绑手机号", response = String.class)
     @ApiImplicitParam(name = "password", value = "当前密码", dataType = "String", paramType = "query", required = true)
-    public ResponseResult unbindPhone(@Valid @RequestBody UnbindPhoneDto unbindPhoneDto)
+    public ResponseResult unbindPhone(@Valid @RequestBody UnbindPhoneOrEmailDto unbindPhoneOrEmailDto)
     {
-        return adminUserService.unbindPhone(unbindPhoneDto);
+        return adminUserService.unbindPhone(unbindPhoneOrEmailDto);
     }
 
     @PostMapping("/email/code")
