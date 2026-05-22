@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DeptListDto;
 import com.mengze.domain.entity.SysDept;
+import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptOptionVo;
 
 import java.util.List;
@@ -21,5 +22,7 @@ public interface SysDeptService extends IService<SysDept> {
     ResponseResult<List<DeptOptionVo>> getDeptOptions();
 
     List<Long> selectDeptAndChildrenIds(Long deptId);
+
+    ResponseResult<DeptFormDetailVo> getDeptFormDetail(Long id);
 }
 

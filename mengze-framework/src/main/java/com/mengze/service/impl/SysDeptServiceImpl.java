@@ -6,8 +6,10 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DeptListDto;
 import com.mengze.domain.entity.*;
+import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptListVo;
 import com.mengze.domain.vo.DeptOptionVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDeptMapper;
 import com.mengze.service.SysDeptService;
 import com.mengze.service.SysRoleDeptService;
@@ -37,6 +39,9 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
     @Autowired
     private SysRoleDeptService sysRoleDeptService;
+
+    @Autowired
+    private SysDeptService sysDeptService;
 
     //获取部门列表（树结构）
     @Override
@@ -117,6 +122,24 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         return ResponseResult.okResult(deptOptionTree);
     }
 
+    //获取部门表单详情
+    @Override
+    public ResponseResult<DeptFormDetailVo> getDeptFormDetail(Long id)
+    {
+        //获取部门id
+        SysDept dept = sysDeptService.getById(id);
+        if (dept == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该部门不存在！");
+        }
+
+        //封装为Vo
+        DeptFormDetailVo deptFormDetailVo = BeanCopyUtils.copyBean(dept, DeptFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(deptFormDetailVo);
+    }
+
+    //查询部门及其子部门id
     @Override
     public List<Long> selectDeptAndChildrenIds(Long deptId)
     {

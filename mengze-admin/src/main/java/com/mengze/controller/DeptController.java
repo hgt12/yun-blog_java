@@ -3,14 +3,17 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DeptListDto;
+import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptOptionVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysDeptService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,6 +45,16 @@ public class DeptController
     public ResponseResult getDeptOptions()
     {
         return sysDeptService.getDeptOptions();
+    }
+
+    @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:dept:update')")
+    @SystemLog(businessName = "获取部门表单数据接口")
+    @ApiOperation(value = "获取部门表单数据接口", notes = "获取部门表单数据，用于编辑部门详情", response = DeptFormDetailVo.class)
+    @ApiImplicitParam(name = "id", value = "部门id", dataType = "long", paramType = "path")
+    public ResponseResult<DeptFormDetailVo> getDeptFormDetail(@PathVariable Long id)
+    {
+        return sysDeptService.getDeptFormDetail(id);
     }
 
 
