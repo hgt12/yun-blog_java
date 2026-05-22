@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.SendCodeDto;
 import com.mengze.domain.entity.SysUser;
@@ -19,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-//发送验证码服务类
+//前台发送验证码服务类
 @Service
 public class AuthServiceImpl implements AuthService
 {
@@ -35,7 +36,7 @@ public class AuthServiceImpl implements AuthService
     @Autowired
     private RedisCache redisCache;
 
-    //统一发送验证码接口
+    //前台统一发送验证码接口
     @Override
     public ResponseResult sendCode(SendCodeDto dto)
     {
@@ -51,7 +52,9 @@ public class AuthServiceImpl implements AuthService
         String type = dto.getType().toLowerCase();
         
         //验证类型的有效性
-        if (!type.equals("login") && !type.equals("register") && !type.equals("forgot_password")) {
+        if (!type.equals(SystemConstants.VERIFY_TYPE_LOGIN)
+                && !type.equals(SystemConstants.VERIFY_TYPE_REGISTER)
+                && !type.equals(SystemConstants.VERIFY_TYPE_FORGOT_PASSWORD)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码类型无效");
         }
         
@@ -59,16 +62,16 @@ public class AuthServiceImpl implements AuthService
         String channel;
         if (account.contains("@")) {
             //包含@符号，判断为邮箱
-            channel = "email";
+            channel = SystemConstants.LOGIN_TYPE_EMAIL;
         } else if (account.matches("^1[3-9]\\d{9}$")) {
             //符合手机号格式
-            channel = "phone";
+            channel = SystemConstants.LOGIN_TYPE_PHONE;
         } else {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请输入正确的邮箱或手机号");
         }
         
         //判断是否需要判断账号已存在（登录和忘记密码需要，注册不需要）
-        boolean needAccountExists = !type.equals("register");
+        boolean needAccountExists = !type.equals(SystemConstants.VERIFY_TYPE_REGISTER);
         
         return sendVerificationCode(account, channel, type, needAccountExists);
     }
@@ -119,18 +122,17 @@ public class AuthServiceImpl implements AuthService
 
         // 发送验证码
         try {
-            if ("email".equals(type)) {
+            if (SystemConstants.CODE_TYPE_EMAIL.equals(type))
+            {
                 //三种情况
                 switch (scene) {
-                    case "login":
-                        emailService.sendVerificationCodeByLogin(account, code);
-                        break;
-                    case "register":
+                    case SystemConstants.VERIFY_TYPE_REGISTER:
                         emailService.sendVerificationCodeByRegister(account, code);
                         break;
-                    case "forgot_password":
+                    case SystemConstants.VERIFY_TYPE_FORGOT_PASSWORD:
                         emailService.sendVerificationCodeByForgotPassword(account, code);
                         break;
+                    case SystemConstants.VERIFY_TYPE_LOGIN:
                     default:
                         emailService.sendVerificationCodeByLogin(account, code);
                 }
@@ -138,9 +140,9 @@ public class AuthServiceImpl implements AuthService
                 aliyunSmsService.sendVerificationCode(account, code);
             }
             System.out.println(String.format("发送%s验证码到%s: %s, 验证码: %s, IP: %s", 
-                scene, type.equals("email") ? "邮箱" : "手机", account, code, clientIp));
+                scene, type.equals(SystemConstants.CODE_TYPE_EMAIL) ? "邮箱" : "手机", account, code, clientIp));
         } catch (Exception e) {
-            System.err.println(String.format("%s发送失败: %s", type.equals("email") ? "邮件" : "短信", e.getMessage()));
+            System.err.println(String.format("%s发送失败: %s", type.equals(SystemConstants.CODE_TYPE_EMAIL) ? "邮件" : "短信", e.getMessage()));
             // 发送失败时删除Redis记录
             redisCache.deleteObject(redisKey);
             redisCache.deleteObject(sendTimeKey);
@@ -154,7 +156,7 @@ public class AuthServiceImpl implements AuthService
     private ResponseResult validateAccount(String account, String type)
     {
         if (!StringUtils.hasText(account)) {
-            if ("email".equals(type)) {
+            if (SystemConstants.LOGIN_TYPE_EMAIL.equals(type)) {
                 return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_NOT_NULL);
             } else {
                 return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
@@ -162,7 +164,7 @@ public class AuthServiceImpl implements AuthService
         }
 
         // 验证手机号格式
-        if ("phone".equals(type) && !account.matches("^1[3-9]\\d{9}$")) {
+        if (SystemConstants.LOGIN_TYPE_PHONE.equals(type) && !account.matches("^1[3-9]\\d{9}$")) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
         }
 
@@ -173,14 +175,14 @@ public class AuthServiceImpl implements AuthService
     private ResponseResult checkAccountForScene(String account, String type, String scene, boolean needAccountExists)
     {
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-        if ("email".equals(type)) {
+        if (SystemConstants.LOGIN_TYPE_EMAIL.equals(type)) {
             queryWrapper.eq(SysUser::getEmail, account);
         } else {
             queryWrapper.eq(SysUser::getPhone, account);
         }
         
         SysUser sysUser = sysUserMapper.selectOne(queryWrapper);
-        String accountTypeName = type.equals("email") ? "邮箱" : "手机号";
+        String accountTypeName = type.equals(SystemConstants.LOGIN_TYPE_EMAIL) ? "邮箱" : "手机号";
         
         if (needAccountExists) {
             // 登录和忘记密码场景：需要账号已存在

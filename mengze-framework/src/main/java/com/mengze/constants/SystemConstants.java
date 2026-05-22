@@ -175,4 +175,36 @@ public class SystemConstants
      *  性别：隐藏
      */
     public static final String SEX_HIDE = "2";
+    /**
+     *  登录类型：邮箱
+     */
+    public static final String LOGIN_TYPE_EMAIL = "email";
+    /**
+     *  登录类型：手机号
+     */
+    public static final String LOGIN_TYPE_PHONE = "phone";
+    /**
+     *  验证码类型：邮箱
+     */
+    public static final String CODE_TYPE_EMAIL = "email";
+    /**
+     *  验证码类型：手机号
+     */
+    public static final String CODE_TYPE_PHONE = "phone";
+    /**
+     *  验证码类型：手机
+     */
+    public static final String CODE_TYPE_MOBILE = "mobile";
+    /**
+     *  验证类型：注册
+     */
+    public static final String VERIFY_TYPE_LOGIN = "login";
+    /**
+     *  验证类型：登录
+     */
+    public static final String VERIFY_TYPE_REGISTER = "register";
+    /**
+     *  验证类型：忘记密码
+     */
+    public static final String VERIFY_TYPE_FORGOT_PASSWORD = "forgot_password";
 }
