@@ -94,6 +94,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     @Autowired
     private AliyunSmsServiceImpl aliyunSmsServiceImpl;
 
+    @Autowired
+    private EmailServiceImpl emailServiceImpl;
+
     @Override
     public ResponseResult getAdminInfo()
     {
@@ -1186,6 +1189,45 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         boolean success = adminUserService.update(unbindPhoneWrapper);
         if (!success) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "解绑手机号失败");
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //发送邮箱验证码
+    @Override
+    public ResponseResult getEmailCode(String email)
+    {
+        //校验邮箱不能为空
+        if (!StringUtils.hasText(email)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
+        }
+
+        email = email.trim();
+
+        //校验邮箱格式
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.EMAIL_FORMAT_ERROR);
+        }
+
+        //记录IP地址
+        String clientIp = getClientIp();
+        ResponseResult limitResult = checkCodeLimit(email, clientIp);
+        if (limitResult != null) {
+            return limitResult;
+        }
+
+        //获得验证码并存入redis
+        String code = generateCode();
+        String redisKey = saveCodeToRedis(SystemConstants.CODE_TYPE_EMAIL, email, code, clientIp);
+
+        try {
+            emailServiceImpl.sendVerificationCodeByUpdateOrBind(email, code);
+        } catch (Exception e) {
+            redisCache.deleteObject(redisKey);
+            redisCache.deleteObject(String.format("admin:email:send:time:%s", email));
+            log.error("发送手机验证码失败, email={}, error={}", email, e.getMessage(), e);
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
         }
 
         return ResponseResult.okResult();

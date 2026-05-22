@@ -123,6 +123,13 @@ public class EmailServiceImpl
         sendVerificationEmail(to, code, "重置密码", "您正在进行密码重置操作，请使用以下验证码完成密码重置。");
     }
 
+    //发送修改/绑定邮箱验证码邮件
+    @Async("asyncExecutor")
+    public void sendVerificationCodeByUpdateOrBind(String to, String code)
+    {
+        sendVerificationEmail(to, code, "邮箱绑定/更换", "您正在进行邮箱绑定或更换操作，请使用以下验证码完成验证。");
+    }
+
     //发送用户密码重置通知邮件
     @Async("asyncExecutor")
     public void sendResetPasswordNotification(String toEmail, String nickname, String username, String newPassword)
@@ -1154,28 +1161,23 @@ public class EmailServiceImpl
     //根据场景获取主题颜色
     private String getThemeColor(String scene)
     {
-        switch (scene) {
-            case "登录":
-                return "#30a9de";  // 蓝色
-            case "注册":
-                return "#52c41a";  // 绿色
-            case "重置密码":
-                return "#ff6b6b";  // 红色
-            default:
-                return "#30a9de";
-        }
+        return switch (scene) {
+            case "登录" -> "#30a9de";  // 蓝色
+            case "注册" -> "#52c41a";  // 绿色
+            case "重置密码" -> "#ff6b6b";  // 红色
+            case "邮箱绑定/更换" -> "#de6530";    //橙色
+            default -> "#30a9de";
+        };
     }
 
     //根据场景获取问候语
     private String getGreeting(String scene)
     {
-        switch (scene) {
-            case "注册":
-                return "⌯ᵔᗜᵔ⌯ಣ 欢迎加入！";
-            case "重置密码":
-                return "密码重置";
-            default:
-                return " (๓´˘`๓) 您好！";
-        }
+        return switch (scene) {
+            case "注册" -> "⌯ᵔᗜᵔ⌯ಣ 欢迎加入！";
+            case "重置密码" -> "密码重置";
+            case "邮箱绑定/更换" -> "邮箱绑定/更换";
+            default -> " (๓´˘`๓) 您好！";
+        };
     }
 }

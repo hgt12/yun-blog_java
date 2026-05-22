@@ -36,6 +36,7 @@ public enum AppHttpCodeEnum {
     FILE_NULL(1022, "上传文件为空！"),
     PARAM_INVALID(1023, "起始日期 不能晚于 终止日期"),
     ACCOUNT_DISABLED(1024, "账号已被封禁"),
+    EMAIL_FORMAT_ERROR(1025, "邮箱格式错误"),
     ;
     int code;
     String msg;

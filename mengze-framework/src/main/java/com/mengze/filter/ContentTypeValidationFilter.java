@@ -45,7 +45,8 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter
      * 白名单路径（不需要验证Content-Type）
      */
     private static final List<String> WHITELIST_PATHS = Arrays.asList(
-            "/users/mobile/code",       // 后台获取验证码接口
+            "/users/email/code",       // 后台获取邮箱验证码接口
+            "/users/mobile/code",       // 后台获取手机验证码接口
             "/users/*/password/reset",   // 后台重置密码接口
             "/auth/refreshToken",   // 后台刷新token接口
             "/comment/like",    // 前台点赞接口
