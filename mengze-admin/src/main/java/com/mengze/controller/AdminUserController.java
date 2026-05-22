@@ -34,9 +34,6 @@ public class AdminUserController
     @Autowired
     private AdminUserService adminUserService;
 
-    @Autowired
-    private AuthService authService;
-
     @GetMapping("/info")
     @SystemLog(businessName = "获取后台用户信息")
     @ApiOperation(value = "获取后台用户信息", notes = "获取当前登录后台用户的个人信息", response = SysUserInfoVo.class)
@@ -283,5 +280,13 @@ public class AdminUserController
     public ResponseResult unbindEmail(@Valid @RequestBody UnbindPhoneOrEmailDto unbindPhoneOrEmailDto)
     {
         return adminUserService.unbindEmail(unbindPhoneOrEmailDto);
+    }
+
+    @GetMapping("/options")
+    @SystemLog(businessName = "用户下拉选项")
+    @ApiOperation(value = "用户下拉选项", notes = "获取用户下拉数据", response = UserOptionVo.class, responseContainer = "List")
+    public ResponseResult getUserOptions()
+    {
+        return adminUserService.getUserOptions();
     }
 }
