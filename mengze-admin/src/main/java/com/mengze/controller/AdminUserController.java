@@ -275,4 +275,13 @@ public class AdminUserController
     {
         return adminUserService.updateOrBindEmail(updateOrBindEmailDto);
     }
+
+    @DeleteMapping("/email")
+    @SystemLog(businessName = "解绑邮箱接口")
+    @ApiOperation(value = "解绑邮箱接口", notes = "用户解绑邮箱", response = String.class)
+    @ApiImplicitParam(name = "password", value = "当前密码", dataType = "String", paramType = "query", required = true)
+    public ResponseResult unbindEmail(@Valid @RequestBody UnbindPhoneOrEmailDto unbindPhoneOrEmailDto)
+    {
+        return adminUserService.unbindEmail(unbindPhoneOrEmailDto);
+    }
 }

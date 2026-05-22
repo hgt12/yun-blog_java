@@ -54,5 +54,7 @@ public interface AdminUserService extends IService<SysUser> {
     ResponseResult getEmailCode(String email);
 
     ResponseResult updateOrBindEmail(UpdateOrBindEmailDto updateOrBindEmailDto);
+
+    ResponseResult unbindEmail(UnbindPhoneOrEmailDto unbindPhoneOrEmailDto);
 }
 
