@@ -168,6 +168,11 @@ public class AuthServiceImpl implements AuthService
             return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
         }
 
+        // 验证手机号格式
+        if (SystemConstants.LOGIN_TYPE_EMAIL.equals(type) && !account.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PHONE_FORMAT_ERROR);
+        }
+
         return null;
     }
 
