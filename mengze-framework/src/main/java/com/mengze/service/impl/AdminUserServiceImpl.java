@@ -152,17 +152,17 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
                 } else if (Objects.equals(maxDataScope, 4)) {
                     //本人数据
-                    queryWrapper.eq(SysUser::getCreateBy, currentUserId);
+                    queryWrapper.eq(SysUser::getId, currentUserId);
                 } else if (Objects.equals(maxDataScope, 5)) {
                     //自定义部门数据
                     List<Long> deptIds = new ArrayList<>();
                     for (SysRole role : roles) {
                         if (Objects.equals(role.getDataScope(), 5)) {
-                            LambdaQueryWrapper<com.mengze.domain.entity.SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                            deptWrapper.eq(com.mengze.domain.entity.SysRoleDept::getRoleId, role.getId())
-                                    .select(com.mengze.domain.entity.SysRoleDept::getDeptId);
-                            List<com.mengze.domain.entity.SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
-                            deptIds.addAll(roleDeptList.stream().map(com.mengze.domain.entity.SysRoleDept::getDeptId).toList());
+                            LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
+                            deptWrapper.eq(SysRoleDept::getRoleId, role.getId())
+                                    .select(SysRoleDept::getDeptId);
+                            List<SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
+                            deptIds.addAll(roleDeptList.stream().map(SysRoleDept::getDeptId).toList());
                         }
                     }
                     if (!deptIds.isEmpty()) {
@@ -584,17 +584,17 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     queryWrapper.eq(SysUser::getDeptId, loginUser.getSysUser().getDeptId());
                 } else if (Objects.equals(maxDataScope, 4)) {
                     //本人数据
-                    queryWrapper.eq(SysUser::getCreateBy, currentUserId);
+                    queryWrapper.eq(SysUser::getId, currentUserId);
                 } else if (Objects.equals(maxDataScope, 5)) {
                     //自定义部门数据
                     List<Long> deptIds = new ArrayList<>();
                     for (SysRole role : roles) {
                         if (Objects.equals(role.getDataScope(), 5)) {
-                            LambdaQueryWrapper<com.mengze.domain.entity.SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                            deptWrapper.eq(com.mengze.domain.entity.SysRoleDept::getRoleId, role.getId())
-                                    .select(com.mengze.domain.entity.SysRoleDept::getDeptId);
-                            List<com.mengze.domain.entity.SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
-                            deptIds.addAll(roleDeptList.stream().map(com.mengze.domain.entity.SysRoleDept::getDeptId).toList());
+                            LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
+                            deptWrapper.eq(SysRoleDept::getRoleId, role.getId())
+                                    .select(SysRoleDept::getDeptId);
+                            List<SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
+                            deptIds.addAll(roleDeptList.stream().map(SysRoleDept::getDeptId).toList());
                         }
                     }
                     if (!deptIds.isEmpty()) {
@@ -1396,11 +1396,11 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
                     List<Long> deptIds = new ArrayList<>();
                     for (SysRole role : roles) {
                         if (Objects.equals(role.getDataScope(), 5)) {
-                            LambdaQueryWrapper<com.mengze.domain.entity.SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                            deptWrapper.eq(com.mengze.domain.entity.SysRoleDept::getRoleId, role.getId())
-                                    .select(com.mengze.domain.entity.SysRoleDept::getDeptId);
-                            List<com.mengze.domain.entity.SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
-                            deptIds.addAll(roleDeptList.stream().map(com.mengze.domain.entity.SysRoleDept::getDeptId).toList());
+                            LambdaQueryWrapper<SysRoleDept> deptWrapper = new LambdaQueryWrapper<>();
+                            deptWrapper.eq(SysRoleDept::getRoleId, role.getId())
+                                    .select(SysRoleDept::getDeptId);
+                            List<SysRoleDept> roleDeptList = sysRoleDeptService.list(deptWrapper);
+                            deptIds.addAll(roleDeptList.stream().map(SysRoleDept::getDeptId).toList());
                         }
                     }
                     if (!deptIds.isEmpty()) {
