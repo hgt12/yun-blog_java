@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.entity.LoginUser;
-import com.mengze.domain.entity.SysDept;
-import com.mengze.domain.entity.SysRole;
-import com.mengze.domain.entity.SysRoleDept;
+import com.mengze.domain.dto.DeptListDto;
+import com.mengze.domain.entity.*;
+import com.mengze.domain.vo.DeptListVo;
 import com.mengze.domain.vo.DeptOptionVo;
 import com.mengze.mapper.SysDeptMapper;
 import com.mengze.service.SysDeptService;
@@ -17,6 +16,7 @@ import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +38,51 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @Autowired
     private SysRoleDeptService sysRoleDeptService;
 
+    //获取部门列表（树结构）
+    @Override
+    public ResponseResult getDeptList(DeptListDto deptListDto)
+    {
+        //构建查询条件
+        LambdaQueryWrapper<SysDept> queryWrapper = new LambdaQueryWrapper<>();
+
+        //根据关键字查询
+        if (StringUtils.hasText(deptListDto.getKeywords())) {
+            queryWrapper.like(SysDept::getName, deptListDto.getKeywords());
+        }
+
+        //根据状态查询
+        if (StringUtils.hasText(deptListDto.getStatus())) {
+            queryWrapper.eq(SysDept::getStatus, deptListDto.getStatus());
+        }
+
+        //当前登录用户
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        Long currentUserId = loginUser.getSysUser().getId();
+
+        //获取当前用户拥有的数据权限范围
+        applyDeptDataScopeFilter(queryWrapper);
+
+        //查询状态正常的部门,按排序降序
+        queryWrapper.eq(SysDept::getStatus, SystemConstants.STATUS_NORMAL)
+                .orderByAsc(SysDept::getSort);
+
+        //查询所有符合条件的部门
+        List<SysDept> sysDepts = list(queryWrapper);
+
+        //如果不是超级管理员且查出来的部门不包含根节点则补上根节点，保证树能正常展开
+        if (!Objects.equals(currentUserId, 1L)) {
+            sysDepts = addParentDepts(sysDepts);
+        }
+
+        //封装成vo
+        List<DeptListVo> deptListVos = BeanCopyUtils.copyBeanList(sysDepts, DeptListVo.class);
+
+        //构建菜单树
+        List<DeptListVo> deptListTree = builderDeptListTree(deptListVos, 0L);
+
+        return ResponseResult.okResult(deptListTree);
+    }
+
     //获取部门下拉选项（树结构）
     @Override
     public ResponseResult<List<DeptOptionVo>> getDeptOptions()
@@ -49,61 +94,8 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         LoginUser loginUser = SecurityUtils.getLoginUser();
         Long currentUserId = loginUser.getSysUser().getId();
 
-        //超级管理员直接看全部；普通用户按数据权限限制
-        if (!Objects.equals(currentUserId, 1L)) {
-            List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
-            Integer maxDataScope = roles.stream()
-                    .map(SysRole::getDataScope)
-                    .filter(Objects::nonNull)
-                    .min(Integer::compareTo)
-                    .orElse(4);
-
-            //判断用户权限大小
-            String deptId = loginUser.getSysUser().getDeptId();
-            //超级管理员可以看到所有是数据
-            if (!Objects.equals(maxDataScope, 1))
-            {
-                //可查看本部门及子部门
-                if (Objects.equals(maxDataScope, 2)) {
-                    //如果当前用户本身绑定了部门就查出本部门以及所有子部门
-                    if (deptId != null && !deptId.isBlank()) {
-                        List<Long> deptIds = selectDeptAndChildrenIds(Long.valueOf(deptId));
-                        queryWrapper.in(SysDept::getId, deptIds);
-                    } else {
-                        //如果当前用户没有部门信息则只能看自己创建的数据
-                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
-                    }
-                } else if (Objects.equals(maxDataScope, 3)) {
-                    //只能查看本部门数据
-                    if (deptId != null && !deptId.isBlank()) {
-                        queryWrapper.eq(SysDept::getId, Long.valueOf(deptId));
-                    } else {
-                        //如果当前用户没有部门信息则只能看自己创建的数据
-                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
-                    }
-                } else if (Objects.equals(maxDataScope, 4)) {
-                    //只能查看本人创建的数据
-                    queryWrapper.eq(SysDept::getCreateBy, currentUserId);
-                } else if (Objects.equals(maxDataScope, 5)) {
-                    //表示自定义部门权限
-                    //先遍历用户拥有的角色 把所有自定义部门权限对应的部门都查出来
-                    List<Long> deptIds = new ArrayList<>();
-                    for (SysRole role : roles) {
-                        if (Objects.equals(role.getDataScope(), 5)) {
-                            deptIds.addAll(selectDeptAndChildrenIdsByRole(role.getId()));
-                        }
-                    }
-
-                    //如果查到了对应部门就按部门进行过滤
-                    if (!deptIds.isEmpty()) {
-                        queryWrapper.in(SysDept::getId, deptIds);
-                    } else {
-                        //如果没有配置任何自定义部门权限则只能看自己创建的数据
-                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
-                    }
-                }
-            }
-        }
+        //获取当前用户拥有的数据权限范围
+        applyDeptDataScopeFilter(queryWrapper);
 
         //查询状态正常的部门,按排序降序
         queryWrapper.eq(SysDept::getStatus, SystemConstants.STATUS_NORMAL)
@@ -184,7 +176,86 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         }
     }
 
+    //获取当前用户拥有的数据权限范围
+    private void applyDeptDataScopeFilter(LambdaQueryWrapper<SysDept> queryWrapper)
+    {
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        Long currentUserId = loginUser.getSysUser().getId();
 
+        //超级管理员直接看全部；普通用户按数据权限限制
+        if (!Objects.equals(currentUserId, 1L)) {
+            List<SysRole> roles = sysRoleService.selectRolesByUserId(currentUserId);
+            Integer maxDataScope = roles.stream()
+                    .map(SysRole::getDataScope)
+                    .filter(Objects::nonNull)
+                    .min(Integer::compareTo)
+                    .orElse(4);
+
+            //判断用户权限大小
+            String deptId = loginUser.getSysUser().getDeptId();
+            //超级管理员可以看到所有是数据
+            if (!Objects.equals(maxDataScope, 1))
+            {
+                //可查看本部门及子部门
+                if (Objects.equals(maxDataScope, 2)) {
+                    //如果当前用户本身绑定了部门就查出本部门以及所有子部门
+                    if (deptId != null && !deptId.isBlank()) {
+                        List<Long> deptIds = selectDeptAndChildrenIds(Long.valueOf(deptId));
+                        queryWrapper.in(SysDept::getId, deptIds);
+                    } else {
+                        //如果当前用户没有部门信息则只能看自己创建的数据
+                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
+                    }
+                } else if (Objects.equals(maxDataScope, 3)) {
+                    //只能查看本部门数据
+                    if (deptId != null && !deptId.isBlank()) {
+                        queryWrapper.eq(SysDept::getId, Long.valueOf(deptId));
+                    } else {
+                        //如果当前用户没有部门信息则只能看自己创建的数据
+                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
+                    }
+                } else if (Objects.equals(maxDataScope, 4)) {
+                    //只能查看本人创建/拥有的数据
+                    queryWrapper.eq(SysDept::getCreateBy, currentUserId);
+                } else if (Objects.equals(maxDataScope, 5)) {
+                    //表示自定义部门权限
+                    //先遍历用户拥有的角色 把所有自定义部门权限对应的部门都查出来
+                    List<Long> deptIds = new ArrayList<>();
+                    for (SysRole role : roles) {
+                        if (Objects.equals(role.getDataScope(), 5)) {
+                            deptIds.addAll(selectDeptAndChildrenIdsByRole(role.getId()));
+                        }
+                    }
+
+                    //如果查到了对应部门就按部门进行过滤
+                    if (!deptIds.isEmpty()) {
+                        queryWrapper.in(SysDept::getId, deptIds);
+                    } else {
+                        //如果没有配置任何自定义部门权限则只能看自己创建的数据
+                        queryWrapper.eq(SysDept::getCreateBy, currentUserId);
+                    }
+                }
+            }
+        }
+    }
+
+    //创建DeptList的菜单树
+    private List<DeptListVo> builderDeptListTree(List<DeptListVo> deptListVos, Long parentId)
+    {
+        return deptListVos.stream()
+                .filter(deptListVo -> parentId.equals(deptListVo.getParentId()))
+                .map(menu -> menu.setChildren(getChildrenByDeptList(menu, deptListVos)))
+                .collect(Collectors.toList());
+    }
+
+    //获取传入参数的 子部门集合
+    private List<DeptListVo> getChildrenByDeptList(DeptListVo deptListVo, List<DeptListVo> deptListVos)
+    {
+        return deptListVos.stream()
+                .filter(child -> deptListVo.getId().equals(child.getParentId()))
+                .map(child -> child.setChildren(getChildrenByDeptList(child, deptListVos)))
+                .collect(Collectors.toList());
+    }
 
     //创建DeptOptions的菜单树
     private List<DeptOptionVo> builderDeptOptionsTree(List<DeptOptionVo> deptOptionVos, Long parentId)

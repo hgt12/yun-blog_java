@@ -2,14 +2,19 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.DeptListDto;
 import com.mengze.domain.vo.DeptOptionVo;
+import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysDeptService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * 部门接口
@@ -22,11 +27,14 @@ public class DeptController
     @Autowired
     private SysDeptService sysDeptService;
 
-
-
-
-
-
+    @GetMapping
+    @PreAuthorize("@ps.hasPermission('sys:dept:query')")
+    @SystemLog(businessName = "部门树列表")
+    @ApiOperation(value = "部门树列表", notes = "获取部门树列表（不分页）", response = PageVo.class)
+    public ResponseResult getDeptList(@Valid DeptListDto deptListDto)
+    {
+        return sysDeptService.getDeptList(deptListDto);
+    }
 
     @GetMapping("/options")
     @SystemLog(businessName = "部门下拉选项")
