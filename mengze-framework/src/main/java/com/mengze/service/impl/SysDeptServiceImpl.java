@@ -62,9 +62,8 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         //获取当前用户拥有的数据权限范围
         applyDeptDataScopeFilter(queryWrapper);
 
-        //查询状态正常的部门,按排序降序
-        queryWrapper.eq(SysDept::getStatus, SystemConstants.STATUS_NORMAL)
-                .orderByAsc(SysDept::getSort);
+        //按排序降序
+        queryWrapper.orderByAsc(SysDept::getSort);
 
         //查询所有符合条件的部门
         List<SysDept> sysDepts = list(queryWrapper);
