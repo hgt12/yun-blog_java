@@ -8,6 +8,7 @@ import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.dto.UpdateDictDto;
 import com.mengze.domain.entity.SysDictItem;
 import com.mengze.domain.vo.DictFormDetailVo;
+import com.mengze.domain.vo.DictItemOptionVo;
 import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysDictItemService;
@@ -110,5 +111,13 @@ public class DictController
     public ResponseResult getDictItemList(Integer pageNum, Integer pageSize, @PathVariable String dictCode, @Valid DictItemListDto dictItemListDto)
     {
         return sysDictItemService.getDictItemList(pageNum, pageSize, dictCode, dictItemListDto);
+    }
+
+    @GetMapping("/{dictCode}/items/options")
+    @SystemLog(businessName = "字典项下拉选项接口")
+    @ApiOperation(value = "字典项下拉选项接口", notes = "获取字典项下拉数据", response = DictItemOptionVo.class, responseContainer = "List")
+    public ResponseResult getDictItemOptions(@PathVariable String dictCode)
+    {
+        return sysDictItemService.getDictItemOptions(dictCode);
     }
 }

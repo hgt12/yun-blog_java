@@ -17,5 +17,6 @@ public interface SysDictItemService extends IService<SysDictItem> {
 
     ResponseResult getDictItemList(Integer pageNum, Integer pageSize, String dictCode, DictItemListDto dictItemListDto);
 
+    ResponseResult getDictItemOptions(String dictCode);
 }
 
