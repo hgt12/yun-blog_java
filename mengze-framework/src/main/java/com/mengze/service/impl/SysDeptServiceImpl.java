@@ -6,6 +6,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDeptDto;
 import com.mengze.domain.dto.DeptListDto;
+import com.mengze.domain.dto.UpdateDeptDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptListVo;
@@ -15,10 +16,12 @@ import com.mengze.mapper.SysDeptMapper;
 import com.mengze.service.SysDeptService;
 import com.mengze.service.SysRoleDeptService;
 import com.mengze.service.SysRoleService;
+import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -43,6 +46,9 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
     @Autowired
     private SysDeptService sysDeptService;
+
+    @Autowired
+    private SysUserService sysUserService;
 
     //获取部门列表（树结构）
     @Override
@@ -145,40 +151,44 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     public ResponseResult addDept(AddDeptDto addDeptDto)
     {
         //检测部门名称与部门编号是否已经纯在
-        LambdaQueryWrapper<SysDept> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SysDept::getName, addDeptDto.getName())
-                    .eq(SysDept::getCode, addDeptDto.getCode());
-        long count = sysDeptService.count(queryWrapper);
+        LambdaQueryWrapper<SysDept> nameWrapper = new LambdaQueryWrapper<>();
+        nameWrapper.eq(SysDept::getName, addDeptDto.getName());
+        if (sysDeptService.count(nameWrapper) > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门名称已存在，请勿重复添加！");
+        }
 
-        if (count > 0) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门名称或编号已存在，请勿重复添加！");
+        LambdaQueryWrapper<SysDept> codeWrapper = new LambdaQueryWrapper<>();
+        codeWrapper.eq(SysDept::getCode, addDeptDto.getCode());
+        if (sysDeptService.count(codeWrapper) > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门编号已存在，请勿重复添加！");
         }
 
         //添加部门
-        SysDept parentDept = sysDeptService.getById(addDeptDto.getParentId());
-        if (parentDept == null) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "上级部门不存在！");
-        }
-
         SysDept sysDept = BeanCopyUtils.copyBean(addDeptDto, SysDept.class);
-        sysDept.setParentId(addDeptDto.getParentId());
+        Long parentId = addDeptDto.getParentId();
+        sysDept.setParentId(parentId);
 
-        //添加父节点路径：根节点为 0，子节点为 父节点路径,父节点ID
-        if (Objects.equals(sysDept.getParentId(), 0L)) {
-            sysDept.setTreePath(SystemConstants.PARENT_NODE_PATH);
+        //顶级部门设置 treePath
+        if (Objects.equals(parentId, 0L)) {
+            sysDept.setTreePath(SystemConstants.PARENT_NODE_PATH);//如果当前部门是顶级部门直接赋值 0
         } else {
-            String parentTreePath = parentDept.getTreePath();
-            if (parentTreePath == null || parentTreePath.isBlank()) {
-                sysDept.setTreePath(String.valueOf(parentDept.getParentId() == null ? 0L : parentDept.getParentId()));
-            } else {
-                sysDept.setTreePath(parentTreePath + "," + parentDept.getId());
+            SysDept parentDept = sysDeptService.getById(parentId);//如果不是顶级部门就先查父部门是否存在
+            if (parentDept == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "上级部门不存在！");
             }
+            String parentTreePath = parentDept.getTreePath();//再取父部门的路径再用","拼接出当前部门完整的层级路径
+            if (parentTreePath == null || parentTreePath.isBlank()) {
+                parentTreePath = SystemConstants.PARENT_NODE_PATH;
+            }
+            sysDept.setTreePath(parentTreePath + "," + parentDept.getId());
         }
 
         sysDeptService.save(sysDept);
 
         return ResponseResult.okResult();
     }
+
+
 
     //查询部门及其子部门id
     @Override
