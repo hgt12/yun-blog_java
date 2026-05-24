@@ -12,10 +12,13 @@ import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictMapper;
 import com.mengze.domain.entity.SysDict;
+import com.mengze.domain.entity.SysDictItem;
+import com.mengze.service.SysDictItemService;
 import com.mengze.service.SysDictService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -33,6 +36,9 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 {
     @Autowired
     private SysDictService sysDictService;
+
+    @Autowired
+    private SysDictItemService sysDictItemService;
 
     //获取字典列表
     @Override
@@ -138,6 +144,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 
     //更新字典
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseResult updateDict(Long id, UpdateDictDto updateDictDto)
     {
         //检查字典是否存在
@@ -164,12 +171,31 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "字典编码已存在，请修改后重试！");
         }
 
-        //TODO 检查该字典是否正在使用，如果正在使用则无法禁止
-
         //更新字典
         SysDict dict = BeanCopyUtils.copyBean(updateDictDto, SysDict.class);
         dict.setId(id);
-        sysDictService.updateById(dict);
+
+        //修改字典信息（dict_code）时自动把原来属于这个字典的所有字典项里的数据也一起更新
+        boolean result = sysDictService.updateById(dict);
+        if (result) {
+            //查询当前字典编码下的所有字典项 然后只取字典项的id 方便后续批量更新
+            List<SysDictItem> dictItemList = sysDictItemService.list(
+                    new LambdaQueryWrapper<SysDictItem>()
+                            .eq(SysDictItem::getDictCode, oldDict.getDictCode())
+                            .select(SysDictItem::getId)
+            );
+
+            //如果存在该字典下的字典项 则把它们的 dictCode 一并改成新的字典编码
+            if (!dictItemList.isEmpty()){
+                List<Long> dictItemIds = dictItemList.stream().map(SysDictItem::getId).toList();
+                SysDictItem dictItem = new SysDictItem();
+                dictItem.setDictCode(dict.getDictCode());
+                sysDictItemService.update(dictItem,
+                        new LambdaQueryWrapper<SysDictItem>()
+                                .in(SysDictItem::getId, dictItemIds)
+                );
+            }
+        }
 
         return ResponseResult.okResult();
     }
@@ -200,8 +226,6 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下字典 id 不存在：" + notExistIds);
         }
-
-        //TODO 和上面接口一样检查该字典是否正在使用，如果正在使用则无法删除
 
         //根据部门id列表删除字典
         sysDictService.removeByIds(idList);
