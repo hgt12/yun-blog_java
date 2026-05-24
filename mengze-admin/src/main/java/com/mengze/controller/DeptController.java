@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDeptDto;
 import com.mengze.domain.dto.DeptListDto;
+import com.mengze.domain.dto.UpdateDeptDto;
 import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptOptionVo;
 import com.mengze.domain.vo.PageVo;
@@ -64,4 +65,13 @@ public class DeptController
         return sysDeptService.addDept(addDeptDto);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:dept:update')")
+    @SystemLog(businessName = "编辑部门接口")
+    @ApiOperation(value = "编辑部门接口", notes = "编辑部门", response = String.class)
+    @ApiImplicitParam(name = "id", value = "部门ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateDept(@PathVariable Long id, @Valid @RequestBody UpdateDeptDto updateDeptDto)
+    {
+        return sysDeptService.updateDept(id, updateDeptDto);
+    }
 }

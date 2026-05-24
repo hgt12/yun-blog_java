@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDeptDto;
 import com.mengze.domain.dto.DeptListDto;
+import com.mengze.domain.dto.UpdateDeptDto;
 import com.mengze.domain.entity.SysDept;
 import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptOptionVo;
@@ -27,5 +28,7 @@ public interface SysDeptService extends IService<SysDept> {
     ResponseResult<DeptFormDetailVo> getDeptFormDetail(Long id);
 
     ResponseResult addDept(AddDeptDto addDeptDto);
+
+    ResponseResult updateDept(Long id, UpdateDeptDto updateDeptDto);
 }
 

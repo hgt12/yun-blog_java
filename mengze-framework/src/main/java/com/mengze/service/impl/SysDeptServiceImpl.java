@@ -188,7 +188,74 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         return ResponseResult.okResult();
     }
 
+    //更新部门
+    @Override
+    @Transactional
+    public ResponseResult updateDept(Long id, UpdateDeptDto updateDeptDto)
+    {
+        //检查部门是否存在
+        SysDept oldDept = sysDeptService.getById(id);
+        if (oldDept == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该部门不存在！");
+        }
 
+        //校验部门名称是否重复(排除自己)
+        LambdaQueryWrapper<SysDept> nameQueryWrapper = new LambdaQueryWrapper<>();
+        nameQueryWrapper.eq(SysDept::getName, updateDeptDto.getName())
+                        .ne(SysDept::getId, id);
+        long nameCount = sysDeptService.count(nameQueryWrapper);
+        if (nameCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门名称已存在，请修改后重试！");
+        }
+
+        //校验部门编号是否重复(排除自己)
+        LambdaQueryWrapper<SysDept> codeQueryWrapper = new LambdaQueryWrapper<>();
+        codeQueryWrapper.eq(SysDept::getCode, updateDeptDto.getCode())
+                        .ne(SysDept::getId, id);
+        long codeCount = sysDeptService.count(codeQueryWrapper);
+        if (codeCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门编号已存在，请修改后重试！");
+        }
+
+        //检查是否将部门状态从正常改为禁用
+        if (SystemConstants.STATUS_NORMAL.equals(oldDept.getStatus())
+                && !SystemConstants.STATUS_NORMAL.equals(updateDeptDto.getStatus())) {
+            //统计该部门下的成员数量
+            LambdaQueryWrapper<SysUser> userQueryWrapper = new LambdaQueryWrapper<>();
+            userQueryWrapper.eq(SysUser::getId, id);
+            long userCount = sysUserService.count(userQueryWrapper);
+
+            if (userCount > 0) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该部门下存在成员，不可禁用！");
+            }
+        }
+
+        //获取 父节点ID路径
+        Long parentId = updateDeptDto.getParentId();
+        oldDept.setParentId(parentId);
+
+        //顶级部门设置 treePath
+        if (Objects.equals(parentId, 0L)) {
+            oldDept.setTreePath(SystemConstants.PARENT_NODE_PATH);//如果当前部门是顶级部门直接赋值 0
+        } else {
+            SysDept parentDept = sysDeptService.getById(parentId);//如果不是顶级部门就先查父部门是否存在
+            if (parentDept == null) {
+                return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "上级部门不存在！");
+            }
+            String parentTreePath = parentDept.getTreePath();//再取父部门的路径再用","拼接出当前部门完整的层级路径
+            if (parentTreePath == null || parentTreePath.isBlank()) {
+                parentTreePath = SystemConstants.PARENT_NODE_PATH;
+            }
+            oldDept.setTreePath(parentTreePath + "," + parentDept.getId());
+        }
+
+        //更新部门信息
+        SysDept sysDept = BeanCopyUtils.copyBean(updateDeptDto, SysDept.class);
+        sysDept.setId(id);
+        sysDeptService.updateById(sysDept);
+
+        return ResponseResult.okResult();
+    }
 
     //查询部门及其子部门id
     @Override
