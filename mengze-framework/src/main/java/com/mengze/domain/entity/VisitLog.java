@@ -24,7 +24,7 @@ public class VisitLog extends Model<VisitLog> {
     @TableId
     //日志ID
     private Long id;
-    //访问者IP地址（不明文入库）
+    //访问者IP地址
     private String ip;
     //操作人（游客/用户（显示用户名））
     private String operator;

@@ -95,7 +95,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         }
 
         // IP 脱敏：保留前三段，末段替换为 *（如 192.168.1.*）
-        String maskedIp = maskIp(ip);
+        //String maskedIp = maskIp(ip);
 
         // 判断操作人：登录用户显示用户名，否则显示“游客”
         String operator = SystemConstants.OPERATOR_IS_VISITOR;
@@ -111,7 +111,8 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
 
         // 访问日志写入 Redis 队列，由定时任务批量保存到数据库
         VisitLog visitLog = new VisitLog();
-        visitLog.setIp(maskedIp);
+        //visitLog.setIp(maskedIp);//使用脱敏的ip进行记录
+        visitLog.setIp(ip);//不使用脱敏的ip进行记录
         visitLog.setOperator(operator);
         visitLog.setRegion(region);
 

@@ -17,7 +17,7 @@ public class VisitLogListVo
     @ApiModelProperty(value = "日志ID", example = "1")
     private Long id;
 
-    @ApiModelProperty(value = "访问者IP地址（不明文入库）", example = "127.0.0.0")
+    @ApiModelProperty(value = "访问者IP地址", example = "127.0.0.0")
     private String ip;
 
     @ApiModelProperty(value = "操作人（游客/用户（显示用户名））", example = "云梦泽")

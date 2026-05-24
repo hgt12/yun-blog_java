@@ -25,7 +25,7 @@ public class UniqueVisitor extends Model<UniqueVisitor> {
     private Long id;
     //访客标识哈希值（IP+User-Agent的MD5）
     private String visitorHash;
-    //访问者IP地址（不明文入库）
+    //访问者IP地址
     private String ip;
     //首次访问时间
     private Date firstVisitTime;

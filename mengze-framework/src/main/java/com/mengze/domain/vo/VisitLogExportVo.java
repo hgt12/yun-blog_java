@@ -71,7 +71,7 @@ public class VisitLogExportVo
     @ColumnWidth(30)
     @ExcelProperty(value = "IP地址", index = 7)
     @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER)
-    @ApiModelProperty(value = "访问者IP地址（不明文入库）", example = "127.0.0.0")
+    @ApiModelProperty(value = "访问者IP地址", example = "127.0.0.0")
     private String ip;
 
     @ColumnWidth(30)
