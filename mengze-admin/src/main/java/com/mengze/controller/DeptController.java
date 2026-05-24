@@ -74,4 +74,14 @@ public class DeptController
     {
         return sysDeptService.updateDept(id, updateDeptDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:dept:delete')")
+    @SystemLog(businessName = "删除部门接口(逻辑删除)")
+    @ApiOperation(value = "删除部门接口（批量逻辑删除）", notes = "删除部门，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "部门id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteDept(@PathVariable Long[] ids)
+    {
+        return sysDeptService.deleteDept(ids);
+    }
 }

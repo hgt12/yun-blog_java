@@ -30,5 +30,7 @@ public interface SysDeptService extends IService<SysDept> {
     ResponseResult addDept(AddDeptDto addDeptDto);
 
     ResponseResult updateDept(Long id, UpdateDeptDto updateDeptDto);
+
+    ResponseResult deleteDept(Long[] ids);
 }
 

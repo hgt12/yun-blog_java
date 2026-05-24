@@ -24,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -253,6 +251,68 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         SysDept sysDept = BeanCopyUtils.copyBean(updateDeptDto, SysDept.class);
         sysDept.setId(id);
         sysDeptService.updateById(sysDept);
+
+        return ResponseResult.okResult();
+    }
+
+    //批量删除部门（逻辑删除）
+    @Override
+    @Transactional
+    public ResponseResult deleteDept(Long[] ids)
+    {
+        //检查是否有选择到要删除的部门
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的部门");
+        }
+
+        //获取部门id列表
+        List<Long> idList = List.of(ids);
+
+        //检查选择的部门是否存在
+        List<SysDept> deptsToDelete = sysDeptService.listByIds(idList);
+        if (deptsToDelete.size() != ids.length){
+            //如果有不存在的部门，就找出对应的部门id
+            Set<Long> existIds = deptsToDelete.stream()
+                    .map(SysDept::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下部门 id 不存在：" + notExistIds);
+        }
+
+        StringBuilder errorMsg = new StringBuilder();
+
+        //收集所有部门（包含子部门）并检查是否存在成员
+        for (Long deptId : idList) {
+            List<Long> deptAndChildrenIds = selectDeptAndChildrenIds(deptId);
+            for (Long currentDeptId : deptAndChildrenIds) {
+                LambdaQueryWrapper<SysUser> userQueryWrapper = new LambdaQueryWrapper<>();
+                userQueryWrapper.eq(SysUser::getDeptId, currentDeptId);
+
+                long userCount = sysUserService.count(userQueryWrapper);
+
+                if (userCount > 0) {
+                    //如果该部门或其子部门下存在用户并生成错误信息
+                    SysDept dept = sysDeptService.getById(currentDeptId);
+                    String deptName = dept != null ? dept.getName() : "ID:" + currentDeptId;
+                    if (!errorMsg.isEmpty()) {
+                        errorMsg.append("; ");
+                    }
+                    errorMsg.append("【").append(deptName).append("】下存在 ").append(userCount).append(" 位成员");
+                }
+            }
+        }
+
+        //如果有部门中存在成员，返回所有错误信息
+        if (!errorMsg.isEmpty()) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg + "，无法删除");
+        }
+
+        //根据部门id列表删除部门
+        sysDeptService.removeByIds(idList);
 
         return ResponseResult.okResult();
     }
