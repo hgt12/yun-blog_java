@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
+import com.mengze.domain.dto.UpdateDictDto;
 import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.vo.DictFormDetailVo;
 
@@ -22,5 +23,7 @@ public interface SysDictService extends IService<SysDict> {
     ResponseResult<DictFormDetailVo> getDictFormDetail(Long id);
 
     ResponseResult addDict(AddDictDto addDictDto);
+
+    ResponseResult updateDict(Long id, UpdateDictDto updateDictDto);
 }
 

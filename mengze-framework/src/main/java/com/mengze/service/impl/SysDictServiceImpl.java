@@ -7,6 +7,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
+import com.mengze.domain.dto.UpdateDictDto;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictMapper;
@@ -129,6 +130,44 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
         //添加字典
         SysDict dict = BeanCopyUtils.copyBean(addDictDto, SysDict.class);
         sysDictService.save(dict);
+
+        return ResponseResult.okResult();
+    }
+
+    //更新字典
+    @Override
+    public ResponseResult updateDict(Long id, UpdateDictDto updateDictDto)
+    {
+        //检查字典是否存在
+        SysDict oldDict = sysDictService.getById(id);
+        if (oldDict == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该字典不存在！");
+        }
+
+        //校验字典名称是否重复(排除自己)
+        LambdaQueryWrapper<SysDict> nameQueryWrapper = new LambdaQueryWrapper<>();
+        nameQueryWrapper.eq(SysDict::getName, updateDictDto.getName())
+                        .ne(SysDict::getId, id);
+        long nameCount = sysDictService.count(nameQueryWrapper);
+        if (nameCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "字典名称已存在，请修改后重试！");
+        }
+
+        //校验字典编码是否重复(排除自己)
+        LambdaQueryWrapper<SysDict> codeQueryWrapper = new LambdaQueryWrapper<>();
+        codeQueryWrapper.eq(SysDict::getDictCode, updateDictDto.getDictCode())
+                        .ne(SysDict::getId, id);
+        long codeCount = sysDictService.count(codeQueryWrapper);
+        if (codeCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "字典编码已存在，请修改后重试！");
+        }
+
+        //TODO 检查该字典是否正在使用，如果正在使用则无法禁止
+
+        //更新字典
+        SysDict dict = BeanCopyUtils.copyBean(updateDictDto, SysDict.class);
+        dict.setId(id);
+        sysDictService.updateById(dict);
 
         return ResponseResult.okResult();
     }

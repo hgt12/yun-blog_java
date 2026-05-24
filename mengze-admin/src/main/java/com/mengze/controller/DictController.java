@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
+import com.mengze.domain.dto.UpdateDictDto;
 import com.mengze.domain.vo.DictFormDetailVo;
 import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
@@ -70,5 +71,15 @@ public class DictController
     public ResponseResult addDict(@Valid @RequestBody AddDictDto addDictDto)
     {
         return sysDictService.addDict(addDictDto);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @SystemLog(businessName = "修改字典接口")
+    @ApiOperation(value = "编辑字典接口", notes = "编辑字典", response = String.class)
+    @ApiImplicitParam(name = "id", value = "字典ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateDict(@PathVariable Long id, @Valid @RequestBody UpdateDictDto updateDictDto)
+    {
+        return sysDictService.updateDict(id, updateDictDto);
     }
 }
