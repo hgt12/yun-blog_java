@@ -8,6 +8,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.dto.UpdateDictDto;
+import com.mengze.domain.entity.SysDept;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictMapper;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 数据字典类型表(SysDict)表服务实现类
@@ -168,6 +171,41 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
         SysDict dict = BeanCopyUtils.copyBean(updateDictDto, SysDict.class);
         dict.setId(id);
         sysDictService.updateById(dict);
+
+        return ResponseResult.okResult();
+    }
+
+    //删除字典
+    @Override
+    public ResponseResult deleteDict(Long[] ids)
+    {
+        //检查是否有选择到要删除的字典
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的字典");
+        }
+
+        //获取字典id列表
+        List<Long> idList = List.of(ids);
+
+        //检查选择的字典是否存在
+        List<SysDict> dictsToDelete = sysDictService.listByIds(idList);
+        if (dictsToDelete.size() != ids.length){
+            //如果有不存在的字典，就找出对应的字典id
+            Set<Long> existIds = dictsToDelete.stream()
+                    .map(SysDict::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下字典 id 不存在：" + notExistIds);
+        }
+
+        //TODO 和上面接口一样检查该字典是否正在使用，如果正在使用则无法删除
+
+        //根据部门id列表删除字典
+        sysDictService.removeByIds(idList);
 
         return ResponseResult.okResult();
     }

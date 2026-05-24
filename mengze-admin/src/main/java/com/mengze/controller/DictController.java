@@ -82,4 +82,14 @@ public class DictController
     {
         return sysDictService.updateDict(id, updateDictDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:dict:delete')")
+    @SystemLog(businessName = "删除字典(逻辑删除)")
+    @ApiOperation(value = "删除字典接口（批量逻辑删除）", notes = "删除字典，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "字典id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteDict(@PathVariable Long[] ids)
+    {
+        return sysDictService.deleteDict(ids);
+    }
 }

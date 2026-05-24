@@ -25,5 +25,7 @@ public interface SysDictService extends IService<SysDict> {
     ResponseResult addDict(AddDictDto addDictDto);
 
     ResponseResult updateDict(Long id, UpdateDictDto updateDictDto);
+
+    ResponseResult deleteDict(Long[] ids);
 }
 
