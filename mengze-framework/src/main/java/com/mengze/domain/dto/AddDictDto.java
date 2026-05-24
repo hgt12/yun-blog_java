@@ -19,7 +19,7 @@ import javax.validation.constraints.Pattern;
 public class AddDictDto {
 
     @NotBlank(message = "字典名称不能为空")
-    @ApiModelProperty(value = "部门名称", required = true, example = "性别")
+    @ApiModelProperty(value = "字典名称", required = true, example = "性别")
     private String name;
 
     @NotBlank(message = "字典名称不能为空")
