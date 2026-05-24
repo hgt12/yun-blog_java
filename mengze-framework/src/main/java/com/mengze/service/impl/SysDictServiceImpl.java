@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -104,6 +105,32 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 
         //返回
         return ResponseResult.okResult(dictFormDetailVo);
+    }
+
+    //添加字典
+    @Override
+    public ResponseResult addDict(AddDictDto addDictDto)
+    {
+        // 检查字典名称和字典编码是否已存在
+        LambdaQueryWrapper<SysDict> nameWrapper = new LambdaQueryWrapper<>();
+        nameWrapper.eq(SysDict::getName, addDictDto.getName());
+        long nameCount = sysDictService.count(nameWrapper);
+        if (nameCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "字典名称已存在，请勿重复添加！");
+        }
+
+        LambdaQueryWrapper<SysDict> codeWrapper = new LambdaQueryWrapper<>();
+        codeWrapper.eq(SysDict::getDictCode, addDictDto.getDictCode());
+        long codeCount = sysDictService.count(codeWrapper);
+        if (codeCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "字典编码已存在，请勿重复添加！");
+        }
+
+        //添加字典
+        SysDict dict = BeanCopyUtils.copyBean(addDictDto, SysDict.class);
+        sysDictService.save(dict);
+
+        return ResponseResult.okResult();
     }
 }
 
