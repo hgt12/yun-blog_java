@@ -6,9 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictListDto;
-import com.mengze.domain.vo.DictListVo;
-import com.mengze.domain.vo.DictOptionVo;
-import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.*;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictMapper;
 import com.mengze.domain.entity.SysDict;
 import com.mengze.service.SysDictService;
@@ -88,6 +87,23 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
         List<DictOptionVo> dictOptionVos = BeanCopyUtils.copyBeanList(dictList, DictOptionVo.class);
 
         return ResponseResult.okResult(dictOptionVos);
+    }
+
+    //获取字典表单数据
+    @Override
+    public ResponseResult<DictFormDetailVo> getDictFormDetail(Long id)
+    {
+        //根据分类id 查询分类
+        SysDict dict = sysDictService.getById(id);
+        if (dict == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该字典不存在！");
+        }
+
+        //转换成Vo
+        DictFormDetailVo dictFormDetailVo = BeanCopyUtils.copyBean(dict, DictFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(dictFormDetailVo);
     }
 }
 

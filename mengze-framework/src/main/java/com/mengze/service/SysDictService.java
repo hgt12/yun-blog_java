@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.entity.SysDict;
+import com.mengze.domain.vo.DictFormDetailVo;
 
 /**
  * 数据字典类型表(SysDict)表服务接口
@@ -16,5 +17,7 @@ public interface SysDictService extends IService<SysDict> {
     ResponseResult getDictList(Integer pageNum, Integer pageSize, DictListDto dictListDto);
 
     ResponseResult getDictOptions();
+
+    ResponseResult<DictFormDetailVo> getDictFormDetail(Long id);
 }
 
