@@ -8,7 +8,6 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.dto.UpdateDictDto;
-import com.mengze.domain.entity.SysDept;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictMapper;
