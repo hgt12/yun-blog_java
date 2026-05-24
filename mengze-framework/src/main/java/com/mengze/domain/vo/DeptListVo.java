@@ -30,6 +30,9 @@ public class DeptListVo
     @ApiModelProperty(value = "部门名称", example = "总部")
     private String name;
 
+    @ApiModelProperty(value = "部门编号", example = "ROOT")
+    private String code;
+
     @ApiModelProperty(value = "排序", example = "5")
     private Integer sort;
 
