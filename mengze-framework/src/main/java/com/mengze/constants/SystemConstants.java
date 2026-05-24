@@ -207,4 +207,8 @@ public class SystemConstants
      *  验证类型：忘记密码
      */
     public static final String VERIFY_TYPE_FORGOT_PASSWORD = "forgot_password";
+    /**
+     *  父节点路径：Parent Node Path
+     */
+    public static final String PARENT_NODE_PATH = "0";
 }

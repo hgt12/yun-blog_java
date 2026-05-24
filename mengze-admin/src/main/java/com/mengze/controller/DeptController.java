@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddDeptDto;
 import com.mengze.domain.dto.DeptListDto;
 import com.mengze.domain.vo.DeptFormDetailVo;
 import com.mengze.domain.vo.DeptOptionVo;
@@ -12,10 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -57,5 +55,13 @@ public class DeptController
         return sysDeptService.getDeptFormDetail(id);
     }
 
+    @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:dept:create')")
+    @SystemLog(businessName = "新增部门接口")
+    @ApiOperation(value = "新增部门接口", notes = "新增部门", response = String.class)
+    public ResponseResult addDept(@Valid @RequestBody AddDeptDto addDeptDto)
+    {
+        return sysDeptService.addDept(addDeptDto);
+    }
 
 }

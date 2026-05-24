@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddDeptDto;
 import com.mengze.domain.dto.DeptListDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.DeptFormDetailVo;
@@ -137,6 +138,46 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
         //返回
         return ResponseResult.okResult(deptFormDetailVo);
+    }
+
+    //添加部门
+    @Override
+    public ResponseResult addDept(AddDeptDto addDeptDto)
+    {
+        //检测部门名称与部门编号是否已经纯在
+        LambdaQueryWrapper<SysDept> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysDept::getName, addDeptDto.getName())
+                    .eq(SysDept::getCode, addDeptDto.getCode());
+        long count = sysDeptService.count(queryWrapper);
+
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门名称或编号已存在，请勿重复添加！");
+        }
+
+        //添加部门
+        SysDept parentDept = sysDeptService.getById(addDeptDto.getParentId());
+        if (parentDept == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "上级部门不存在！");
+        }
+
+        SysDept sysDept = BeanCopyUtils.copyBean(addDeptDto, SysDept.class);
+        sysDept.setParentId(addDeptDto.getParentId());
+
+        //添加父节点路径：根节点为 0，子节点为 父节点路径,父节点ID
+        if (Objects.equals(sysDept.getParentId(), 0L)) {
+            sysDept.setTreePath(SystemConstants.PARENT_NODE_PATH);
+        } else {
+            String parentTreePath = parentDept.getTreePath();
+            if (parentTreePath == null || parentTreePath.isBlank()) {
+                sysDept.setTreePath(String.valueOf(parentDept.getParentId() == null ? 0L : parentDept.getParentId()));
+            } else {
+                sysDept.setTreePath(parentTreePath + "," + parentDept.getId());
+            }
+        }
+
+        sysDeptService.save(sysDept);
+
+        return ResponseResult.okResult();
     }
 
     //查询部门及其子部门id
