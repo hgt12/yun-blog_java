@@ -3,11 +3,14 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictDto;
+import com.mengze.domain.dto.DictItemListDto;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.dto.UpdateDictDto;
+import com.mengze.domain.entity.SysDictItem;
 import com.mengze.domain.vo.DictFormDetailVo;
 import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.service.SysDictItemService;
 import com.mengze.service.SysDictService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -29,6 +32,9 @@ public class DictController
 {
     @Autowired
     private SysDictService sysDictService;
+
+    @Autowired
+    private SysDictItemService sysDictItemService;
 
     @GetMapping
     @PreAuthorize("@ps.hasPermission('blog:dict:query')")
@@ -91,5 +97,18 @@ public class DictController
     public ResponseResult deleteDict(@PathVariable Long[] ids)
     {
         return sysDictService.deleteDict(ids);
+    }
+
+    @GetMapping("/{dictCode}/items")
+    @PreAuthorize("@ps.hasPermission('blog:dict:query')")
+    @SystemLog(businessName = "分页查询字典项列表")
+    @ApiOperation(value = "字典项列表", notes = "分页查询字典项列表", response = PageVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
+    })
+    public ResponseResult getDictItemList(Integer pageNum, Integer pageSize, @PathVariable String dictCode, @Valid DictItemListDto dictItemListDto)
+    {
+        return sysDictItemService.getDictItemList(pageNum, pageSize, dictCode, dictItemListDto);
     }
 }
