@@ -212,7 +212,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
                         .ne(SysDept::getId, id);
         long codeCount = sysDeptService.count(codeQueryWrapper);
         if (codeCount > 0) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门编号已存在，请修改后重试！");
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "部门编码已存在，请修改后重试！");
         }
 
         //检查是否将部门状态从正常改为禁用
