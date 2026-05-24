@@ -2,10 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
-import com.mengze.domain.dto.AddDictDto;
-import com.mengze.domain.dto.DictItemListDto;
-import com.mengze.domain.dto.DictListDto;
-import com.mengze.domain.dto.UpdateDictDto;
+import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.DictFormDetailVo;
 import com.mengze.domain.vo.DictItemFormDetailVo;
 import com.mengze.domain.vo.DictItemOptionVo;
@@ -134,5 +131,14 @@ public class DictController
     public ResponseResult<DictItemFormDetailVo> getDictItemFormDetail(@PathVariable Long id, @PathVariable String dictCode)
     {
         return sysDictItemService.getDictItemFormDetail(id, dictCode);
+    }
+
+    @PostMapping("/{dictCode}/items")
+    @PreAuthorize("@ps.hasPermission('blog:dict:create')")
+    @SystemLog(businessName = "新增字典项")
+    @ApiOperation(value = "新增字典项接口", notes = "新增字典项", response = String.class)
+    public ResponseResult addDictItem(@PathVariable String dictCode, @Valid @RequestBody AddDictItemDto addDictItemDto)
+    {
+        return sysDictItemService.addDictItem(dictCode, addDictItemDto);
     }
 }

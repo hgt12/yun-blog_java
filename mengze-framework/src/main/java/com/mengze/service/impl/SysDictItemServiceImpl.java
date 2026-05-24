@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddDictItemDto;
 import com.mengze.domain.dto.DictItemListDto;
 import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.vo.*;
@@ -131,6 +132,35 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
 
         //返回
         return ResponseResult.okResult(dictItemFormDetailVo);
+    }
+
+    //添加字典项
+    @Override
+    public ResponseResult addDictItem(String dictCode, AddDictItemDto addDictItemDto)
+    {
+        //检查同一个字典编码（dict_code）下的字典项标签（label）和字典项值（value）是否重复
+        LambdaQueryWrapper<SysDictItem> labelWrapper = new LambdaQueryWrapper<>();
+        labelWrapper.eq(SysDictItem::getDictCode, dictCode)
+                    .eq(SysDictItem::getLabel, addDictItemDto.getLabel());
+        long labelCount = sysDictItemService.count(labelWrapper);
+        if (labelCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "当前字典下字典项标签已存在，请勿重复添加！");
+        }
+
+        LambdaQueryWrapper<SysDictItem> valueWrapper = new LambdaQueryWrapper<>();
+        valueWrapper.eq(SysDictItem::getDictCode, dictCode)
+                    .eq(SysDictItem::getValue, addDictItemDto.getValue());
+        long valueCount = sysDictItemService.count(valueWrapper);
+        if (valueCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "当前字典下字典项值已存在，请勿重复添加！");
+        }
+
+        //添加字典项
+        SysDictItem dictItem = BeanCopyUtils.copyBean(addDictItemDto, SysDictItem.class);
+        dictItem.setDictCode(dictCode);
+        sysDictItemService.save(dictItem);
+
+        return ResponseResult.okResult();
     }
 
 }

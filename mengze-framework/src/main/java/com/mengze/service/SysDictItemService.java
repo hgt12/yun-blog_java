@@ -1,10 +1,9 @@
 package com.mengze.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddDictItemDto;
 import com.mengze.domain.dto.DictItemListDto;
-import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.entity.SysDictItem;
 import com.mengze.domain.vo.DictItemFormDetailVo;
 
@@ -21,5 +20,7 @@ public interface SysDictItemService extends IService<SysDictItem> {
     ResponseResult getDictItemOptions(String dictCode);
 
     ResponseResult<DictItemFormDetailVo> getDictItemFormDetail(Long id, String dictCode);
+
+    ResponseResult addDictItem(String dictCode, AddDictItemDto addDictItemDto);
 }
 
