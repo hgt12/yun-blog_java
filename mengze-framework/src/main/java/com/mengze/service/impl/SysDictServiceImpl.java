@@ -97,7 +97,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
     @Override
     public ResponseResult<DictFormDetailVo> getDictFormDetail(Long id)
     {
-        //根据分类id 查询分类
+        //根据字典id 查询字典
         SysDict dict = sysDictService.getById(id);
         if (dict == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该字典不存在！");
