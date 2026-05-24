@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "菜单树列表请求对象")
 public class MenuListDto {
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索菜单名字）", example = "系统管理")
+    @ApiModelProperty(value = "关键字（菜单名字）", example = "系统管理")
     private String keywords;
 }

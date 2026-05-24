@@ -28,6 +28,6 @@ public class PostsListDto
     @ApiModelProperty(value = "文章状态（0-已发布，1-草稿）", example = "0")
     private String status;
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索文章标题）", example = "标题")
+    @ApiModelProperty(value = "关键字（文章标题或摘要）", example = "标题")
     private String keywords;
 }

@@ -21,6 +21,6 @@ public class LinkListDto {
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索友链名称）", example = "Fluid")
+    @ApiModelProperty(value = "关键字（友链名称）", example = "Fluid")
     private String keywords;
 }

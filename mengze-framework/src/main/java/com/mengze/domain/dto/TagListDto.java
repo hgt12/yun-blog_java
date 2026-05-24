@@ -21,6 +21,6 @@ public class TagListDto {
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索标签名称）", example = "Vue")
+    @ApiModelProperty(value = "关键字（标签名称）", example = "Vue")
     private String keywords;
 }

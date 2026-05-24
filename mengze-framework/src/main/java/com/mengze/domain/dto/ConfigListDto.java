@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "配置查询请求对象")
 public class ConfigListDto {
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索配置）", example = "配置")
+    @ApiModelProperty(value = "关键字（配置键或配置名称）", example = "配置")
     private String keywords;
 }

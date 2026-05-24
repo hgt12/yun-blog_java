@@ -17,7 +17,7 @@ import javax.validation.constraints.Pattern;
 @ApiModel(description = "评论列表请求对象")
 public class CommentListDto {
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索评论内容）", example = "测试")
+    @ApiModelProperty(value = "关键字（评论内容）", example = "测试")
     private String keywords;
 
     @Pattern(regexp = "^$|^[012]$", message = "评论类型只能为0、1或2")

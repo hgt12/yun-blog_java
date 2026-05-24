@@ -21,6 +21,6 @@ public class DeptListDto
     @ApiModelProperty(value = "状态", example = "0")
     private String status;
 
-    @ApiModelProperty(value = "关键字（用于模糊搜索菜单名字）", example = "系统管理")
+    @ApiModelProperty(value = "关键字（部门名称）", example = "小部门")
     private String keywords;
 }
