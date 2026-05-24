@@ -166,14 +166,14 @@ public class AdminCategoryServiceImpl implements AdminCategoryService
         long count = categoryService.count(queryWrapper);
         
         if (count > 0) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类名称已存在，请修改后重试！");
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "分类名称已存在，请勿重复添加！");
         }
 
         String msg = null;
 
         //检查是否将分类状态从正常改为禁用
         if (SystemConstants.STATUS_NORMAL.equals(oldCategory.getStatus())
-            && !"0".equals(updateCategoryDto.getStatus())) {
+            && !SystemConstants.STATUS_NORMAL.equals(updateCategoryDto.getStatus())) {
             //统计该分类下的文章数量
             LambdaQueryWrapper<Article> articleQueryWrapper = new LambdaQueryWrapper<>();
             articleQueryWrapper.eq(Article::getCategoryId, id);
