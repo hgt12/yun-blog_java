@@ -3,9 +3,11 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.vo.DictListVo;
+import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.mapper.SysDictMapper;
 import com.mengze.domain.entity.SysDict;
@@ -66,6 +68,26 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
         PageVo pageVo = new PageVo(dictListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取字典下拉选项
+    @Override
+    public ResponseResult getDictOptions()
+    {
+        //构建查询条件
+        LambdaQueryWrapper<SysDict> queryWrapper = new LambdaQueryWrapper<>();
+
+        //查询状态正常的字典
+        queryWrapper.eq(SysDict::getStatus, SystemConstants.STATUS_NORMAL)
+                    .orderByDesc(SysDict::getId);
+
+        //封装成一个集合
+        List<SysDict> dictList = sysDictService.list(queryWrapper);
+
+        //转换成Vo
+        List<DictOptionVo> dictOptionVos = BeanCopyUtils.copyBeanList(dictList, DictOptionVo.class);
+
+        return ResponseResult.okResult(dictOptionVos);
     }
 }
 

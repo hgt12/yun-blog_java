@@ -3,8 +3,8 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictListDto;
+import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
-import com.mengze.service.SysDeptService;
 import com.mengze.service.SysDictService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -40,5 +40,14 @@ public class DictController
     public ResponseResult getDictList(Integer pageNum, Integer pageSize, @Valid DictListDto dictListDto)
     {
         return sysDictService.getDictList(pageNum, pageSize, dictListDto);
+    }
+
+    //这个接口是在代码生成模块里使用的，但是目前前端项目中还没有代码生成模块，所以该接口预留在此，实际上是没有用上的
+    @GetMapping("/options")
+    @SystemLog(businessName = "字典下拉选项")
+    @ApiOperation(value = "字典下拉选项", notes = "获取字典下拉数据", response = DictOptionVo.class, responseContainer = "List")
+    public ResponseResult getDictOptions()
+    {
+        return sysDictService.getDictOptions();
     }
 }

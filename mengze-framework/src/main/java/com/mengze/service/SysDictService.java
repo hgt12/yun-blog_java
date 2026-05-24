@@ -14,5 +14,7 @@ import com.mengze.domain.entity.SysDict;
 public interface SysDictService extends IService<SysDict> {
 
     ResponseResult getDictList(Integer pageNum, Integer pageSize, DictListDto dictListDto);
+
+    ResponseResult getDictOptions();
 }
 
