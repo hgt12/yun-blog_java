@@ -6,6 +6,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictItemListDto;
 import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.entity.SysDictItem;
+import com.mengze.domain.vo.DictItemFormDetailVo;
 
 /**
  * 数据字典项表(SysDictItem)表服务接口
@@ -18,5 +19,7 @@ public interface SysDictItemService extends IService<SysDictItem> {
     ResponseResult getDictItemList(Integer pageNum, Integer pageSize, String dictCode, DictItemListDto dictItemListDto);
 
     ResponseResult getDictItemOptions(String dictCode);
+
+    ResponseResult<DictItemFormDetailVo> getDictItemFormDetail(Long id, String dictCode);
 }
 

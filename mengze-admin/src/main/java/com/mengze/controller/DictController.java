@@ -6,8 +6,8 @@ import com.mengze.domain.dto.AddDictDto;
 import com.mengze.domain.dto.DictItemListDto;
 import com.mengze.domain.dto.DictListDto;
 import com.mengze.domain.dto.UpdateDictDto;
-import com.mengze.domain.entity.SysDictItem;
 import com.mengze.domain.vo.DictFormDetailVo;
+import com.mengze.domain.vo.DictItemFormDetailVo;
 import com.mengze.domain.vo.DictItemOptionVo;
 import com.mengze.domain.vo.DictOptionVo;
 import com.mengze.domain.vo.PageVo;
@@ -106,7 +106,8 @@ public class DictController
     @ApiOperation(value = "字典项列表", notes = "分页查询字典项列表", response = PageVo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
-            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "dictCode", value = "字典编码", dataType = "string", paramType = "path")
     })
     public ResponseResult getDictItemList(Integer pageNum, Integer pageSize, @PathVariable String dictCode, @Valid DictItemListDto dictItemListDto)
     {
@@ -116,8 +117,22 @@ public class DictController
     @GetMapping("/{dictCode}/items/options")
     @SystemLog(businessName = "字典项下拉选项接口")
     @ApiOperation(value = "字典项下拉选项接口", notes = "获取字典项下拉数据", response = DictItemOptionVo.class, responseContainer = "List")
+    @ApiImplicitParam(name = "dictCode", value = "字典编码", dataType = "string", paramType = "path")
     public ResponseResult getDictItemOptions(@PathVariable String dictCode)
     {
         return sysDictItemService.getDictItemOptions(dictCode);
+    }
+
+    @GetMapping("/{dictCode}/items/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @SystemLog(businessName = "获取字典项表单数据接口")
+    @ApiOperation(value = "获取字典项表单数据接口", notes = "获取字典项表单数据，用于编辑字典项详情", response = DictItemFormDetailVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "字典id", dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "dictCode", value = "字典编码", dataType = "string", paramType = "path")
+    })
+    public ResponseResult<DictItemFormDetailVo> getDictItemFormDetail(@PathVariable Long id, @PathVariable String dictCode)
+    {
+        return sysDictItemService.getDictItemFormDetail(id, dictCode);
     }
 }

@@ -7,10 +7,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.DictItemListDto;
 import com.mengze.domain.entity.SysDict;
-import com.mengze.domain.vo.DictItemListVo;
-import com.mengze.domain.vo.DictItemOptionVo;
-import com.mengze.domain.vo.DictOptionVo;
-import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysDictItemMapper;
 import com.mengze.domain.entity.SysDictItem;
@@ -117,6 +114,23 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
         List<DictItemOptionVo> dictItemOptionVos = BeanCopyUtils.copyBeanList(dictItemList, DictItemOptionVo.class);
 
         return ResponseResult.okResult(dictItemOptionVos);
+    }
+
+    //获取字典项表单数据
+    @Override
+    public ResponseResult<DictItemFormDetailVo> getDictItemFormDetail(Long id, String dictCode)
+    {
+        //根据字典项id 查询字典项
+        SysDictItem dictItem = sysDictItemService.getById(id);
+        if (dictItem == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该字典项不存在！");
+        }
+
+        //转换成Vo
+        DictItemFormDetailVo dictItemFormDetailVo = BeanCopyUtils.copyBean(dictItem, DictItemFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(dictItemFormDetailVo);
     }
 
 }
