@@ -227,7 +227,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下字典 id 不存在：" + notExistIds);
         }
 
-        //根据部门id列表删除字典
+        //删除字典
         sysDictService.removeByIds(idList);
 
         return ResponseResult.okResult();
