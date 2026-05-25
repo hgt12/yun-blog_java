@@ -25,7 +25,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/menus")
 @Api(tags = "菜单", description = "菜单相关接口")
-public class SysMenuController
+public class MenuController
 {
     @Autowired
     private SysMenuService sysMenuService;

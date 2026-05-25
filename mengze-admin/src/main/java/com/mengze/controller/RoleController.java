@@ -26,7 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/roles")
 @Api(tags = "角色", description = "角色相关接口")
-public class SysRoleController
+public class RoleController
 {
     @Autowired
     private SysRoleService sysRoleService;
