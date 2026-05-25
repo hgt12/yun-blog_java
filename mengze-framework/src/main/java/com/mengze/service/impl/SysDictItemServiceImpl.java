@@ -23,6 +23,8 @@ import org.springframework.util.StringUtils;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 数据字典项表(SysDictItem)表服务实现类
@@ -201,6 +203,39 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
         SysDictItem dictItem = BeanCopyUtils.copyBean(updateDictItemDto, SysDictItem.class);
         dictItem.setId(id);
         sysDictItemService.updateById(dictItem);
+
+        return ResponseResult.okResult();
+    }
+
+    //删除字典项
+    @Override
+    public ResponseResult deleteDictItem(Long[] ids)
+    {
+        //检查是否有选择到要删除的字典项
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的字典项");
+        }
+
+        //获取字典项id列表
+        List<Long> idList = List.of(ids);
+
+        //检查选择的字典项是否存在
+        List<SysDictItem> dictItemsToDelete = sysDictItemService.listByIds(idList);
+        if (dictItemsToDelete.size() != ids.length){
+            //如果有不存在的字典项，就找出对应的字典项id
+            Set<Long> existIds = dictItemsToDelete.stream()
+                    .map(SysDictItem::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下字典项 id 不存在：" + notExistIds);
+        }
+
+        //删除字典项
+        sysDictItemService.removeByIds(idList);
 
         return ResponseResult.okResult();
     }

@@ -151,4 +151,15 @@ public class DictController
     {
         return sysDictItemService.updateDictItem(id, dictCode, updateDictItemDto);
     }
+
+    @DeleteMapping("/{dictCode}/items/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:dict:delete')")
+    @SystemLog(businessName = "删除字典项(逻辑删除)")
+    @ApiOperation(value = "删除字典项接口（批量逻辑删除）", notes = "删除字典项，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "字典项id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteDictItem(@PathVariable Long[] ids)
+    {
+        return sysDictItemService.deleteDictItem(ids);
+    }
+
 }

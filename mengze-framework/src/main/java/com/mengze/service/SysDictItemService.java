@@ -27,5 +27,7 @@ public interface SysDictItemService extends IService<SysDictItem> {
     ResponseResult addDictItem(String dictCode, AddDictItemDto addDictItemDto);
 
     ResponseResult updateDictItem(Long id, String dictCode, @Valid UpdateDictItemDto updateDictDto);
+
+    ResponseResult deleteDictItem(Long[] ids);
 }
 
