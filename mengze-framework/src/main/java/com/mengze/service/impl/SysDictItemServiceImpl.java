@@ -7,6 +7,7 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddDictItemDto;
 import com.mengze.domain.dto.DictItemListDto;
+import com.mengze.domain.dto.UpdateDictItemDto;
 import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -68,9 +70,9 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
             queryWrapper.eq(SysDictItem::getStatus, dictItemListDto.getStatus());
         }
 
-        //按排序顺序排序和按创建时间倒序排序
-        queryWrapper.orderByAsc(SysDictItem::getSort)
-                    .orderByDesc(SysDictItem::getCreateTime);
+        //按排序和字典项值顺序排序
+        queryWrapper.orderByAsc(SysDictItem::getValue)
+                    .orderByAsc(SysDictItem::getSort);
 
         //分页查询
         Page<SysDictItem> page = new Page<>(pageNum, pageSize);
@@ -107,6 +109,9 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
         //查询状态正常的字典
         queryWrapper.eq(SysDictItem::getStatus, SystemConstants.STATUS_NORMAL)
                 .orderByDesc(SysDictItem::getId);
+
+        //按排序和字典项值顺序排序
+        queryWrapper.orderByAsc(SysDictItem::getValue);
 
         //封装成一个集合
         List<SysDictItem> dictItemList = sysDictItemService.list(queryWrapper);
@@ -159,6 +164,43 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
         SysDictItem dictItem = BeanCopyUtils.copyBean(addDictItemDto, SysDictItem.class);
         dictItem.setDictCode(dictCode);
         sysDictItemService.save(dictItem);
+
+        return ResponseResult.okResult();
+    }
+
+    //更新字典项
+    @Override
+    public ResponseResult updateDictItem(Long id, String dictCode, @Valid UpdateDictItemDto updateDictItemDto)
+    {
+        //检查字典项是否存在
+        SysDictItem oldDictItem = sysDictItemService.getById(id);
+        if (oldDictItem == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该字典项不存在！");
+        }
+
+        //检查同一个字典编码（dict_code）下的字典项标签（label）和字典项值（value）是否重复(排除自己)
+        LambdaQueryWrapper<SysDictItem> labelWrapper = new LambdaQueryWrapper<>();
+        labelWrapper.eq(SysDictItem::getDictCode, dictCode)
+                    .eq(SysDictItem::getLabel, updateDictItemDto.getLabel())
+                    .ne(SysDictItem::getId, id);
+        long labelCount = sysDictItemService.count(labelWrapper);
+        if (labelCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "当前字典下字典项标签已存在，请修改后重试！");
+        }
+
+        LambdaQueryWrapper<SysDictItem> valueWrapper = new LambdaQueryWrapper<>();
+        valueWrapper.eq(SysDictItem::getDictCode, dictCode)
+                    .eq(SysDictItem::getValue, updateDictItemDto.getValue())
+                    .ne(SysDictItem::getId, id);
+        long valueCount = sysDictItemService.count(valueWrapper);
+        if (valueCount > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "当前字典下字典项值已存在，请修改后重试！");
+        }
+
+        //更新字典项
+        SysDictItem dictItem = BeanCopyUtils.copyBean(updateDictItemDto, SysDictItem.class);
+        dictItem.setId(id);
+        sysDictItemService.updateById(dictItem);
 
         return ResponseResult.okResult();
     }

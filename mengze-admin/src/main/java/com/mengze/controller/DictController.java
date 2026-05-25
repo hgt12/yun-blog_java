@@ -141,4 +141,14 @@ public class DictController
     {
         return sysDictItemService.addDictItem(dictCode, addDictItemDto);
     }
+
+    @PutMapping("/{dictCode}/items/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @SystemLog(businessName = "修改字典项接口")
+    @ApiOperation(value = "编辑字典项接口", notes = "编辑字典项", response = String.class)
+    @ApiImplicitParam(name = "id", value = "字典项ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateDictItem(@PathVariable Long id, @PathVariable String dictCode, @Valid @RequestBody UpdateDictItemDto updateDictItemDto)
+    {
+        return sysDictItemService.updateDictItem(id, dictCode, updateDictItemDto);
+    }
 }
