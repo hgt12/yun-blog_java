@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -12,10 +13,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -53,5 +51,14 @@ public class NoticeController
     public ResponseResult<NoticeFormDetailVo> getNoticeFormDetail(@PathVariable Long id)
     {
         return sysNoticeService.getNoticeFormDetail(id);
+    }
+
+    @PostMapping
+    @PreAuthorize("@ps.hasPermission('blog:notice:create')")
+    @SystemLog(businessName = "新增通知")
+    @ApiOperation(value = "新增通知接口", notes = "新增通知", response = String.class)
+    public ResponseResult addNotice(@Valid @RequestBody AddNoticeDto addNoticeDto)
+    {
+        return sysNoticeService.addNotice(addNoticeDto);
     }
 }

@@ -5,26 +5,29 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
-import com.mengze.domain.entity.SysDict;
-import com.mengze.domain.entity.SysNotice;
-import com.mengze.domain.entity.SysNoticeUser;
-import com.mengze.domain.entity.SysUser;
-import com.mengze.domain.vo.DictFormDetailVo;
+import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.NoticeListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysNoticeMapper;
+import com.mengze.service.OssFileService;
+import com.mengze.service.SysFileService;
 import com.mengze.service.SysNoticeService;
 import com.mengze.service.SysNoticeUserService;
 import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
+import com.mengze.utils.ImageUrlUtils;
 import com.mengze.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,12 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
 
     @Autowired
     private SysNoticeService sysNoticeService;
+
+    @Autowired
+    private OssFileService ossFileService;
+
+    @Autowired
+    private SysFileService sysFileService;
 
     //查询通知列表
     @Override
@@ -154,6 +163,85 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
 
         //返回
         return ResponseResult.okResult(noticeFormDetailVo);
+    }
+
+    //添加通知
+    @Override
+    @Transactional
+    public ResponseResult addNotice(AddNoticeDto addNoticeDto)
+    {
+        //只处理通知内容中的临时图片，将其转为正式文件
+        String content = addNoticeDto.getContent();
+        if (ImageUrlUtils.containsTempImages(content)) {
+            content = processContentImages(content, addNoticeDto.getTitle());
+            addNoticeDto.setContent(content);
+        }
+
+        //封装通知实体
+        SysNotice sysNotice = BeanCopyUtils.copyBean(addNoticeDto, SysNotice.class);
+        sysNotice.setTargetUserIds(convertTargetUserIds(addNoticeDto.getTargetUserIds()));
+        sysNotice.setPublisherId(SecurityUtils.getUserId());
+        sysNotice.setPublishTime(new Date());
+
+        //保存通知
+        boolean save = this.save(sysNotice);
+        if (!save) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "添加通知失败");
+        }
+
+        return ResponseResult.okResult();
+    }
+
+    //将通知内容中的临时图片转正并同步文件表
+    private String processContentImages(String content, String noticeTitle)
+    {
+        List<String> tempImageUrls = ImageUrlUtils.extractTempImageUrls(content);
+        String result = content;
+
+        //同一通知里可能重复引用同一张临时图片，先去重
+        List<String> distinctTempImageUrls = tempImageUrls.stream().distinct().toList();
+
+        for (String tempUrl : distinctTempImageUrls) {
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(tempUrl);
+            if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
+                throw new RuntimeException("通知内容图片保存失败，无法保存通知记录: " + tempUrl);
+            }
+
+            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, uploadFileMetaVo.getUrl());
+
+            if (StringUtils.hasText(uploadFileMetaVo.getFilePath())) {
+                saveFileRecord(uploadFileMetaVo.getName(),
+                        uploadFileMetaVo.getFilePath(),
+                        uploadFileMetaVo.getUrl(),
+                        uploadFileMetaVo.getSize(),
+                        uploadFileMetaVo.getMimeType(),
+                        "通知《" + noticeTitle + "》中的图片");
+            }
+        }
+
+        return result;
+    }
+
+    //把目标用户ID列表转换成数据库存储格式
+    private String convertTargetUserIds(List<Long> targetUsers)
+    {
+        if (targetUsers == null || targetUsers.isEmpty()) {
+            return null;
+        }
+        return targetUsers.stream().map(String::valueOf).collect(Collectors.joining(","));
+    }
+
+    //将元数据写入文件表
+    private void saveFileRecord(String fileName, String filePath, String url, Long size, String mimeType, String fileSource)
+    {
+        SysFile sysFile = new SysFile();
+        sysFile.setName(fileName);
+        sysFile.setFilePath(filePath);
+        sysFile.setUrl(url);
+        sysFile.setSize(size);
+        sysFile.setMimeType(mimeType);
+        sysFile.setFileSource(fileSource);
+        sysFileService.save(sysFile);
     }
 }
 
