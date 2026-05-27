@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.NoticeListDto;
+import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysNoticeService;
 import io.swagger.annotations.Api;
@@ -12,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +41,17 @@ public class NoticeController
     public ResponseResult<PageVo> getNoticeList(Integer pageNum, Integer pageSize, @Valid NoticeListDto noticeListDto)
     {
         return sysNoticeService.getNoticeList(pageNum, pageSize, noticeListDto);
+    }
+
+    @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('blog:notice:update')")
+    @SystemLog(businessName = "获取通知表单数据（编辑公告时用上）")
+    @ApiOperation(value = "获取通知表单数据（编辑公告时用上）", notes = "获取通知表单数据，用于编辑通知详情", response = NoticeFormDetailVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "友链id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<NoticeFormDetailVo> getNoticeFormDetail(@PathVariable Long id)
+    {
+        return sysNoticeService.getNoticeFormDetail(id);
     }
 }

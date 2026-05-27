@@ -6,11 +6,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.NoticeListDto;
+import com.mengze.domain.entity.SysDict;
 import com.mengze.domain.entity.SysNotice;
 import com.mengze.domain.entity.SysNoticeUser;
 import com.mengze.domain.entity.SysUser;
+import com.mengze.domain.vo.DictFormDetailVo;
+import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.NoticeListVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysNoticeMapper;
 import com.mengze.service.SysNoticeService;
 import com.mengze.service.SysNoticeUserService;
@@ -41,6 +45,9 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Autowired
+    private SysNoticeService sysNoticeService;
 
     //查询通知列表
     @Override
@@ -130,6 +137,23 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         PageVo pageVo = new PageVo(noticeListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取通知表单数据
+    @Override
+    public ResponseResult<NoticeFormDetailVo> getNoticeFormDetail(Long id)
+    {
+        //根据通知id 查询通知详情
+        SysNotice notice = sysNoticeService.getById(id);
+        if (notice == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该通知不存在！");
+        }
+
+        //转换成Vo
+        NoticeFormDetailVo noticeFormDetailVo = BeanCopyUtils.copyBean(notice, NoticeFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(noticeFormDetailVo);
     }
 }
 
