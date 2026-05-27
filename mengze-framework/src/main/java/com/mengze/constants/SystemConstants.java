@@ -211,4 +211,12 @@ public class SystemConstants
      *  父节点路径：Parent Node Path
      */
     public static final String PARENT_NODE_PATH = "0";
+    /**
+     *  通知未读
+     */
+    public static final String NOTICE_NOT_READ = "0";
+    /**
+     *  目标类型：全体成员
+     */
+    public static final String TARGET_TYPE_IS_ALL = "1";
 }
