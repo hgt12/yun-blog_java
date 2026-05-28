@@ -90,8 +90,8 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                     .apply("concat(',', target_user_ids, ',') like {0}", "%," + userId + ",%"));
         }
 
-        //按id顺序排序
-        queryWrapper.orderByAsc(SysNotice::getId);
+        //按发布时间倒序排序
+        queryWrapper.orderByDesc(SysNotice::getPublishTime);
 
         //分页查询
         Page<SysNotice> page = new Page<>(pageNum, pageSize);
