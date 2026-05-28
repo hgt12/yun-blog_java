@@ -220,6 +220,10 @@ public class SystemConstants
      */
     public static final String TARGET_TYPE_IS_ALL = "1";
     /**
+     *  目标类型：指定用户
+     */
+    public static final String TARGET_TYPE_IS_SPECIFIED = "2";
+    /**
      *  通知状态：已发布
      */
     public static final String NOTICE_STATUS_PUBLISHED = "1";
