@@ -62,32 +62,32 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     @Override
     public ResponseResult<PageVo> getNoticeList(Integer pageNum, Integer pageSize, NoticeListDto noticeListDto)
     {
-        //获取当前登录用户ID 用于过滤该用户可见的通知
+        //获取当前登录用户ID和角色信息
         Long userId = SecurityUtils.getUserId();
+        boolean isAdmin = SecurityUtils.isAdmin();
 
         //构建查询条件
         LambdaQueryWrapper<SysNotice> queryWrapper = new LambdaQueryWrapper<>();
 
         //根据通知标题模糊搜索
-        if (StringUtils.hasText(noticeListDto.getTitle())) {
+        if (noticeListDto != null && StringUtils.hasText(noticeListDto.getTitle())) {
             queryWrapper.like(SysNotice::getTitle, noticeListDto.getTitle());
         }
 
-        //根据状态筛选
-        if (StringUtils.hasText(noticeListDto.getStatus())) {
-            queryWrapper.eq(SysNotice::getStatus, noticeListDto.getStatus());
+        //管理员可按前端传入状态筛选，普通用户仅能查看已发布通知
+        if (isAdmin) {
+            if (noticeListDto != null && StringUtils.hasText(noticeListDto.getStatus())) {
+                queryWrapper.eq(SysNotice::getStatus, noticeListDto.getStatus());
+            }
+        } else {
+            queryWrapper.eq(SysNotice::getStatus, SystemConstants.NOTICE_STATUS_PUBLISHED);
         }
 
-        //根据当前用户过滤可见通知：
-        //targetType=1 表示全体可见
-        //targetType=2 时，通过 targetUserIds 判断是否包含当前用户ID
-        if (userId != null) {
-            queryWrapper.and(wrapper -> wrapper.eq(SysNotice::getTargetType,  SystemConstants.TARGET_TYPE_IS_ALL)
+        //管理员可查看所有通知，普通用户只能查看全体通知和自己的通知
+        if (!isAdmin) {
+            queryWrapper.and(wrapper -> wrapper.eq(SysNotice::getTargetType, SystemConstants.TARGET_TYPE_IS_ALL)
                     .or()
-                    .like(SysNotice::getTargetUserIds, userId.toString()));
-        } else {
-            //未登录时仅展示全体通知
-            queryWrapper.eq(SysNotice::getTargetType, SystemConstants.TARGET_TYPE_IS_ALL);
+                    .apply("concat(',', target_user_ids, ',') like {0}", "%," + userId + ",%"));
         }
 
         //按id顺序排序
@@ -116,14 +116,19 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                     .collect(Collectors.toMap(SysUser::getId, SysUser::getNickname, (oldVal, newVal) -> oldVal));
         }
 
-        //把发布人名称收集到返回结果中
+        //把发布人名称回填到返回结果中
         for (int i = 0; i < noticeList.size(); i++) {
             SysNotice notice = noticeList.get(i);
             NoticeListVo noticeListVo = noticeListVos.get(i);
             noticeListVo.setPublisherName(publisherNameMap.get(notice.getPublisherId()));
         }
 
-        //查询当前用户对这些通知的阅读状态
+        //默认都设置为未读
+        for (NoticeListVo noticeListVo : noticeListVos) {
+            noticeListVo.setIsRead(SystemConstants.NOTICE_NOT_READ);
+        }
+
+        //如果当前用户已登录，再查询并回填阅读状态
         if (userId != null && !noticeList.isEmpty()) {
             List<Long> noticeIds = noticeList.stream().map(SysNotice::getId).collect(Collectors.toList());
             List<SysNoticeUser> noticeUserList = sysNoticeUserService.list(new LambdaQueryWrapper<SysNoticeUser>()
@@ -135,11 +140,6 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
 
             for (NoticeListVo noticeListVo : noticeListVos) {
                 noticeListVo.setIsRead(noticeReadMap.getOrDefault(noticeListVo.getId(), SystemConstants.NOTICE_NOT_READ));
-            }
-        } else {
-            //未登录时默认未读
-            for (NoticeListVo noticeListVo : noticeListVos) {
-                noticeListVo.setIsRead(SystemConstants.NOTICE_NOT_READ);
             }
         }
 

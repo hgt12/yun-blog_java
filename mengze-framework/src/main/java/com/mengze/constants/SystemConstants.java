@@ -219,4 +219,8 @@ public class SystemConstants
      *  目标类型：全体成员
      */
     public static final String TARGET_TYPE_IS_ALL = "1";
+    /**
+     *  通知状态：已发布
+     */
+    public static final String NOTICE_STATUS_PUBLISHED = "1";
 }
