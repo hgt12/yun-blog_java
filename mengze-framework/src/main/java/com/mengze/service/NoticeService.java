@@ -3,6 +3,8 @@ package com.mengze.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.SysNotice;
+import com.mengze.domain.vo.BlogNoticeDetailVo;
+import com.mengze.domain.vo.BlogNoticeListVo;
 import com.mengze.domain.vo.PageVo;
 
 /**
@@ -14,5 +16,7 @@ import com.mengze.domain.vo.PageVo;
 public interface NoticeService extends IService<SysNotice> {
 
     ResponseResult<PageVo> getNoticeList(Integer pageNum, Integer pageSize);
+
+    ResponseResult<BlogNoticeDetailVo> getNoticeDetail(Long id);
 }
 

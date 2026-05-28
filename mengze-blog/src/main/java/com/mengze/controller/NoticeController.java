@@ -2,6 +2,8 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.vo.BlogNoticeDetailVo;
+import com.mengze.domain.vo.BlogNoticeListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.NoticeService;
 import io.swagger.annotations.Api;
@@ -34,6 +36,13 @@ public class NoticeController
         return noticeService.getNoticeList(pageNum, pageSize);
     }
 
-
+    @GetMapping("/notice/{id}")
+    @SystemLog(businessName = "获取通知详情接口")
+    @ApiOperation(value = "获取通知详情接口", notes = "获取通知的详细信息", response = PageVo.class)
+    @ApiImplicitParam(name = "id", value = "通知id", dataType = "long", paramType = "path")
+    public ResponseResult<BlogNoticeDetailVo> getNoticeDetail(@PathVariable Long id)
+    {
+        return noticeService.getNoticeDetail(id);
+    }
 
 }

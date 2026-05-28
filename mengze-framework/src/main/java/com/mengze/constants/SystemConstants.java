@@ -216,6 +216,10 @@ public class SystemConstants
      */
     public static final String NOTICE_NOT_READ = "0";
     /**
+     *  通知已读
+     */
+    public static final String NOTICE_IS_READ = "1";
+    /**
      *  目标类型：全体成员
      */
     public static final String TARGET_TYPE_IS_ALL = "1";
