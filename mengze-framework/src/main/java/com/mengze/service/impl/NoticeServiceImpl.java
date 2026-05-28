@@ -140,6 +140,10 @@ public class NoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice> i
             for (BlogNoticeListVo noticeListVo : noticeListVos) {
                 noticeListVo.setIsRead(noticeReadMap.getOrDefault(noticeListVo.getId(), SystemConstants.NOTICE_NOT_READ));
             }
+
+            //未读优先，已读在后；同状态下保持发布时间倒序
+            noticeListVos.sort(Comparator.comparing((BlogNoticeListVo vo) -> SystemConstants.NOTICE_IS_READ.equals(vo.getIsRead()))
+                    .thenComparing(BlogNoticeListVo::getPublishTime, Comparator.nullsLast(Comparator.reverseOrder())));
         }
 
         PageVo pageVo = new PageVo(noticeListVos, page.getTotal());
