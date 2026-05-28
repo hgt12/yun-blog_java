@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  */
 @Service("userService")
 @Slf4j
-public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService
+public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService
 {
 
     //国内手机号正则：1开头，第二位3-9，后面9位数字
