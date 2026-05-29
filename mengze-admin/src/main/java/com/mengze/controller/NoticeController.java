@@ -114,4 +114,12 @@ public class NoticeController
     {
         return sysNoticeService.getNoticeDetail(id);
     }
+
+    @PutMapping("/read-all")
+    @SystemLog(businessName = "通知全部已读")
+    @ApiOperation(value = "通知全部已读接口", notes = "通知全部已读", response = String.class)
+    public ResponseResult readAllNotice()
+    {
+        return sysNoticeService.readAllNotice();
+    }
 }

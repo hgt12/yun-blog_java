@@ -33,5 +33,7 @@ public interface SysNoticeService extends IService<SysNotice> {
     ResponseResult revokeNotice(Long id);
 
     ResponseResult<NoticeDetailVo> getNoticeDetail(Long id);
+
+    ResponseResult readAllNotice();
 }
 

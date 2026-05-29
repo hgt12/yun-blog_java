@@ -397,6 +397,82 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         return ResponseResult.okResult(noticeDetailVo);
     }
 
+    //通知全部已读
+    @Override
+    @Transactional
+    public ResponseResult readAllNotice()
+    {
+        //先校验登录状态，如果是未登录返回需要登录
+        Long userId = SecurityUtils.getUserId();
+        if (userId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //查询当前用户可见的已发布的通知
+        boolean isAdmin = SecurityUtils.isAdmin();
+        LambdaQueryWrapper<SysNotice> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysNotice::getStatus, SystemConstants.NOTICE_STATUS_PUBLISHED);
+
+        //将通知在 sys_notice_user 中批量标记为已读
+        if (!isAdmin) {
+            queryWrapper.and(wrapper -> wrapper.eq(SysNotice::getTargetType, SystemConstants.TARGET_TYPE_IS_ALL)
+                    .or()
+                    .apply("concat(',', target_user_ids, ',') like {0}", "%," + userId + ",%"));
+        }
+
+        //没有通知时直接返回
+        List<SysNotice> noticeList = sysNoticeService.list(queryWrapper);
+        if (noticeList.isEmpty()) {
+            return ResponseResult.okResult();
+        }
+
+        //提取当前页可见通知ID
+        List<Long> noticeIds = noticeList.stream().map(SysNotice::getId).toList();
+
+        //查询当前用户针对这些通知是否已经存在阅读记录
+        List<SysNoticeUser> noticeUserList = sysNoticeUserService.list(new LambdaQueryWrapper<SysNoticeUser>()
+                .eq(SysNoticeUser::getUserId, userId)
+                .in(SysNoticeUser::getNoticeId, noticeIds));
+
+        //把已存在的阅读记录转成Map方便后续操作
+        Map<Long, SysNoticeUser> noticeUserMap = noticeUserList.stream()
+                .collect(Collectors.toMap(SysNoticeUser::getNoticeId, item -> item, (oldVal, newVal) -> oldVal));
+
+        //新增未读记录和更新已有未读记录分开来收集然后再批量入库
+        List<SysNoticeUser> saveList = new ArrayList<>();
+        List<SysNoticeUser> updateList = new ArrayList<>();
+        Date now = new Date();
+        for (SysNotice notice : noticeList) {
+            SysNoticeUser noticeUser = noticeUserMap.get(notice.getId());
+            if (noticeUser == null) {
+                //当前用户没有该通知的阅读记录，则新增一条已读记录
+                SysNoticeUser newNoticeUser = new SysNoticeUser();
+                newNoticeUser.setNoticeId(notice.getId());
+                newNoticeUser.setUserId(userId);
+                newNoticeUser.setIsRead(SystemConstants.NOTICE_IS_READ);
+                newNoticeUser.setReadTime(now);
+                saveList.add(newNoticeUser);
+            } else if (!SystemConstants.NOTICE_IS_READ.equals(noticeUser.getIsRead())) {
+                //已有记录但状态不是已读，则更新为已读（防御性编程）
+                noticeUser.setIsRead(SystemConstants.NOTICE_IS_READ);
+                noticeUser.setReadTime(now);
+                updateList.add(noticeUser);
+            }
+        }
+
+        //批量保存新增的阅读记录
+        if (!saveList.isEmpty()) {
+            sysNoticeUserService.saveBatch(saveList);
+        }
+
+        //批量更新已存在的阅读记录
+        if (!updateList.isEmpty()) {
+            sysNoticeUserService.updateBatchById(updateList);
+        }
+
+        return ResponseResult.okResult();
+    }
+
     //将通知内容中的临时图片转正并同步文件表
     private String processContentImages(String content, String noticeTitle)
     {
