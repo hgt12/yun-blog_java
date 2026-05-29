@@ -4,7 +4,6 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
-import com.mengze.domain.dto.UpdateLinkDto;
 import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -72,5 +71,15 @@ public class NoticeController
     public ResponseResult updateNotice(@PathVariable Long id, @Valid @RequestBody UpdateNoticeDto updateNoticeDto)
     {
         return sysNoticeService.updateNotice(id, updateNoticeDto);
+    }
+
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('blog:notice:delete')")
+    @SystemLog(businessName = "删除通知(逻辑删除)")
+    @ApiOperation(value = "删除通知接口（批量逻辑删除）", notes = "删除通知，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "通知id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteNotice(@PathVariable Long[] ids)
+    {
+        return sysNoticeService.deleteNotice(ids);
     }
 }

@@ -24,5 +24,7 @@ public interface SysNoticeService extends IService<SysNotice> {
     ResponseResult addNotice(AddNoticeDto addNoticeDto);
 
     ResponseResult updateNotice(Long id, UpdateNoticeDto updateNoticeDto);
+
+    ResponseResult deleteNotice(Long[] ids);
 }
 

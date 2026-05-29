@@ -250,6 +250,69 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         return ResponseResult.okResult();
     }
 
+    //删除通知（批量）
+    @Override
+    public ResponseResult deleteNotice(Long[] ids)
+    {
+        //参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的通知");
+        }
+
+        List<Long> idList = List.of(ids);
+
+        //检查通知是否存在
+        List<SysNotice> noticesToDelete = sysNoticeService.listByIds(idList);
+        if (noticesToDelete.size() != ids.length) {
+            //找出不存在的 通知id
+            Set<Long> existIds = noticesToDelete.stream()
+                    .map(SysNotice::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下通知 id 不存在：" + notExistIds);
+        }
+
+        //遍历每个通知ID，将相关图片移动到deleted文件夹，并同步删除文件表记录
+        for (Long noticeId : idList)
+        {
+            SysNotice notice = sysNoticeService.getById(noticeId);
+
+            //查找需要移动的图片URL并去重
+            Set<String> imageUrlSet = new LinkedHashSet<>();
+            if (StringUtils.hasText(notice.getContent())) {
+                List<String> contentImages = ImageUrlUtils.extractImageUrls(notice.getContent());
+                imageUrlSet.addAll(contentImages);
+                log.info("通知ID: {} 内容中提取到的图片URL: {}", noticeId, contentImages);
+            }
+
+            List<String> imageUrls = new ArrayList<>(imageUrlSet);
+            log.info("通知ID: {} 去重后的图片URL: {}", noticeId, imageUrls);
+
+            //批量移动图片到 deleted 文件夹
+            if (!imageUrls.isEmpty()) {
+                int movedCount = ossFileService.batchMoveFilesToDeleted(imageUrls);
+                log.info("通知ID: {} 的图片已移动到deleted文件夹，成功: {}/{}",
+                        noticeId, movedCount, imageUrls.size());
+
+                //同步删除文件表记录
+                for (String imageUrl : imageUrls) {
+                    deleteFileRecordByUrl(imageUrl);
+                }
+                log.info("文章ID: {} 的图片文件表记录已删除，共 {} 条", noticeId, imageUrls.size());
+            }
+        }
+
+        //逻辑删除通知（将 del_flag 从 0 > 1）
+        sysNoticeService.removeByIds(idList);
+        log.info("批量逻辑删除通知成功，ID列表: {}", idList);
+
+        return ResponseResult.okResult();
+    }
+
     //将通知内容中的临时图片转正并同步文件表
     private String processContentImages(String content, String noticeTitle)
     {
