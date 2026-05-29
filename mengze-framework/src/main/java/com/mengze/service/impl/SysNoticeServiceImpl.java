@@ -375,6 +375,11 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     @Override
     public ResponseResult<NoticeDetailVo> getNoticeDetail(Long id)
     {
+        //参数校验
+        if (id == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "通知id不能为空");
+        }
+
         //根据通知id 查询通知详情
         SysNotice notice = sysNoticeService.getById(id);
         if (notice == null) {
@@ -389,6 +394,29 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             SysUser publisher = sysUserService.getById(notice.getPublisherId());
             if (publisher != null) {
                 noticeDetailVo.setPublisherName(StringUtils.hasText(publisher.getNickname()) ? publisher.getNickname() : publisher.getUsername());
+            }
+        }
+
+        //查看详情时同步阅读状态
+        Long userId = SecurityUtils.getUserId();
+        if (userId != null) {
+            SysNoticeUser noticeUser = sysNoticeUserService.getOne(new LambdaQueryWrapper<SysNoticeUser>()
+                    .eq(SysNoticeUser::getUserId, userId)
+                    .eq(SysNoticeUser::getNoticeId, notice.getId())
+                    .last("limit 1"));
+
+            Date now = new Date();
+            if (noticeUser == null) {
+                noticeUser = new SysNoticeUser();
+                noticeUser.setNoticeId(notice.getId());
+                noticeUser.setUserId(userId);
+                noticeUser.setIsRead(SystemConstants.NOTICE_IS_READ);
+                noticeUser.setReadTime(now);
+                sysNoticeUserService.save(noticeUser);
+            } else if (!SystemConstants.NOTICE_IS_READ.equals(noticeUser.getIsRead())) {
+                noticeUser.setIsRead(SystemConstants.NOTICE_IS_READ);
+                noticeUser.setReadTime(now);
+                sysNoticeUserService.updateById(noticeUser);
             }
         }
 
