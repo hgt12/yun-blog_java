@@ -43,7 +43,7 @@ public class NoticeController
     }
 
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ps.hasPermission('blog:notice:update')")
+    @PreAuthorize("@ps.hasPermission('sys:notice:update')")
     @SystemLog(businessName = "获取通知表单数据（编辑公告时用上）")
     @ApiOperation(value = "获取通知表单数据（编辑公告时用上）", notes = "获取通知表单数据，用于编辑通知详情", response = NoticeFormDetailVo.class)
     @ApiImplicitParams({
@@ -55,7 +55,7 @@ public class NoticeController
     }
 
     @PostMapping
-    @PreAuthorize("@ps.hasPermission('blog:notice:create')")
+    @PreAuthorize("@ps.hasPermission('sys:notice:create')")
     @SystemLog(businessName = "新增通知")
     @ApiOperation(value = "新增通知接口", notes = "新增通知", response = String.class)
     public ResponseResult addNotice(@Valid @RequestBody AddNoticeDto addNoticeDto)
@@ -64,7 +64,7 @@ public class NoticeController
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@ps.hasPermission('blog:notice:update')")
+    @PreAuthorize("@ps.hasPermission('sys:notice:update')")
     @SystemLog(businessName = "修改通知")
     @ApiOperation(value = "修改通知接口", notes = "修改通知", response = String.class)
     @ApiImplicitParam(name = "id", value = "通知ID", dataType = "long", paramType = "path", required = true)
@@ -74,12 +74,22 @@ public class NoticeController
     }
 
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ps.hasPermission('blog:notice:delete')")
+    @PreAuthorize("@ps.hasPermission('sys:notice:delete')")
     @SystemLog(businessName = "删除通知(逻辑删除)")
     @ApiOperation(value = "删除通知接口（批量逻辑删除）", notes = "删除通知，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "通知id", dataType = "Long", paramType = "path", required = true)
     public ResponseResult deleteNotice(@PathVariable Long[] ids)
     {
         return sysNoticeService.deleteNotice(ids);
+    }
+
+    @PutMapping("/{id}/publish")
+    @PreAuthorize("@ps.hasPermission('sys:notice:publish')")
+    @SystemLog(businessName = "发布通知")
+    @ApiOperation(value = "发布通知接口", notes = "发布通知", response = String.class)
+    @ApiImplicitParam(name = "id", value = "通知ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult publishNotice(@PathVariable Long id)
+    {
+        return sysNoticeService.publishNotice(id);
     }
 }

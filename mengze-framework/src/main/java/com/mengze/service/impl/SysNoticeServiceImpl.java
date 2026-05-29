@@ -318,6 +318,35 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         return ResponseResult.okResult();
     }
 
+    //发布通知
+    @Override
+    public ResponseResult publishNotice(Long id)
+    {
+        //检查通知是否存在
+        SysNotice oldNotice = sysNoticeService.getById(id);
+        if (oldNotice == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该通知不存在！");
+        }
+
+        //已发布的通知无需重复发布
+        if (SystemConstants.NOTICE_STATUS_PUBLISHED.equals(oldNotice.getStatus())) {
+            return ResponseResult.okResult();
+        }
+
+        //更新通知状态并写入发布时间
+        SysNotice notice = new SysNotice();
+        notice.setId(id);
+        notice.setStatus(SystemConstants.NOTICE_STATUS_PUBLISHED);
+        notice.setPublishTime(new Date());
+
+        boolean updated = sysNoticeService.updateById(notice);
+        if (!updated) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "发布通知失败");
+        }
+
+        return ResponseResult.okResult();
+    }
+
     //将通知内容中的临时图片转正并同步文件表
     private String processContentImages(String content, String noticeTitle)
     {
