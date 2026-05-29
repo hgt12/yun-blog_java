@@ -34,7 +34,7 @@ public class NoticeFormDetailVo
     @ApiModelProperty(value = "通知等级（字典code：notice_level）", example = "M")
     private String level;
 
-    @ApiModelProperty(value = "读取状态（0: 未读, 1: 已读）", example = "0")
+    @ApiModelProperty(value = "状态（0: 未发布, 1: 已发布, 2: 已撤回）", example = "1")
     private String status;
 
     @ApiModelProperty(value = "目标人ID集合（多个使用英文逗号,分割）", example = "['1', '23']")
