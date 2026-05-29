@@ -5,6 +5,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
 import com.mengze.domain.dto.UpdateNoticeDto;
+import com.mengze.domain.vo.NoticeDetailVo;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysNoticeService;
@@ -101,5 +102,16 @@ public class NoticeController
     public ResponseResult revokeNotice(@PathVariable Long id)
     {
         return sysNoticeService.revokeNotice(id);
+    }
+
+    @GetMapping("/{id}/detail")
+    @SystemLog(businessName = "获取通知详情信息（用户查看通知信息时用上）")
+    @ApiOperation(value = "获取通知详情信息", notes = "获取通知详情信息，用户查看通知时用", response = NoticeFormDetailVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "友链id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<NoticeDetailVo> getNoticeDetail(@PathVariable Long id)
+    {
+        return sysNoticeService.getNoticeDetail(id);
     }
 }

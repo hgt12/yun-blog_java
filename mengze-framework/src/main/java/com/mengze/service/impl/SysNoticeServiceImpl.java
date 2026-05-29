@@ -10,10 +10,7 @@ import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
 import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.entity.*;
-import com.mengze.domain.vo.NoticeFormDetailVo;
-import com.mengze.domain.vo.NoticeListVo;
-import com.mengze.domain.vo.PageVo;
-import com.mengze.domain.vo.UploadFileMetaVo;
+import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysNoticeMapper;
 import com.mengze.service.OssFileService;
@@ -373,6 +370,31 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         }
 
         return ResponseResult.okResult();
+    }
+
+    //获取通知信息详情
+    @Override
+    public ResponseResult<NoticeDetailVo> getNoticeDetail(Long id)
+    {
+        //根据通知id 查询通知详情
+        SysNotice notice = sysNoticeService.getById(id);
+        if (notice == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该通知不存在！");
+        }
+
+        //转换成Vo
+        NoticeDetailVo noticeDetailVo = BeanCopyUtils.copyBean(notice, NoticeDetailVo.class);
+
+        //回填发布人名称
+        if (notice.getPublisherId() != null) {
+            SysUser publisher = sysUserService.getById(notice.getPublisherId());
+            if (publisher != null) {
+                noticeDetailVo.setPublisherName(StringUtils.hasText(publisher.getNickname()) ? publisher.getNickname() : publisher.getUsername());
+            }
+        }
+
+        //返回
+        return ResponseResult.okResult(noticeDetailVo);
     }
 
     //将通知内容中的临时图片转正并同步文件表

@@ -6,6 +6,7 @@ import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
 import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.entity.SysNotice;
+import com.mengze.domain.vo.NoticeDetailVo;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 
@@ -30,5 +31,7 @@ public interface SysNoticeService extends IService<SysNotice> {
     ResponseResult publishNotice(Long id);
 
     ResponseResult revokeNotice(Long id);
+
+    ResponseResult<NoticeDetailVo> getNoticeDetail(Long id);
 }
 
