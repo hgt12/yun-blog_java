@@ -225,37 +225,28 @@ public class AdminPostsServiceImpl implements AdminPostsService
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该文章不存在！");
         }
 
-        // 处理文章内容中的图片
+        //处理文章内容中的图片
         String content = updatePostsDto.getContent();
         List<String> oldContentImages = new ArrayList<>();
         List<String> newContentImages = new ArrayList<>();
 
-        // 提取旧内容中的图片URL
+        //提取旧内容中的图片URL
         if (StringUtils.hasText(oldArticle.getContent())) {
             oldContentImages = ImageUrlUtils.extractImageUrls(oldArticle.getContent());
         }
 
-        // 处理新内容中的临时图片
+        //处理新内容中的临时图片
         if (ImageUrlUtils.containsTempImages(content)) {
-            content = processContentImagesAndSaveRecords(content, oldArticle.getTitle());
+            content = processContentImagesAndSaveRecords(content, updatePostsDto.getTitle());
             updatePostsDto.setContent(content);
         }
 
-        // 提取新内容中的图片URL
+        //提取新内容中的图片URL
         if (StringUtils.hasText(content)) {
             newContentImages = ImageUrlUtils.extractImageUrls(content);
         }
 
-        // 删除不再使用的内容图片
-        for (String oldImageUrl : oldContentImages) {
-            if (!newContentImages.contains(oldImageUrl)) {
-                ossFileService.deleteFileByUrl(oldImageUrl);
-                deleteFileRecordByUrl(oldImageUrl);
-                log.info("删除旧的内容图片并同步文件表: {}", oldImageUrl);
-            }
-        }
-
-        // 处理缩略图
+        //处理缩略图
         String newThumbnail = updatePostsDto.getThumbnail();
         String oldThumbnail = oldArticle.getThumbnail();
 
@@ -271,10 +262,33 @@ public class AdminPostsServiceImpl implements AdminPostsService
                     uploadFileMetaVo.getUrl(),
                     uploadFileMetaVo.getSize(),
                     uploadFileMetaVo.getMimeType(),
-                    "文章《" + oldArticle.getTitle() + "》中的缩略图");
+                    "文章《" + updatePostsDto.getTitle() + "》中的缩略图");
         }
 
-        // 如果缩略图发生变化，删除旧缩略图
+        //更新文章基本信息
+        Article article = BeanCopyUtils.copyBean(updatePostsDto, Article.class);
+        article.setId(id);
+        boolean updated = articleService.updateById(article);
+        if (!updated) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新文章失败");
+        }
+
+        //如果标题发生变化，同步更新文件表里的文件来源
+        if (StringUtils.hasText(oldArticle.getTitle()) && StringUtils.hasText(updatePostsDto.getTitle())
+                && !oldArticle.getTitle().equals(updatePostsDto.getTitle())) {
+            syncFileSourceByTitle(oldArticle.getTitle(), updatePostsDto.getTitle());
+        }
+
+        //删除不再使用的内容图片
+        for (String oldImageUrl : oldContentImages) {
+            if (!newContentImages.contains(oldImageUrl)) {
+                ossFileService.deleteFileByUrl(oldImageUrl);
+                deleteFileRecordByUrl(oldImageUrl);
+                log.info("删除旧的内容图片并同步文件表: {}", oldImageUrl);
+            }
+        }
+
+        //如果缩略图发生变化，删除旧缩略图
         if (StringUtils.hasText(oldThumbnail) &&
             StringUtils.hasText(newThumbnail) &&
             !oldThumbnail.equals(newThumbnail)) {
@@ -283,18 +297,13 @@ public class AdminPostsServiceImpl implements AdminPostsService
             log.info("删除旧的缩略图并同步文件表: {}", oldThumbnail);
         }
 
-        // 更新文章基本信息
-        Article article = BeanCopyUtils.copyBean(updatePostsDto, Article.class);
-        article.setId(id);
-        articleService.updateById(article);
-
-        // 更新标签关联关系
-        // 先删除旧的关联关系
+        //更新标签关联关系
+        //先删除旧的关联关系
         LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
         deleteWrapper.eq(ArticleTag::getArticleId, id);
         articleTagMapper.delete(deleteWrapper);
 
-        // 添加新的关联关系
+        //添加新的关联关系
         if (updatePostsDto.getTags() != null && !updatePostsDto.getTags().isEmpty()) {
             List<ArticleTag> articleTags = updatePostsDto.getTags().stream()
                     .map(tagId -> new ArticleTag(article.getId(), tagId))
@@ -305,13 +314,13 @@ public class AdminPostsServiceImpl implements AdminPostsService
         return ResponseResult.okResult();
     }
 
-    // 批量删除文章（逻辑删除），将文章中的图片有的图片从oss里的正式文件夹转移到 deleted 文件夹中
-    // 如果后续需要有恢复文章的功能，则可以利用逻辑删除这个特性，将文章恢复并且将图片或文件从 deleted 文件夹移动到正式文件夹中
+    //批量删除文章（逻辑删除），将文章中的图片有的图片从oss里的正式文件夹转移到 deleted 文件夹中
+    //如果后续需要有恢复文章的功能，则可以利用逻辑删除这个特性，将文章恢复并且将图片或文件从 deleted 文件夹移动到正式文件夹中
     @Override
     @Transactional
     public ResponseResult deletePosts(Long[] ids)
     {
-        // 参数校验
+        //参数校验
         if (ids == null || ids.length == 0) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的文章");
         }
@@ -333,12 +342,12 @@ public class AdminPostsServiceImpl implements AdminPostsService
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下文章 id 不存在：" + notExistIds);
         }
 
-        // 遍历每个文章ID，将相关图片移动到deleted文件夹，并同步删除文件表记录
+        //遍历每个文章ID，将相关图片移动到deleted文件夹，并同步删除文件表记录
         for (Long articleId : idList)
         {
             Article article = articleService.getById(articleId);
 
-            // 查找需要移动的图片URL并去重
+            //查找需要移动的图片URL并去重
             Set<String> imageUrlSet = new LinkedHashSet<>();
             if (StringUtils.hasText(article.getContent())) {
                 List<String> contentImages = ImageUrlUtils.extractImageUrls(article.getContent());
@@ -353,13 +362,13 @@ public class AdminPostsServiceImpl implements AdminPostsService
             List<String> imageUrls = new ArrayList<>(imageUrlSet);
             log.info("文章ID: {} 去重后的图片URL: {}", articleId, imageUrls);
 
-            // 批量移动图片到 deleted 文件夹
+            //批量移动图片到 deleted 文件夹
             if (!imageUrls.isEmpty()) {
                 int movedCount = ossFileService.batchMoveFilesToDeleted(imageUrls);
                 log.info("文章ID: {} 的图片已移动到deleted文件夹，成功: {}/{}",
                     articleId, movedCount, imageUrls.size());
 
-                // 同步删除文件表记录
+                //同步删除文件表记录
                 for (String imageUrl : imageUrls) {
                     deleteFileRecordByUrl(imageUrl);
                 }
@@ -367,14 +376,14 @@ public class AdminPostsServiceImpl implements AdminPostsService
             }
 
             //此段注释掉，逻辑删除文章 + 上删除文章和标签关联关系会破坏逻辑删除的构想，如何后续开发回收站就可以连着关联关系一起删
-//            // 删除文章标签关联关系
+//            //删除文章标签关联关系
 //            LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
 //            deleteWrapper.eq(ArticleTag::getArticleId, articleId);
 //            int deletedCount = articleTagMapper.delete(deleteWrapper);
 //            log.info("删除文章ID: {} 的标签关联记录，共 {} 条", articleId, deletedCount);
         }
 
-        // 逻辑删除文章（将 del_flag 从 0 > 1）
+        //逻辑删除文章（将 del_flag 从 0 > 1）
         articleService.removeByIds(idList);
         log.info("批量逻辑删除文章成功，ID列表: {}", idList);
 
@@ -460,7 +469,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
             result = ImageUrlUtils.replaceImageUrl(result, tempUrl, uploadFileMetaVo.getUrl());
             if (StringUtils.hasText(uploadFileMetaVo.getFilePath())) {
-                String fileSource = "文章《" + postTitle + "》中的图片";
+                String fileSource = "文章《" + postTitle + "》中的内容图片";
                 saveFileRecord(uploadFileMetaVo.getName(),
                         uploadFileMetaVo.getFilePath(),
                         uploadFileMetaVo.getUrl(),
@@ -484,6 +493,29 @@ public class AdminPostsServiceImpl implements AdminPostsService
         sysFile.setMimeType(mimeType);
         sysFile.setFileSource(fileSource);
         sysFileService.save(sysFile);
+    }
+
+    //标题变更时同步更新文件来源
+    private void syncFileSourceByTitle(String oldTitle, String newTitle)
+    {
+        String oldPostPrefix = "文章《" + oldTitle + "》";
+        String newPostPrefix = "文章《" + newTitle + "》";
+
+        List<SysFile> fileList = sysFileService.list(new LambdaQueryWrapper<SysFile>()
+                .like(SysFile::getFileSource, oldPostPrefix));
+
+        if (fileList.isEmpty()) {
+            return;
+        }
+
+        for (SysFile sysFile : fileList) {
+            String fileSource = sysFile.getFileSource();
+            if (StringUtils.hasText(fileSource)) {
+                sysFile.setFileSource(fileSource.replace(oldPostPrefix, newPostPrefix));
+            }
+        }
+
+        sysFileService.updateBatchById(fileList);
     }
 
     //处理删除文件
