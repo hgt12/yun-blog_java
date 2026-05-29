@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
+import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.entity.SysNotice;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -21,5 +22,7 @@ public interface SysNoticeService extends IService<SysNotice> {
     ResponseResult<NoticeFormDetailVo> getNoticeFormDetail(Long id);
 
     ResponseResult addNotice(AddNoticeDto addNoticeDto);
+
+    ResponseResult updateNotice(Long id, UpdateNoticeDto updateNoticeDto);
 }
 

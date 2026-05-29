@@ -1,12 +1,14 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
+import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.entity.*;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.NoticeListVo;
@@ -22,16 +24,13 @@ import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.ImageUrlUtils;
 import com.mengze.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +40,7 @@ import java.util.stream.Collectors;
  * @since 2026-05-25 20:30:59
  */
 @Service("sysNoticeService")
+@Slf4j
 public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice> implements SysNoticeService
 {
     @Autowired
@@ -192,6 +192,64 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         return ResponseResult.okResult();
     }
 
+    //更新通知
+    @Override
+    @Transactional
+    public ResponseResult updateNotice(Long id, UpdateNoticeDto updateNoticeDto)
+    {
+        //检查通知是否存在
+        SysNotice oldNotice = sysNoticeService.getById(id);
+        if (oldNotice == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该通知不存在！");
+        }
+
+        //处理通知内容中的图片
+        String content = updateNoticeDto.getContent();
+        List<String> oldContentImages = new ArrayList<>();
+        List<String> newContentImages = new ArrayList<>();
+
+        //提取旧内容中的图片URL
+        if (StringUtils.hasText(oldNotice.getContent())) {
+            oldContentImages = ImageUrlUtils.extractImageUrls(oldNotice.getContent());
+        }
+
+        //处理新内容中的临时图片
+        if (ImageUrlUtils.containsTempImages(content)) {
+            content = processContentImagesAndSaveRecords(content, updateNoticeDto.getTitle());
+            updateNoticeDto.setContent(content);
+        }
+
+        //提取新内容中的图片URL
+        if (StringUtils.hasText(content)) {
+            newContentImages = ImageUrlUtils.extractImageUrls(content);
+        }
+
+        //先更新通知，避免先删 OSS 再更新数据库
+        SysNotice notice = BeanCopyUtils.copyBean(updateNoticeDto, SysNotice.class);
+        notice.setId(id);
+        boolean updated = sysNoticeService.updateById(notice);
+        if (!updated) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "更新通知失败");
+        }
+
+        //如果标题发生变化，同步更新文件表里的文件来源
+        if (StringUtils.hasText(oldNotice.getTitle()) && StringUtils.hasText(updateNoticeDto.getTitle())
+                && !oldNotice.getTitle().equals(updateNoticeDto.getTitle())) {
+            syncFileSourceByTitle(oldNotice.getTitle(), updateNoticeDto.getTitle());
+        }
+
+        //数据库更新成功后，再删除不再使用的内容图片
+        for (String oldImageUrl : oldContentImages) {
+            if (!newContentImages.contains(oldImageUrl)) {
+                ossFileService.deleteFileByUrl(oldImageUrl);
+                deleteFileRecordByUrl(oldImageUrl);
+                log.info("删除旧的内容图片并同步文件表: {}", oldImageUrl);
+            }
+        }
+
+        return ResponseResult.okResult();
+    }
+
     //将通知内容中的临时图片转正并同步文件表
     private String processContentImages(String content, String noticeTitle)
     {
@@ -243,5 +301,73 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         sysFile.setFileSource(fileSource);
         sysFileService.save(sysFile);
     }
+
+    //处理通知内容中的图片并将其写入文件表
+    private String processContentImagesAndSaveRecords(String content, String postTitle)
+    {
+        List<String> tempImageUrls = ImageUrlUtils.extractTempImageUrls(content);
+        String result = content;
+
+        //因为同一篇通知里可能重复引用同一张临时图片，所一这里先去重，避免重复转正和重复删除临时文件
+        List<String> distinctTempImageUrls = tempImageUrls.stream().distinct().toList();
+
+        for (String tempUrl : distinctTempImageUrls) {
+            UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(tempUrl);
+
+            //判断图片是否保存（从oss中的 临时 > 正式）成功
+            if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
+                throw new RuntimeException("图片保存失败，无法保存通知内容中的图片记录: " + tempUrl);
+            }
+
+            result = ImageUrlUtils.replaceImageUrl(result, tempUrl, uploadFileMetaVo.getUrl());
+            if (StringUtils.hasText(uploadFileMetaVo.getFilePath())) {
+                String fileSource = "通知《" + postTitle + "》中的内容图片";
+                saveFileRecord(uploadFileMetaVo.getName(),
+                        uploadFileMetaVo.getFilePath(),
+                        uploadFileMetaVo.getUrl(),
+                        uploadFileMetaVo.getSize(),
+                        uploadFileMetaVo.getMimeType(),
+                        fileSource);
+            }
+        }
+
+        return result;
+    }
+
+    //处理删除文件
+    private void deleteFileRecordByUrl(String url)
+    {
+        if (!StringUtils.hasText(url)) {
+            return;
+        }
+
+        LambdaQueryWrapper<SysFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysFile::getUrl, url);
+        sysFileService.remove(queryWrapper);
+    }
+
+    //标题变更时同步更新文件来源
+    private void syncFileSourceByTitle(String oldTitle, String newTitle)
+    {
+        String oldPostPrefix = "通知《" + oldTitle + "》";
+        String newPostPrefix = "通知《" + newTitle + "》";
+
+        List<SysFile> fileList = sysFileService.list(new LambdaQueryWrapper<SysFile>()
+                .like(SysFile::getFileSource, oldPostPrefix));
+
+        if (fileList.isEmpty()) {
+            return;
+        }
+
+        for (SysFile sysFile : fileList) {
+            String fileSource = sysFile.getFileSource();
+            if (StringUtils.hasText(fileSource)) {
+                sysFile.setFileSource(fileSource.replace(oldPostPrefix, newPostPrefix));
+            }
+        }
+
+        sysFileService.updateBatchById(fileList);
+    }
+
 }
 

@@ -4,6 +4,8 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddNoticeDto;
 import com.mengze.domain.dto.NoticeListDto;
+import com.mengze.domain.dto.UpdateLinkDto;
+import com.mengze.domain.dto.UpdateNoticeDto;
 import com.mengze.domain.vo.NoticeFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.SysNoticeService;
@@ -60,5 +62,15 @@ public class NoticeController
     public ResponseResult addNotice(@Valid @RequestBody AddNoticeDto addNoticeDto)
     {
         return sysNoticeService.addNotice(addNoticeDto);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('blog:notice:update')")
+    @SystemLog(businessName = "修改通知")
+    @ApiOperation(value = "修改通知接口", notes = "修改通知", response = String.class)
+    @ApiImplicitParam(name = "id", value = "通知ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateNotice(@PathVariable Long id, @Valid @RequestBody UpdateNoticeDto updateNoticeDto)
+    {
+        return sysNoticeService.updateNotice(id, updateNoticeDto);
     }
 }
