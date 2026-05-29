@@ -90,10 +90,9 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                     .apply("concat(',', target_user_ids, ',') like {0}", "%," + userId + ",%"));
         }
 
-        //管理员优先显示未发布通知，其他状态仍按发布时间倒序
+        //管理员优先显示未发布和已撤回通知，其他状态仍按发布时间倒序
         if (isAdmin) {
-            queryWrapper.orderByAsc(SysNotice::getStatus)
-                        .orderByDesc(SysNotice::getPublishTime);
+            queryWrapper.last("ORDER BY CASE WHEN status IN ('0','2') THEN 0 ELSE 1 END, publish_time DESC");
         } else {
             queryWrapper.orderByDesc(SysNotice::getPublishTime);
         }
