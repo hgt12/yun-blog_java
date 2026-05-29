@@ -1,7 +1,6 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.SystemConstants;
@@ -471,6 +470,89 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         }
 
         return ResponseResult.okResult();
+    }
+
+    //获取我的通知列表
+    @Override
+    public ResponseResult<PageVo> getMyNoticeList(Integer pageNum, Integer pageSize, NoticeListDto noticeListDto)
+    {
+        //先校验登录状态，未登录无法查看我的通知
+        Long userId = SecurityUtils.getUserId();
+        if (userId == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.NEED_LOGIN);
+        }
+
+        //构建查询条件
+        LambdaQueryWrapper<SysNotice> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysNotice::getStatus, SystemConstants.NOTICE_STATUS_PUBLISHED)
+                .eq(SysNotice::getDelFlag, SystemConstants.STATUS_NORMAL)
+                .and(wrapper -> wrapper.eq(SysNotice::getTargetType, SystemConstants.TARGET_TYPE_IS_ALL)
+                        .or()
+                        .apply("find_in_set({0}, target_user_ids)", userId));
+
+        //标题模糊搜索
+        if (noticeListDto != null && StringUtils.hasText(noticeListDto.getTitle())) {
+            queryWrapper.like(SysNotice::getTitle, noticeListDto.getTitle());
+        }
+
+        //按发布时间倒序
+        queryWrapper.orderByDesc(SysNotice::getPublishTime);
+
+        //分页查询
+        Page<SysNotice> page = new Page<>(pageNum, pageSize);
+        this.page(page, queryWrapper);
+
+        List<SysNotice> noticeList = page.getRecords();
+        List<MyNoticeListVo> myNoticeListVos = BeanCopyUtils.copyBeanList(noticeList, MyNoticeListVo.class);
+
+        //回填发布人名称
+        List<Long> publisherIds = noticeList.stream()
+                .map(SysNotice::getPublisherId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, String> publisherNameMap = new HashMap<>();
+        if (!publisherIds.isEmpty()) {
+            List<SysUser> publisherList = sysUserService.listByIds(publisherIds);
+            publisherNameMap = publisherList.stream()
+                    .collect(Collectors.toMap(SysUser::getId,
+                            user -> StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername(),
+                            (oldVal, newVal) -> oldVal));
+        }
+
+        for (int i = 0; i < noticeList.size(); i++) {
+            SysNotice notice = noticeList.get(i);
+            MyNoticeListVo myNoticeListVo = myNoticeListVos.get(i);
+            myNoticeListVo.setPublisherName(publisherNameMap.get(notice.getPublisherId()));
+        }
+
+        //默认都设置为未读
+        for (MyNoticeListVo myNoticeListVo : myNoticeListVos) {
+            myNoticeListVo.setIsRead(SystemConstants.NOTICE_NOT_READ);
+        }
+
+        //查询并回填阅读状态
+        if (!noticeList.isEmpty()) {
+            List<Long> noticeIds = noticeList.stream().map(SysNotice::getId).collect(Collectors.toList());
+            List<SysNoticeUser> noticeUserList = sysNoticeUserService.list(new LambdaQueryWrapper<SysNoticeUser>()
+                    .eq(SysNoticeUser::getUserId, userId)
+                    .in(SysNoticeUser::getNoticeId, noticeIds));
+
+            Map<Long, String> noticeReadMap = noticeUserList.stream()
+                    .collect(Collectors.toMap(SysNoticeUser::getNoticeId, SysNoticeUser::getIsRead, (oldVal, newVal) -> oldVal));
+
+            for (MyNoticeListVo myNoticeListVo : myNoticeListVos) {
+                myNoticeListVo.setIsRead(noticeReadMap.getOrDefault(myNoticeListVo.getId(), SystemConstants.NOTICE_NOT_READ));
+            }
+        }
+
+        //未读优先，已读在后；同状态下按发布时间倒序
+        myNoticeListVos.sort(Comparator.comparing((MyNoticeListVo vo) -> SystemConstants.NOTICE_IS_READ.equals(vo.getIsRead()))
+                .thenComparing(MyNoticeListVo::getPublishTime, Comparator.nullsLast(Comparator.reverseOrder())));
+
+        PageVo pageVo = new PageVo(myNoticeListVos, page.getTotal());
+        return ResponseResult.okResult(pageVo);
     }
 
     //将通知内容中的临时图片转正并同步文件表

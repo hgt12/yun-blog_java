@@ -35,5 +35,7 @@ public interface SysNoticeService extends IService<SysNotice> {
     ResponseResult<NoticeDetailVo> getNoticeDetail(Long id);
 
     ResponseResult readAllNotice();
+
+    ResponseResult<PageVo> getMyNoticeList(Integer pageNum, Integer pageSize, NoticeListDto noticeListDto);
 }
 

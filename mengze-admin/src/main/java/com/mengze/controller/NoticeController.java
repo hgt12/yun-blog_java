@@ -122,4 +122,16 @@ public class NoticeController
     {
         return sysNoticeService.readAllNotice();
     }
+
+    @GetMapping("/my")
+    @SystemLog(businessName = "获取我的通知列表接口")
+    @ApiOperation(value = "获取我的通知列表接口", notes = "分页查询我的通知列表", response = PageVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "pageNum", value = "页号", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "pageSize", value = "每页数量", dataType = "int", paramType = "query")
+    })
+    public ResponseResult<PageVo> getMyNoticeList(Integer pageNum, Integer pageSize, @Valid NoticeListDto NoticeListDto)
+    {
+        return sysNoticeService.getMyNoticeList(pageNum, pageSize, NoticeListDto);
+    }
 }
