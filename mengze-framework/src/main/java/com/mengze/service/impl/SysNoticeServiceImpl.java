@@ -90,8 +90,13 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                     .apply("concat(',', target_user_ids, ',') like {0}", "%," + userId + ",%"));
         }
 
-        //按发布时间倒序排序
-        queryWrapper.orderByDesc(SysNotice::getPublishTime);
+        //管理员优先显示未发布通知，其他状态仍按发布时间倒序
+        if (isAdmin) {
+            queryWrapper.orderByAsc(SysNotice::getStatus)
+                        .orderByDesc(SysNotice::getPublishTime);
+        } else {
+            queryWrapper.orderByDesc(SysNotice::getPublishTime);
+        }
 
         //分页查询
         Page<SysNotice> page = new Page<>(pageNum, pageSize);
