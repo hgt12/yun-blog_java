@@ -92,4 +92,14 @@ public class NoticeController
     {
         return sysNoticeService.publishNotice(id);
     }
+
+    @PutMapping("/{id}/revoke")
+    @PreAuthorize("@ps.hasPermission('sys:notice:revoke')")
+    @SystemLog(businessName = "撤回通知")
+    @ApiOperation(value = "撤回通知接口", notes = "撤回通知", response = String.class)
+    @ApiImplicitParam(name = "id", value = "通知ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult revokeNotice(@PathVariable Long id)
+    {
+        return sysNoticeService.revokeNotice(id);
+    }
 }

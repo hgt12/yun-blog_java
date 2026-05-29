@@ -231,4 +231,8 @@ public class SystemConstants
      *  通知状态：已发布
      */
     public static final String NOTICE_STATUS_PUBLISHED = "1";
+    /**
+     *  通知状态：已撤回
+     */
+    public static final String NOTICE_STATUS_REVOKED = "2";
 }
