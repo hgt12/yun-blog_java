@@ -3,6 +3,7 @@ package com.mengze.controller;
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.ConfigListDto;
+import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminConfigService;
 import io.swagger.annotations.Api;
@@ -11,10 +12,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -40,5 +38,17 @@ public class ConfigController
     public ResponseResult<PageVo> getConfigList(Integer pageNum, Integer pageSize, @Valid ConfigListDto configListDto)
     {
         return adminConfigService.getConfigList(pageNum, pageSize, configListDto);
+    }
+
+    @GetMapping("/{id}/form")
+    @PreAuthorize("@ps.hasPermission('sys:config:update')")
+    @SystemLog(businessName = "获取配置表单数据")
+    @ApiOperation(value = "获取配置表单数据", notes = "获取配置表单数据，用于编辑配置详情", response = ConfigFormDetailVo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "配置id", dataType = "long", paramType = "path")
+    })
+    public ResponseResult<ConfigFormDetailVo> getConfigFormDetail(@PathVariable Long id)
+    {
+        return adminConfigService.getConfigFormDetail(id);
     }
 }

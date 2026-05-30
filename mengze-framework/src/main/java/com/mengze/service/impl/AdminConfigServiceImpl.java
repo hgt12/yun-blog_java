@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.vo.AdminConfigListVo;
+import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
+import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ConfigMapper;
 import com.mengze.domain.entity.Config;
 import com.mengze.service.AdminConfigService;
@@ -45,7 +47,6 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
             );
         }
 
-
         //按id顺序排序
         queryWrapper.orderByAsc(Config::getId);
 
@@ -58,6 +59,23 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         PageVo pageVo = new PageVo(configListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    //获取配置表单数据
+    @Override
+    public ResponseResult<ConfigFormDetailVo> getConfigFormDetail(Long id)
+    {
+        //获取配置id
+        Config config = adminConfigService.getById(id);
+        if (config == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该配置不存在！");
+        }
+
+        //封装为Vo
+        ConfigFormDetailVo configFormDetailVo = BeanCopyUtils.copyBean(config, ConfigFormDetailVo.class);
+
+        //返回
+        return ResponseResult.okResult(configFormDetailVo);
     }
 }
 
