@@ -21,7 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 系统配置表(SysConfig)表服务实现类
@@ -126,6 +127,39 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         Config config = BeanCopyUtils.copyBean(updateConfigDto, Config.class);
         config.setId(id);
         adminConfigService.updateById(config);
+
+        return ResponseResult.okResult();
+    }
+
+    //删除配置（批量逻辑删除）
+    @Override
+    public ResponseResult deleteConfig(Long[] ids)
+    {
+        //参数校验
+        if (ids == null || ids.length == 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "请选择要删除的配置");
+        }
+
+        //获取配置id列表
+        List<Long> idList = List.of(ids);
+
+        //检查配置是否存在
+        List<Config> configToDelete = adminConfigService.listByIds(idList);
+        if (configToDelete.size() != ids.length) {
+            //找出不存在的 配置id
+            Set<Long> existIds = configToDelete.stream()
+                    .map(Config::getId)
+                    .collect(Collectors.toSet());
+
+            List<Long> notExistIds = idList.stream()
+                    .filter(id -> !existIds.contains(id))
+                    .toList();
+
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下配置 id 不存在：" + notExistIds);
+        }
+
+        //根据配置id列表删除配置
+        adminConfigService.removeByIds(idList);
 
         return ResponseResult.okResult();
     }

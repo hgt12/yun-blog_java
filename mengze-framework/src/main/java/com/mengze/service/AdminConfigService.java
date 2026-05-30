@@ -24,5 +24,7 @@ public interface AdminConfigService extends IService<Config> {
     ResponseResult addConfig(AddConfigDto addConfigDto);
 
     ResponseResult updateConfig(Long id, UpdateConfigDto updateConfigDto);
+
+    ResponseResult deleteConfig(Long[] ids);
 }
 

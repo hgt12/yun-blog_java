@@ -72,4 +72,14 @@ public class ConfigController
     {
         return adminConfigService.updateConfig(id, updateConfigDto);
     }
+
+    @DeleteMapping("/{ids}")
+    @PreAuthorize("@ps.hasPermission('sys:config:delete')")
+    @SystemLog(businessName = "删除配置(逻辑删除)")
+    @ApiOperation(value = "删除配置接口（批量逻辑删除）", notes = "删除配置，支持批量删除", response = String.class)
+    @ApiImplicitParam(name = "ids", value = "配置id", dataType = "Long", paramType = "path", required = true)
+    public ResponseResult deleteConfig(@PathVariable Long[] ids)
+    {
+        return adminConfigService.deleteConfig(ids);
+    }
 }
