@@ -4,6 +4,7 @@ import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
+import com.mengze.domain.dto.UpdateConfigDto;
 import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.service.AdminConfigService;
@@ -60,5 +61,15 @@ public class ConfigController
     public ResponseResult addConfig(@Valid @RequestBody AddConfigDto addConfigDto)
     {
         return adminConfigService.addConfig(addConfigDto);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@ps.hasPermission('sys:config:update')")
+    @SystemLog(businessName = "修改配置")
+    @ApiOperation(value = "修改配置接口", notes = "修改配置", response = String.class)
+    @ApiImplicitParam(name = "id", value = "配置ID", dataType = "long", paramType = "path", required = true)
+    public ResponseResult updateConfig(@PathVariable Long id, @Valid @RequestBody UpdateConfigDto updateConfigDto)
+    {
+        return adminConfigService.updateConfig(id, updateConfigDto);
     }
 }

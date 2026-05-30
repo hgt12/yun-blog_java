@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
+import com.mengze.domain.dto.UpdateConfigDto;
+import com.mengze.domain.entity.Category;
 import com.mengze.domain.vo.AdminConfigListVo;
 import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 系统配置表(SysConfig)表服务实现类
@@ -95,6 +98,34 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         //添加配置
         Config config = BeanCopyUtils.copyBean(addConfigDto, Config.class);
         adminConfigService.save(config);
+
+        return ResponseResult.okResult();
+    }
+
+    //更新配置
+    @Override
+    public ResponseResult updateConfig(Long id, UpdateConfigDto updateConfigDto)
+    {
+        //检查配置是否存在
+        Config oldConfig = adminConfigService.getById(id);
+        if (oldConfig == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该配置不存在！");
+        }
+
+        //检查配置键是否与其他配置键重复（排除自己）
+        LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Config::getConfigKey, updateConfigDto.getConfigKey())
+                .ne(Config::getId, id); // 排除当前配置
+        long count = adminConfigService.count(queryWrapper);
+
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "配置键已存在，请勿重复添加！");
+        }
+
+        //更新配置信息
+        Config config = BeanCopyUtils.copyBean(updateConfigDto, Config.class);
+        config.setId(id);
+        adminConfigService.updateById(config);
 
         return ResponseResult.okResult();
     }

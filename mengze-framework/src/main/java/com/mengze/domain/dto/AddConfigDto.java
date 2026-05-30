@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.NotBlank;
 
 /**
- * 添加分类请求DTO
+ * 添加配置请求DTO
  */
 @Data
 @AllArgsConstructor
