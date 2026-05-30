@@ -7,20 +7,21 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.dto.UpdateConfigDto;
-import com.mengze.domain.entity.Category;
+import com.mengze.domain.entity.Config;
 import com.mengze.domain.vo.AdminConfigListVo;
 import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ConfigMapper;
-import com.mengze.domain.entity.Config;
 import com.mengze.service.AdminConfigService;
 import com.mengze.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,8 +34,13 @@ import java.util.stream.Collectors;
 @Service("sysConfigService")
 public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements AdminConfigService
 {
+    private static final String CONFIG_CACHE_PREFIX = "config:";
+
     @Autowired
     private AdminConfigService adminConfigService;
+
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
 
     //获取配置列表
     @Override
@@ -160,6 +166,33 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
 
         //根据配置id列表删除配置
         adminConfigService.removeByIds(idList);
+
+        return ResponseResult.okResult();
+    }
+
+    //刷新配置缓存
+    @Override
+    public ResponseResult refreshConfigCache()
+    {
+        //获取配置列表
+        List<Config> configList = adminConfigService.list();
+
+        //清理 Redis 中 config:* 的旧缓存
+        Set<Object> keys = redisTemplate.keys(CONFIG_CACHE_PREFIX + "*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+
+        //将最新配置重新写入缓存
+        if (configList != null && !configList.isEmpty()) {
+            Map<Object, Object> configCacheMap = configList.stream()
+                    .collect(Collectors.toMap(
+                            config -> CONFIG_CACHE_PREFIX + config.getConfigKey(),
+                            Config::getConfigValue,
+                            (oldValue, newValue) -> newValue
+                    ));
+            redisTemplate.opsForValue().multiSet(configCacheMap);
+        }
 
         return ResponseResult.okResult();
     }

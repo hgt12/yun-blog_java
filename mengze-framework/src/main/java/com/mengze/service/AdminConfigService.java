@@ -26,5 +26,7 @@ public interface AdminConfigService extends IService<Config> {
     ResponseResult updateConfig(Long id, UpdateConfigDto updateConfigDto);
 
     ResponseResult deleteConfig(Long[] ids);
+
+    ResponseResult refreshConfigCache();
 }
 

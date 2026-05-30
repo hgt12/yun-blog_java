@@ -45,6 +45,7 @@ public class ContentTypeValidationFilter extends OncePerRequestFilter
      * 白名单路径（不需要验证Content-Type）
      */
     private static final List<String> WHITELIST_PATHS = Arrays.asList(
+            "/configs/refresh",       // 后台刷新配置缓存接口
             "/notices/read-all",       // 后台全部已读通知接口
             "/notices/*/publish",       // 后台发布通知接口
             "/notices/*/revoke",       // 后台撤回通知接口

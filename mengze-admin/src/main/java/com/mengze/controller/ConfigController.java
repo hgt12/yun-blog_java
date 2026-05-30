@@ -82,4 +82,13 @@ public class ConfigController
     {
         return adminConfigService.deleteConfig(ids);
     }
+
+    @PutMapping("/refresh")
+    @PreAuthorize("@ps.hasPermission('sys:config:update')")
+    @SystemLog(businessName = "刷新配置缓存")
+    @ApiOperation(value = "刷新配置缓存接口", notes = "刷新配置缓存", response = String.class)
+    public ResponseResult refreshConfigCache()
+    {
+        return adminConfigService.refreshConfigCache();
+    }
 }
