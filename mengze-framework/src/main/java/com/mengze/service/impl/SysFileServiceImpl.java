@@ -8,6 +8,7 @@ import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.FileListDto;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.SysFile;
+import com.mengze.domain.entity.SysNotice;
 import com.mengze.domain.entity.SysUser;
 import com.mengze.domain.vo.FileListVo;
 import com.mengze.domain.vo.PageVo;
@@ -15,6 +16,7 @@ import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysFileMapper;
 import com.mengze.service.ArticleService;
 import com.mengze.service.SysFileService;
+import com.mengze.service.SysNoticeService;
 import com.mengze.service.SysUserService;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.ImageUrlUtils;
@@ -48,6 +50,9 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Autowired
+    private SysNoticeService sysNoticeService;
 
     @Autowired
     private OssFileServiceImpl ossFileService;
@@ -141,13 +146,14 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败，以下文件ID不存在：" + notExistIds);
         }
 
-        //根据选中的文件URL查询相关文章
+        //根据选中的文件URL查询相关文章和通知
         List<String> fileUrls = filesToDelete.stream()
                 .map(SysFile::getUrl)
                 .filter(StringUtils::hasText)
                 .collect(Collectors.toList());
 
         Map<String, List<Article>> fileArticleUsageMap = new HashMap<>();
+        Map<String, List<SysNotice>> fileNoticeUsageMap = new HashMap<>();
         if (!fileUrls.isEmpty())
         {
             List<Article> relatedArticles = articleService.list(
@@ -180,6 +186,31 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
                     }
                 }
             }
+
+            //获取通知里的图片url
+            List<SysNotice> relatedNotices = sysNoticeService.list(
+                    Wrappers.<SysNotice>lambdaQuery()
+                            .select(SysNotice::getId, SysNotice::getTitle, SysNotice::getContent)
+                            .and(wrapper -> {
+                                for (String fileUrl : fileUrls) {
+                                    wrapper.or().like(SysNotice::getContent, fileUrl);
+                                }
+                            })
+            );
+
+            //遍历每一条通知 检查这条通知的内容里有没有图片地址
+            //如果有就看看这些图片是不是准备删除的文件
+            for (SysNotice notice : relatedNotices) {
+                List<String> contentImages = ImageUrlUtils.extractImageUrls(notice.getContent());
+                if (!contentImages.isEmpty()) {
+                    for (String imageUrl : contentImages) {
+                        if (StringUtils.hasText(imageUrl) && fileUrls.contains(imageUrl)) {
+                            fileNoticeUsageMap.computeIfAbsent(imageUrl, key -> new ArrayList<>())
+                                    .add(notice);
+                        }
+                    }
+                }
+            }
         }
 
         //检验选中的文件中是否能被删除
@@ -206,6 +237,23 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
                 errorMsg.add("【" + file.getName() + "】正在被文章【" + articleNames + "】使用");
             }
 
+            //如果文件正在被通知内容中的图片使用，不允许删除
+            List<SysNotice> usedNotices = fileNoticeUsageMap.get(fileUrl);
+            if (usedNotices != null && !usedNotices.isEmpty()) {
+                String noticeNames = usedNotices.stream()
+                        .map(SysNotice::getTitle)
+                        .filter(StringUtils::hasText)
+                        .distinct()
+                        .collect(Collectors.joining("、"));
+                if (!StringUtils.hasText(noticeNames)) {
+                    noticeNames = usedNotices.stream()
+                            .map(notice -> String.valueOf(notice.getId()))
+                            .distinct()
+                            .collect(Collectors.joining("、"));
+                }
+                errorMsg.add("【" + file.getName() + "】正在被通知【" + noticeNames + "】内容使用");
+            }
+
             //如果文件正在被用户头像使用，不允许删除
             SysUser user = sysUserService.getOne(
                     Wrappers.<SysUser>lambdaQuery()
@@ -219,7 +267,8 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         }
 
         if (!errorMsg.isEmpty()) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, errorMsg + "，无法删除");
+            String msg = String.join("；", errorMsg);
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, msg + "，无法删除");
         }
 
         boolean removed = removeByIds(idList);
