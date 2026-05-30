@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -106,6 +107,9 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         Config config = BeanCopyUtils.copyBean(addConfigDto, Config.class);
         adminConfigService.save(config);
 
+        //将配置加入缓存
+        redisTemplate.opsForValue().set(getConfigCacheKey(config.getConfigKey()), config.getConfigValue());
+
         return ResponseResult.okResult();
     }
 
@@ -129,10 +133,19 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "配置键已存在，请勿重复添加！");
         }
 
+        String oldCacheKey = getConfigCacheKey(oldConfig.getConfigKey());
+        String newCacheKey = getConfigCacheKey(updateConfigDto.getConfigKey());
+
         //更新配置信息
         Config config = BeanCopyUtils.copyBean(updateConfigDto, Config.class);
         config.setId(id);
         adminConfigService.updateById(config);
+
+        //从缓存里更新配置
+        if (!Objects.equals(oldConfig.getConfigKey(), updateConfigDto.getConfigKey())) {
+            redisTemplate.delete(oldCacheKey);
+        }
+        redisTemplate.opsForValue().set(newCacheKey, updateConfigDto.getConfigValue());
 
         return ResponseResult.okResult();
     }
@@ -167,6 +180,9 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         //根据配置id列表删除配置
         adminConfigService.removeByIds(idList);
 
+        //缓存里删除配置
+        configToDelete.forEach(config -> redisTemplate.delete(getConfigCacheKey(config.getConfigKey())));
+
         return ResponseResult.okResult();
     }
 
@@ -186,8 +202,9 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         //将最新配置重新写入缓存
         if (configList != null && !configList.isEmpty()) {
             Map<Object, Object> configCacheMap = configList.stream()
+                    .filter(config -> StringUtils.hasText(config.getConfigKey()))
                     .collect(Collectors.toMap(
-                            config -> CONFIG_CACHE_PREFIX + config.getConfigKey(),
+                            config -> getConfigCacheKey(config.getConfigKey()),
                             Config::getConfigValue,
                             (oldValue, newValue) -> newValue
                     ));
@@ -195,6 +212,11 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         }
 
         return ResponseResult.okResult();
+    }
+
+    private String getConfigCacheKey(String configKey)
+    {
+        return CONFIG_CACHE_PREFIX + configKey;
     }
 }
 
