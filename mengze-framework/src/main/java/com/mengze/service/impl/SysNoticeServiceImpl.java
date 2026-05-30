@@ -315,6 +315,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
 
     //发布通知
     @Override
+    @Transactional
     public ResponseResult publishNotice(Long id)
     {
         //检查通知是否存在
@@ -328,15 +329,51 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             return ResponseResult.okResult();
         }
 
+        //指定用户公告需要先校验目标用户是否为空
+        if (SystemConstants.TARGET_TYPE_IS_SPECIFIED.equals(oldNotice.getTargetType())
+                && !StringUtils.hasText(oldNotice.getTargetUserIds())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "推送指定用户不能为空");
+        }
+
         //更新通知状态并写入发布时间
         SysNotice notice = new SysNotice();
         notice.setId(id);
         notice.setStatus(SystemConstants.NOTICE_STATUS_PUBLISHED);
         notice.setPublishTime(new Date());
+        notice.setPublisherId(SecurityUtils.getUserId());
 
         boolean updated = sysNoticeService.updateById(notice);
         if (!updated) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "发布通知失败");
+        }
+
+        //发布通知的同时，删除该通知之前的用户阅读记录，因为可能是重新发布
+        sysNoticeUserService.remove(new LambdaQueryWrapper<SysNoticeUser>()
+                .eq(SysNoticeUser::getNoticeId, id));
+
+        //添加新的用户阅读记录
+        List<Long> targetUserIdList = null;
+        if (SystemConstants.TARGET_TYPE_IS_SPECIFIED.equals(oldNotice.getTargetType())) {
+            targetUserIdList = Arrays.stream(oldNotice.getTargetUserIds().split(","))
+                    .map(Long::valueOf)
+                    .toList();
+        }
+
+        //收集需要插入数据的用户列表
+        List<SysUser> targetUserList = sysUserService.list(new LambdaQueryWrapper<SysUser>()
+                .in(SystemConstants.TARGET_TYPE_IS_SPECIFIED.equals(oldNotice.getTargetType()), SysUser::getId, targetUserIdList));
+
+        //批量插入数据（1万以内的用户基数同步插入时的压力一般不会很大，如果是1万以上的用户基数就要考虑分批插入或者是异步生成了）
+        List<SysNoticeUser> noticeUserList = targetUserList.stream().map(user -> {
+            SysNoticeUser noticeUser = new SysNoticeUser();
+            noticeUser.setNoticeId(id);
+            noticeUser.setUserId(user.getId());
+            noticeUser.setIsRead(SystemConstants.NOTICE_NOT_READ);
+            return noticeUser;
+        }).toList();
+
+        if (!noticeUserList.isEmpty()) {
+            sysNoticeUserService.saveBatch(noticeUserList);
         }
 
         return ResponseResult.okResult();
