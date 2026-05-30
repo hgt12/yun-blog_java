@@ -2,6 +2,7 @@ package com.mengze.controller;
 
 import com.mengze.annotation.SystemLog;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
@@ -50,5 +51,14 @@ public class ConfigController
     public ResponseResult<ConfigFormDetailVo> getConfigFormDetail(@PathVariable Long id)
     {
         return adminConfigService.getConfigFormDetail(id);
+    }
+
+    @PostMapping
+    @PreAuthorize("@ps.hasPermission('sys:config:create')")
+    @SystemLog(businessName = "新增配置")
+    @ApiOperation(value = "新增配置接口", notes = "新增配置", response = String.class)
+    public ResponseResult addConfig(@Valid @RequestBody AddConfigDto addConfigDto)
+    {
+        return adminConfigService.addConfig(addConfigDto);
     }
 }

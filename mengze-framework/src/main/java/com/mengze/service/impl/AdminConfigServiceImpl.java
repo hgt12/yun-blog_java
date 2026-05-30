@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.domain.ResponseResult;
+import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.vo.AdminConfigListVo;
 import com.mengze.domain.vo.ConfigFormDetailVo;
@@ -76,6 +77,26 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
 
         //返回
         return ResponseResult.okResult(configFormDetailVo);
+    }
+
+    //添加配置
+    @Override
+    public ResponseResult addConfig(AddConfigDto addConfigDto)
+    {
+        //检查配置键是否已存在
+        LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Config::getConfigKey, addConfigDto.getConfigKey());
+        long count = adminConfigService.count(queryWrapper);
+
+        if (count > 0) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "配置键已存在，请勿重复添加！");
+        }
+
+        //添加配置
+        Config config = BeanCopyUtils.copyBean(addConfigDto, Config.class);
+        adminConfigService.save(config);
+
+        return ResponseResult.okResult();
     }
 }
 
