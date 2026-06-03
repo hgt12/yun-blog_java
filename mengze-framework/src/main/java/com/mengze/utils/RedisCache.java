@@ -289,4 +289,29 @@ public class RedisCache
         return result != null && result > 0;
     }
 
+    /**
+     * 从 Set 中移除一个元素
+     *
+     * @param key Redis键
+     * @param value 值
+     * @return 移除数量
+     */
+    public <T> long removeFromSet(final String key, final T value)
+    {
+        Long result = redisTemplate.opsForSet().remove(key, value);
+        return result == null ? 0 : result;
+    }
+
+    /**
+     * 获取 Set 元素数量
+     *
+     * @param key Redis键
+     * @return 元素数量
+     */
+    public long getSetSize(final String key)
+    {
+        Long result = redisTemplate.opsForSet().size(key);
+        return result == null ? 0 : result;
+    }
+
 }

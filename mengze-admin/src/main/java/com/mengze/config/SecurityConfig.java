@@ -60,6 +60,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/weather/now").permitAll()
                 // 对于后台记录访问日志接口所有人都能访问
                 .antMatchers("/statistics/visits/recordVisit").permitAll()
+                // 对于WebSocket连接端点允许握手，实际连接鉴权在STOMP CONNECT阶段完成
+                .antMatchers("/ws/**").permitAll()
                 // 对于swagger-ui相关页面不需要认证就能访问
                 .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs", "/v3/api-docs", "/webjars/**").permitAll()
                 // 除上面外的所有请求都需要认证才可以访问

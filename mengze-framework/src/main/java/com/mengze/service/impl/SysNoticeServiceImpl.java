@@ -332,7 +332,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         //指定用户公告需要先校验目标用户是否为空
         if (SystemConstants.TARGET_TYPE_IS_SPECIFIED.equals(oldNotice.getTargetType())
                 && !StringUtils.hasText(oldNotice.getTargetUserIds())) {
-            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "推送指定用户不能为空");
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "指定用户不能为空");
         }
 
         //更新通知状态并写入发布时间
