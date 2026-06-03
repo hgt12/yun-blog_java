@@ -111,7 +111,9 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         sysFileService.page(page, queryWrapper);
 
         //封装成vo返回
-        List<FileListVo> fileListVos = BeanCopyUtils.copyBeanList(page.getRecords(), FileListVo.class);
+        List<SysFile> fileRecords = page.getRecords();
+        List<FileListVo> fileListVos = BeanCopyUtils.copyBeanList(fileRecords, FileListVo.class);
+        fillCreatorName(fileRecords, fileListVos);
         PageVo pageVo = new PageVo(fileListVos, page.getTotal());
 
         return ResponseResult.okResult(pageVo);
@@ -284,6 +286,43 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         }
 
         return ResponseResult.okResult();
+    }
+
+    //根据创建者id转换创建者名字
+    private void fillCreatorName(List<SysFile> fileRecords, List<FileListVo> fileListVos)
+    {
+        //文件列表为空时直接返回
+        if (fileRecords == null || fileRecords.isEmpty() || fileListVos == null || fileListVos.isEmpty()) {
+            return;
+        }
+
+        //收集文件记录中的创建者id并过滤空id
+        Set<Long> creatorIds = fileRecords.stream()
+                .map(SysFile::getCreateBy)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (creatorIds.isEmpty()) {
+            return;
+        }
+
+        //根据创建者id批量查询用户信息
+        Map<Long, String> creatorNameMap = sysUserService.list(
+                        Wrappers.<SysUser>lambdaQuery()
+                                .select(SysUser::getId, SysUser::getNickname, SysUser::getUsername)
+                                .in(SysUser::getId, creatorIds)
+                ).stream()
+                .collect(Collectors.toMap(
+                        SysUser::getId,
+                        //优先使用用户昵称作为创建者名字；如果昵称为空则使用用户名
+                        user -> StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername(),
+                        (oldName, newName) -> oldName
+                ));
+
+        //将创建者id转换后的创建者名字设置到Vo中
+        for (int i = 0; i < fileRecords.size(); i++) {
+            Long creatorId = fileRecords.get(i).getCreateBy();
+            fileListVos.get(i).setCreatorName(creatorNameMap.get(creatorId));
+        }
     }
 
     //保存到文件表 方法

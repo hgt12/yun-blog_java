@@ -1,5 +1,6 @@
 package com.mengze.domain.vo;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -35,8 +36,9 @@ public class FileListVo
     @ApiModelProperty(value = "MIME类型", example = "image/gif")
     private String mimeType;
 
-    @ApiModelProperty(value = "创建者ID", example = "1")
-    private Long createBy;
+    @TableField(exist = false)
+    @ApiModelProperty(value = "创建者名字", example = "云梦泽")
+    private String creatorName;
 
     @ApiModelProperty(value = "创建时间", example = "2026-05-08 14:40:22")
     private Date createTime;
