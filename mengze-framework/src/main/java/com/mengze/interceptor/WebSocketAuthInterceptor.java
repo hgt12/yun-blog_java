@@ -24,6 +24,9 @@ import java.util.Objects;
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor
 {
+    private static final String ADMIN_LOGIN_KEY_PREFIX = "adminLogin:";
+    private static final String BLOG_LOGIN_KEY_PREFIX = "blogLogin:";
+
     @Autowired
     private RedisCache redisCache;
 
@@ -49,13 +52,18 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         String userId = claims.getSubject();
-        LoginUser loginUser = redisCache.getCacheObject("adminLogin:" + userId);
+        LoginUser loginUser = redisCache.getCacheObject(ADMIN_LOGIN_KEY_PREFIX + userId);
+        String loginType = WebSocketPrincipal.LOGIN_TYPE_ADMIN;
+        if (Objects.isNull(loginUser)){
+            loginUser = redisCache.getCacheObject(BLOG_LOGIN_KEY_PREFIX + userId);
+            loginType = WebSocketPrincipal.LOGIN_TYPE_BLOG;
+        }
         if (Objects.isNull(loginUser)){
             throw new IllegalArgumentException("token无效或过期！");
         }
 
         //绑定当前登录用户身份，后续可通过Principal获取当前用户
-        WebSocketPrincipal principal = new WebSocketPrincipal(userId, loginUser);
+        WebSocketPrincipal principal = new WebSocketPrincipal(userId, loginUser, loginType);
         accessor.setUser(principal);
         accessor.setHeader("loginUser", loginUser);
         accessor.setHeader("authentication", new UsernamePasswordAuthenticationToken(loginUser, null, null));
@@ -65,15 +73,22 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
     //WebSocket用户身份信息
     public static class WebSocketPrincipal implements Principal
     {
+        public static final String LOGIN_TYPE_ADMIN = "admin";
+        public static final String LOGIN_TYPE_BLOG = "blog";
+
         private final String name;
 
         @Getter
         private final LoginUser loginUser;
 
-        public WebSocketPrincipal(String name, LoginUser loginUser)
+        @Getter
+        private final String loginType;
+
+        public WebSocketPrincipal(String name, LoginUser loginUser, String loginType)
         {
             this.name = name;
             this.loginUser = loginUser;
+            this.loginType = loginType;
         }
 
         @Override

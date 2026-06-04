@@ -1,5 +1,6 @@
 package com.mengze.listener;
 
+import com.mengze.interceptor.WebSocketAuthInterceptor.WebSocketPrincipal;
 import com.mengze.service.OnlineUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -10,13 +11,13 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.security.Principal;
-import java.util.Objects;
 
 //WebSocket连接事件监听器
 @Component
 public class WebSocketEventListener
 {
-    private static final String ONLINE_COUNT_TOPIC = "/topic/online-count";
+    private static final String ADMIN_ONLINE_COUNT_TOPIC = "/topic/admin/online-count";
+    private static final String BLOG_ONLINE_COUNT_TOPIC = "/topic/blog/online-count";
 
     @Autowired
     private OnlineUserService onlineUserService;
@@ -28,19 +29,22 @@ public class WebSocketEventListener
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         Principal principal = accessor.getUser();
-        if (Objects.nonNull(principal)){
-            onlineUserService.online(sessionId, principal.getName());
+        if (principal instanceof WebSocketPrincipal webSocketPrincipal){
+            onlineUserService.online(sessionId, webSocketPrincipal.getName(), webSocketPrincipal.getLoginType());
         }
     }
 
-    //前端有人访问页面后立即给当前会话更新一次当前在线人数
+    //有人订阅在线人数主题后立即推送当前在线人数
     @EventListener
     public void handleSessionSubscribeEvent(SessionSubscribeEvent event)
     {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = accessor.getDestination();
-        if (ONLINE_COUNT_TOPIC.equals(destination)){
-            onlineUserService.pushOnlineCount();
+        if (ADMIN_ONLINE_COUNT_TOPIC.equals(destination)){
+            onlineUserService.pushOnlineCount(WebSocketPrincipal.LOGIN_TYPE_ADMIN);
+        }
+        if (BLOG_ONLINE_COUNT_TOPIC.equals(destination)){
+            onlineUserService.pushOnlineCount(WebSocketPrincipal.LOGIN_TYPE_BLOG);
         }
     }
 
