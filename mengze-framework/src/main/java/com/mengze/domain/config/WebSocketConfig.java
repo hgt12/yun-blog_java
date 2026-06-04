@@ -1,4 +1,4 @@
-package com.mengze.config;
+package com.mengze.domain.config;
 
 import com.mengze.interceptor.WebSocketAuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;

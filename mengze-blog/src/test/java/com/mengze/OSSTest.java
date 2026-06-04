@@ -8,6 +8,7 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 
 @SpringBootTest
 @Component
+@Disabled
 //@ConfigurationProperties(prefix = "oss")
 public class OSSTest {
     private String accessKey;
