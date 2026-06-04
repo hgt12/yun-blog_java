@@ -3,6 +3,7 @@ package com.mengze.interceptor;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.utils.JwtUtil;
 import com.mengze.utils.RedisCache;
+import com.mengze.constants.WebSocketConstants;
 import io.jsonwebtoken.Claims;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -19,14 +20,12 @@ import org.springframework.util.StringUtils;
 
 import java.security.Principal;
 import java.util.Objects;
+import java.util.UUID;
 
 //WebSocket连接鉴权拦截器
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor
 {
-    private static final String ADMIN_LOGIN_KEY_PREFIX = "adminLogin:";
-    private static final String BLOG_LOGIN_KEY_PREFIX = "blogLogin:";
-
     @Autowired
     private RedisCache redisCache;
 
@@ -39,9 +38,17 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         //获取STOMP CONNECT Header中的token
-        String token = accessor.getFirstNativeHeader("token");
+        String token = accessor.getFirstNativeHeader(WebSocketConstants.HEADER_TOKEN);
         if (!StringUtils.hasText(token)){
-            throw new IllegalArgumentException("token不能为空");
+            String visitorId = accessor.getFirstNativeHeader(WebSocketConstants.HEADER_VISITOR_ID);
+            if (!StringUtils.hasText(visitorId)){
+                visitorId = UUID.randomUUID().toString().replace("-", "");
+            }
+            VisitorPrincipal principal = new VisitorPrincipal(visitorId);
+            accessor.setUser(principal);
+            accessor.setHeader(WebSocketConstants.HEADER_LOGIN_TYPE, WebSocketConstants.LOGIN_TYPE_VISITOR);
+            accessor.setHeader(WebSocketConstants.HEADER_VISITOR_ID, visitorId);
+            return message;
         }
 
         Claims claims;
@@ -52,11 +59,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         String userId = claims.getSubject();
-        LoginUser loginUser = redisCache.getCacheObject(ADMIN_LOGIN_KEY_PREFIX + userId);
-        String loginType = WebSocketPrincipal.LOGIN_TYPE_ADMIN;
+        LoginUser loginUser = redisCache.getCacheObject(WebSocketConstants.REDIS_ADMIN_LOGIN_KEY_PREFIX + userId);
+        String loginType = WebSocketConstants.LOGIN_TYPE_ADMIN;
         if (Objects.isNull(loginUser)){
-            loginUser = redisCache.getCacheObject(BLOG_LOGIN_KEY_PREFIX + userId);
-            loginType = WebSocketPrincipal.LOGIN_TYPE_BLOG;
+            loginUser = redisCache.getCacheObject(WebSocketConstants.REDIS_BLOG_LOGIN_KEY_PREFIX + userId);
+            loginType = WebSocketConstants.LOGIN_TYPE_BLOG;
         }
         if (Objects.isNull(loginUser)){
             throw new IllegalArgumentException("token无效或过期！");
@@ -65,17 +72,15 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         //绑定当前登录用户身份，后续可通过Principal获取当前用户
         WebSocketPrincipal principal = new WebSocketPrincipal(userId, loginUser, loginType);
         accessor.setUser(principal);
-        accessor.setHeader("loginUser", loginUser);
-        accessor.setHeader("authentication", new UsernamePasswordAuthenticationToken(loginUser, null, null));
+        accessor.setHeader(WebSocketConstants.HEADER_LOGIN_USER, loginUser);
+        accessor.setHeader(WebSocketConstants.HEADER_LOGIN_TYPE, loginType);
+        accessor.setHeader(WebSocketConstants.HEADER_AUTHENTICATION, new UsernamePasswordAuthenticationToken(loginUser, null, null));
         return message;
     }
 
     //WebSocket用户身份信息
     public static class WebSocketPrincipal implements Principal
     {
-        public static final String LOGIN_TYPE_ADMIN = "admin";
-        public static final String LOGIN_TYPE_BLOG = "blog";
-
         private final String name;
 
         @Getter
@@ -97,5 +102,22 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
             return name;
         }
 
+    }
+
+    //游客WebSocket身份信息
+    public static class VisitorPrincipal implements Principal
+    {
+        private final String name;
+
+        public VisitorPrincipal(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        public String getName()
+        {
+            return name;
+        }
     }
 }

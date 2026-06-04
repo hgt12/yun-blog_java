@@ -3,6 +3,7 @@ package com.mengze.service.impl;
 import com.mengze.domain.vo.OnlineCountVo;
 import com.mengze.service.OnlineUserService;
 import com.mengze.utils.RedisCache;
+import com.mengze.constants.WebSocketConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -16,21 +17,6 @@ import java.util.Set;
 @Service
 public class OnlineUserServiceImpl implements OnlineUserService
 {
-    //后台系统
-    private static final String ADMIN_ONLINE_COUNT_TOPIC = "/topic/admin/online-count";
-
-    //前台系统
-    private static final String BLOG_ONLINE_COUNT_TOPIC = "/topic/blog/online-count";
-
-    //在线用户集合 Key，按登录类型分别统计。
-    private static final String ONLINE_USERS_KEY_PREFIX = "ws:online:users:";
-
-    //WebSocket 会话与用户的映射 Key,用于断开连接时反查用户
-    private static final String ONLINE_SESSIONS_KEY = "ws:online:sessions";
-
-    //单个用户对应的 WebSocket 会话集合 Key 前缀
-    private static final String USER_SESSIONS_KEY_PREFIX = "ws:online:user:sessions:";
-
     @Autowired
     private RedisCache redisCache;
 
@@ -48,20 +34,15 @@ public class OnlineUserServiceImpl implements OnlineUserService
             return;
         }
 
-        String userSessionsKey = getUserSessionsKey(userId, loginType);
-        String onlineUsersKey = getOnlineUsersKey(loginType);
+        String normalizedLoginType = normalizeLoginType(loginType);
+        String userSessionsKey = getUserSessionsKey(userId, normalizedLoginType);
+        String onlineUsersKey = getOnlineUsersKey(normalizedLoginType);
 
-        //保存 sessionId -> userId/loginType 映射，方便离线时根据 sessionId 找到对应用户
-        redisCache.setCacheMapValue(ONLINE_SESSIONS_KEY, sessionId, buildSessionValue(userId, loginType));
-
-        //保存当前用户拥有的 sessionId（支持同一用户多端或多标签页同时在线）
+        //将用户加入 redis对应在线用户集合（去重后）
+        redisCache.setCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId, buildSessionValue(userId, normalizedLoginType));
         redisCache.addToSet(userSessionsKey, sessionId);
-
-        //将用户加入对应在线用户集合（去重后）
         redisCache.addToSet(onlineUsersKey, userId);
-
-        //在线状态变化后向前端更新最新在线人数
-        pushOnlineCount(loginType);
+        pushOnlineCount(normalizedLoginType);
     }
 
     //标记用户为离线
@@ -76,10 +57,10 @@ public class OnlineUserServiceImpl implements OnlineUserService
         }
 
         //通过 sessionId 查 userId 与 loginType，用于清理该用户的会话集合
-        String sessionValue = redisCache.getCacheMapValue(ONLINE_SESSIONS_KEY, sessionId);
+        String sessionValue = redisCache.getCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId);
 
         //删除全局 sessionId -> userId/loginType 映射
-        redisCache.delCacheMapValue(ONLINE_SESSIONS_KEY, sessionId);
+        redisCache.delCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId);
         if (StringUtils.hasText(sessionValue)){
             String[] sessionParts = sessionValue.split(":", 2);
             if (sessionParts.length == 2 && StringUtils.hasText(sessionParts[0]) && StringUtils.hasText(sessionParts[1])){
@@ -100,7 +81,6 @@ public class OnlineUserServiceImpl implements OnlineUserService
 
                 //离线状态变化后更新最新在线人数
                 pushOnlineCount(loginType);
-                return;
             }
         }
     }
@@ -109,13 +89,13 @@ public class OnlineUserServiceImpl implements OnlineUserService
     @Override
     public OnlineCountVo getOnlineCount()
     {
-        return getOnlineCount("admin");
+        return getOnlineCount(WebSocketConstants.LOGIN_TYPE_ADMIN);
     }
 
     @Override
     public OnlineCountVo getOnlineCount(String loginType)
     {
-        Set<String> onlineUsers = redisCache.getCacheSet(getOnlineUsersKey(loginType));
+        Set<String> onlineUsers = redisCache.getCacheSet(getOnlineUsersKey(normalizeLoginType(loginType)));
         long count = onlineUsers == null ? 0L : onlineUsers.size();
         return new OnlineCountVo(count, System.currentTimeMillis());
     }
@@ -124,34 +104,48 @@ public class OnlineUserServiceImpl implements OnlineUserService
     @Override
     public void pushOnlineCount()
     {
-        pushOnlineCount("admin");
+        pushOnlineCount(WebSocketConstants.LOGIN_TYPE_ADMIN);
     }
 
     @Override
     public void pushOnlineCount(String loginType)
     {
-        String topic = getOnlineCountTopic(loginType);
-        messagingTemplate.convertAndSend(topic, getOnlineCount(loginType));
+        String normalizedLoginType = normalizeLoginType(loginType);
+        String topic = getOnlineCountTopic(normalizedLoginType);
+        messagingTemplate.convertAndSend(topic, getOnlineCount(normalizedLoginType));
     }
 
     //拼接指定用户的 WebSocket 会话集合 Key
     private String getUserSessionsKey(String userId, String loginType)
     {
-        return USER_SESSIONS_KEY_PREFIX + loginType + ":" + userId;
+        return WebSocketConstants.REDIS_USER_SESSIONS_KEY_PREFIX + loginType + ":" + userId;
     }
 
     private String getOnlineUsersKey(String loginType)
     {
-        return ONLINE_USERS_KEY_PREFIX + loginType;
+        return WebSocketConstants.REDIS_ONLINE_USERS_KEY_PREFIX + loginType;
     }
 
+    //获取在线数 topic
     private String getOnlineCountTopic(String loginType)
     {
-        return "blog".equals(loginType) ? BLOG_ONLINE_COUNT_TOPIC : ADMIN_ONLINE_COUNT_TOPIC;
+        if (WebSocketConstants.LOGIN_TYPE_VISITOR.equals(loginType)){
+            return WebSocketConstants.TOPIC_VISITOR_ONLINE_COUNT;
+        }
+        return WebSocketConstants.LOGIN_TYPE_BLOG.equals(loginType) ? WebSocketConstants.TOPIC_BLOG_ONLINE_COUNT : WebSocketConstants.TOPIC_ADMIN_ONLINE_COUNT;
     }
 
     private String buildSessionValue(String userId, String loginType)
     {
         return userId + ":" + loginType;
+    }
+
+    //登录用户类型
+    private String normalizeLoginType(String loginType)
+    {
+        if (!StringUtils.hasText(loginType)){
+            return WebSocketConstants.DEFAULT_LOGIN_TYPE;
+        }
+        return loginType;
     }
 }

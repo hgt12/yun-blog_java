@@ -1,5 +1,7 @@
 package com.mengze.listener;
 
+import com.mengze.constants.WebSocketConstants;
+import com.mengze.interceptor.WebSocketAuthInterceptor.VisitorPrincipal;
 import com.mengze.interceptor.WebSocketAuthInterceptor.WebSocketPrincipal;
 import com.mengze.service.OnlineUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,6 @@ import java.security.Principal;
 @Component
 public class WebSocketEventListener
 {
-    private static final String ADMIN_ONLINE_COUNT_TOPIC = "/topic/admin/online-count";
-    private static final String BLOG_ONLINE_COUNT_TOPIC = "/topic/blog/online-count";
-
     @Autowired
     private OnlineUserService onlineUserService;
 
@@ -31,20 +30,29 @@ public class WebSocketEventListener
         Principal principal = accessor.getUser();
         if (principal instanceof WebSocketPrincipal webSocketPrincipal){
             onlineUserService.online(sessionId, webSocketPrincipal.getName(), webSocketPrincipal.getLoginType());
+            return;
+        }
+        if (principal instanceof VisitorPrincipal visitorPrincipal){
+            onlineUserService.online(sessionId, visitorPrincipal.getName(), WebSocketConstants.LOGIN_TYPE_VISITOR);
         }
     }
 
-    //有人订阅在线人数主题后立即推送当前在线人数
+    //有人在预览页面则将人数推送当前在线人数
     @EventListener
     public void handleSessionSubscribeEvent(SessionSubscribeEvent event)
     {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = accessor.getDestination();
-        if (ADMIN_ONLINE_COUNT_TOPIC.equals(destination)){
-            onlineUserService.pushOnlineCount(WebSocketPrincipal.LOGIN_TYPE_ADMIN);
+        if (WebSocketConstants.TOPIC_ADMIN_ONLINE_COUNT.equals(destination)){
+            onlineUserService.pushOnlineCount(WebSocketConstants.LOGIN_TYPE_ADMIN);
+            return;
         }
-        if (BLOG_ONLINE_COUNT_TOPIC.equals(destination)){
-            onlineUserService.pushOnlineCount(WebSocketPrincipal.LOGIN_TYPE_BLOG);
+        if (WebSocketConstants.TOPIC_BLOG_ONLINE_COUNT.equals(destination)){
+            onlineUserService.pushOnlineCount(WebSocketConstants.LOGIN_TYPE_BLOG);
+            return;
+        }
+        if (WebSocketConstants.TOPIC_VISITOR_ONLINE_COUNT.equals(destination)){
+            onlineUserService.pushOnlineCount(WebSocketConstants.LOGIN_TYPE_VISITOR);
         }
     }
 
