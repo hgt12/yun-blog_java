@@ -1,5 +1,6 @@
 package com.mengze.service.impl;
 
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.vo.OnlineCountVo;
 import com.mengze.service.OnlineUserService;
 import com.mengze.utils.RedisCache;
@@ -39,7 +40,7 @@ public class OnlineUserServiceImpl implements OnlineUserService
         String onlineUsersKey = getOnlineUsersKey(normalizedLoginType);
 
         //将用户加入 redis对应在线用户集合（去重后）
-        redisCache.setCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId, buildSessionValue(userId, normalizedLoginType));
+        redisCache.setCacheMapValue(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, sessionId, buildSessionValue(userId, normalizedLoginType));
         redisCache.addToSet(userSessionsKey, sessionId);
         redisCache.addToSet(onlineUsersKey, userId);
         pushOnlineCount(normalizedLoginType);
@@ -57,10 +58,10 @@ public class OnlineUserServiceImpl implements OnlineUserService
         }
 
         //通过 sessionId 查 userId 与 loginType，用于清理该用户的会话集合
-        String sessionValue = redisCache.getCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId);
+        String sessionValue = redisCache.getCacheMapValue(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, sessionId);
 
         //删除全局 sessionId -> userId/loginType 映射
-        redisCache.delCacheMapValue(WebSocketConstants.REDIS_ONLINE_SESSIONS_KEY, sessionId);
+        redisCache.delCacheMapValue(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, sessionId);
         if (StringUtils.hasText(sessionValue)){
             String[] sessionParts = sessionValue.split(":", 2);
             if (sessionParts.length == 2 && StringUtils.hasText(sessionParts[0]) && StringUtils.hasText(sessionParts[1])){
@@ -118,12 +119,12 @@ public class OnlineUserServiceImpl implements OnlineUserService
     //拼接指定用户的 WebSocket 会话集合 Key
     private String getUserSessionsKey(String userId, String loginType)
     {
-        return WebSocketConstants.REDIS_USER_SESSIONS_KEY_PREFIX + loginType + ":" + userId;
+        return RedisKeyConstants.WS_ONLINE_USER_SESSIONS_KEY_PREFIX + loginType + ":" + userId;
     }
 
     private String getOnlineUsersKey(String loginType)
     {
-        return WebSocketConstants.REDIS_ONLINE_USERS_KEY_PREFIX + loginType;
+        return RedisKeyConstants.WS_ONLINE_USERS_KEY_PREFIX + loginType;
     }
 
     //获取在线数 topic

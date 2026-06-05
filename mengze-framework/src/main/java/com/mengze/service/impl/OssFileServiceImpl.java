@@ -1,6 +1,8 @@
 package com.mengze.service.impl;
 
 import com.google.gson.Gson;
+import com.mengze.constants.OssFileConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.vo.UploadFileMetaVo;
 import com.mengze.service.OssFileService;
 import com.mengze.utils.PathUtils;
@@ -26,7 +28,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,11 +51,6 @@ public class OssFileServiceImpl implements OssFileService
     
     @Autowired
     private RedisCache redisCache;
-    
-    private static final String TEMP_FILE_KEY_PREFIX = "temp:file:";
-    private static final String TEMP_PATH_PREFIX = "temp/";
-    private static final String FORMAL_PATH_PREFIX = "formal/";
-    private static final String DELETED_PATH_PREFIX = "deleted/";
 
     //将文件上传至oss
     public String uploadOss(MultipartFile file, String filePath)
@@ -115,7 +111,7 @@ public class OssFileServiceImpl implements OssFileService
         }
 
         // 已经是正式地址时，直接返回，不重复转正
-        if (tempFileUrl.contains(FORMAL_PATH_PREFIX)) {
+        if (tempFileUrl.contains(OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX)) {
             String filePath = extractKeyFromUrl(tempFileUrl);
             return new UploadFileMetaVo(extractOriginalFileName(filePath), filePath, tempFileUrl, null, null);
         }
@@ -139,8 +135,8 @@ public class OssFileServiceImpl implements OssFileService
             }
             
             // 生成正式文件的key（先去掉“temp/”前缀，再换上“formal/”前缀）
-            String originalFileName = extractOriginalFileName(tempKey.replace(TEMP_PATH_PREFIX, ""));
-            String formalKey = FORMAL_PATH_PREFIX + PathUtils.generateFilePath(originalFileName);
+            String originalFileName = extractOriginalFileName(tempKey.replace(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX, ""));
+            String formalKey = OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX + PathUtils.generateFilePath(originalFileName);
             
             // 在OSS上移动文件（实际是复制+删除）
             bucketManager.copy(getBucket(), tempKey, getBucket(), formalKey, true);
@@ -152,7 +148,7 @@ public class OssFileServiceImpl implements OssFileService
             bucketManager.delete(getBucket(), tempKey);
             
             // 删除临时文件时间戳记录
-            redisCache.deleteObject(TEMP_FILE_KEY_PREFIX + tempKey);
+            redisCache.deleteObject(RedisKeyConstants.TEMP_FILE_KEY_PREFIX + tempKey);
             
             // 返回正式文件元数据
             String formalUrl = getDomain() + formalKey;
@@ -219,7 +215,7 @@ public class OssFileServiceImpl implements OssFileService
         
         try {
             // 从Redis获取所有临时文件记录
-            Collection<String> keys = redisCache.keys(TEMP_FILE_KEY_PREFIX + "*");
+            Collection<String> keys = redisCache.keys(RedisKeyConstants.TEMP_FILE_KEY_PREFIX + "*");
             
             if (keys == null || keys.isEmpty()) {
                 log.info("没有需要清理的临时文件");
@@ -251,7 +247,7 @@ public class OssFileServiceImpl implements OssFileService
                 // 如果文件已过期（超过24小时）
                 if (uploadTime != null && (currentTime - uploadTime) > expireTime) {
                     // 提取文件key
-                    String fileKey = redisKey.replace(TEMP_FILE_KEY_PREFIX, "");
+                    String fileKey = redisKey.replace(RedisKeyConstants.TEMP_FILE_KEY_PREFIX, "");
                     
                     // 删除OSS上的文件
                     if (deleteFile(fileKey)) {
@@ -326,19 +322,19 @@ public class OssFileServiceImpl implements OssFileService
             }
             
             // 如果文件已经在deleted文件夹中，直接返回成功
-            if (sourceKey.startsWith(DELETED_PATH_PREFIX)) {
+            if (sourceKey.startsWith(OssFileConstants.DELETED_OSS_DIRECTORY_PATH_PREFIX)) {
                 log.info("文件已在deleted文件夹中: {}", sourceKey);
                 return true;
             }
             
             // 删除时去掉 formal/ 前缀
             String normalizedSourceKey = sourceKey;
-            if (normalizedSourceKey.startsWith(FORMAL_PATH_PREFIX)) {
-                normalizedSourceKey = normalizedSourceKey.substring(FORMAL_PATH_PREFIX.length());
+            if (normalizedSourceKey.startsWith(OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX)) {
+                normalizedSourceKey = normalizedSourceKey.substring(OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX.length());
             }
             
             // 生成 deleted key
-            String targetKey = DELETED_PATH_PREFIX + normalizedSourceKey;
+            String targetKey = OssFileConstants.DELETED_OSS_DIRECTORY_PATH_PREFIX + normalizedSourceKey;
             
             // 在OSS上移动文件（实际是复制+删除）
             BucketManager bucketManager = getBucketManager();
@@ -394,15 +390,15 @@ public class OssFileServiceImpl implements OssFileService
             }
             
             // 检查文件是否在deleted文件夹中
-            if (!deletedKey.startsWith(DELETED_PATH_PREFIX)) {
+            if (!deletedKey.startsWith(OssFileConstants.DELETED_OSS_DIRECTORY_PATH_PREFIX)) {
                 log.warn("文件不在deleted文件夹中，无需恢复: {}", deletedKey);
                 return deletedFileUrl; // 返回原URL
             }
             
             // 生成恢复后的文件key（去掉deleted/前缀）
-            String restoredKey = deletedKey.substring(DELETED_PATH_PREFIX.length());
-            if (!restoredKey.startsWith(FORMAL_PATH_PREFIX)) {
-                restoredKey = FORMAL_PATH_PREFIX + restoredKey;
+            String restoredKey = deletedKey.substring(OssFileConstants.DELETED_OSS_DIRECTORY_PATH_PREFIX.length());
+            if (!restoredKey.startsWith(OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX)) {
+                restoredKey = OssFileConstants.FORMAL_OSS_DIRECTORY_PATH_PREFIX + restoredKey;
             }
             
             // 在OSS上移动文件（实际是复制+删除）

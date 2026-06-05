@@ -3,6 +3,7 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
@@ -35,8 +36,6 @@ import java.util.stream.Collectors;
 @Service("sysConfigService")
 public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements AdminConfigService
 {
-    private static final String CONFIG_CACHE_PREFIX = "config:";
-
     @Autowired
     private AdminConfigService adminConfigService;
 
@@ -194,7 +193,7 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         List<Config> configList = adminConfigService.list();
 
         //清理 Redis 中 config:* 的旧缓存
-        Set<Object> keys = redisTemplate.keys(CONFIG_CACHE_PREFIX + "*");
+        Set<Object> keys = redisTemplate.keys(RedisKeyConstants.CONFIG_KEY_PREFIX + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
@@ -216,7 +215,7 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
 
     private String getConfigCacheKey(String configKey)
     {
-        return CONFIG_CACHE_PREFIX + configKey;
+        return RedisKeyConstants.CONFIG_KEY_PREFIX + configKey;
     }
 }
 

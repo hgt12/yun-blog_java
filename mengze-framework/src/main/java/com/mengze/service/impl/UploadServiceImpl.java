@@ -1,5 +1,7 @@
 package com.mengze.service.impl;
 
+import com.mengze.constants.OssFileConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.exception.SystemException;
@@ -21,9 +23,6 @@ public class UploadServiceImpl implements UploadService
 
     @Autowired
     OssFileServiceImpl ossFileService;
-    
-    // Redis key前缀，用于存储临时文件信息
-    private static final String TEMP_FILE_KEY_PREFIX = "temp:file:";
 
     //公用的上传图片方法
     @Override
@@ -49,12 +48,12 @@ public class UploadServiceImpl implements UploadService
         }
         
         //上传到临时目录，文件路径格式：temp/yyyy/MM/dd/文件名.后缀
-        String filePath = "temp/" + PathUtils.generateFilePath(originalFilename);
+        String filePath = OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX + PathUtils.generateFilePath(originalFilename);
         String url = ossFileService.uploadOss(image, filePath);
         
         //将临时文件信息存入Redis，设置24小时过期时间
         //存储格式：key=temp:file:文件路径, value=上传时间戳
-        redisCache.setCacheObject(TEMP_FILE_KEY_PREFIX + filePath, System.currentTimeMillis(), 24, TimeUnit.HOURS);
+        redisCache.setCacheObject(RedisKeyConstants.TEMP_FILE_KEY_PREFIX + filePath, System.currentTimeMillis(), 24, TimeUnit.HOURS);
         
         return ResponseResult.okResult(url);
     }

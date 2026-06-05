@@ -2,6 +2,7 @@ package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Config;
 import com.mengze.domain.vo.BlogConfigVo;
@@ -25,7 +26,6 @@ import java.util.Set;
 @Service("configService")
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService
 {
-    private static final String CONFIG_CACHE_PREFIX = "config:";
 
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
@@ -36,14 +36,14 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     public ResponseResult<List<BlogConfigVo>> getBlogConfig()
     {
         //先从缓存读取前台配置
-        Set<Object> keys = redisTemplate.keys(CONFIG_CACHE_PREFIX + "*");
+        Set<Object> keys = redisTemplate.keys(RedisKeyConstants.CONFIG_KEY_PREFIX + "*");
         List<BlogConfigVo> blogConfigVos = new ArrayList<>();
 
         if (keys != null && !keys.isEmpty()) {
             keys.forEach(key -> {
                 Object value = redisTemplate.opsForValue().get(key);
                 if (value != null) {
-                    String configKey = String.valueOf(key).substring(CONFIG_CACHE_PREFIX.length());
+                    String configKey = String.valueOf(key).substring(RedisKeyConstants.CONFIG_KEY_PREFIX.length());
                     blogConfigVos.add(new BlogConfigVo(configKey, String.valueOf(value)));
                 }
             });

@@ -2,6 +2,8 @@ package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.RedisHashFieldConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.RecordVisitDto;
@@ -61,11 +63,11 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     public ResponseResult getSiteInfo()
     {
         //从Redis获取总预览量（PV）
-        Integer cachedViews = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD);
+        Integer cachedViews = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
         long totalViews = cachedViews != null ? cachedViews.longValue() : 0L;
 
         //从Redis获取总访客数（UV）
-        Integer cachedVisitors = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
+        Integer cachedVisitors = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
         long totalVisitors = cachedVisitors != null ? cachedVisitors.longValue() : 0L;
 
         SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors);
@@ -134,19 +136,19 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         visitLog.setMethod(request.getMethod());
         visitLog.setVisitTime(new Date());
         visitLog.setExecutionTime((int) (System.currentTimeMillis() - startTime));
-        redisCache.pushToList(SystemConstants.VISIT_LOG_QUEUE, visitLog);
+        redisCache.pushToList(RedisKeyConstants.VISIT_LOG_QUEUE_KEY, visitLog);
 
         // PV 计数递增
-        redisCache.incrementCacheMapValue(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD, 1);
+        redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, 1);
 
         // UV 去重：使用全站统一 key，保证 unique_visitor 统计的是全站唯一访客
         String visitorHash = DigestUtils.md5DigestAsHex((ip + userAgent).getBytes(StandardCharsets.UTF_8));
-        String visitorKey = SystemConstants.SITE_VISITOR_SET_PREFIX;
+        String visitorKey = RedisKeyConstants.SITE_VISITOR_SET_KEY;
 
         // 如果是全站新访客就写入 Redis 和数据库
         boolean isNewVisitor = redisCache.addToSet(visitorKey, visitorHash);
         if (isNewVisitor) {
-            redisCache.incrementCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD, 1);
+            redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, 1);
 
             UniqueVisitor uniqueVisitor = new UniqueVisitor();
             uniqueVisitor.setVisitorHash(visitorHash);
@@ -243,8 +245,8 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     public ResponseResult getVisitOverview()
     {
         //从 Redis 中获取累计 PV 和 UV
-        Long totalPvCount = getCachedLong(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD);
-        Long totalUvCount = getCachedLong(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
+        Long totalPvCount = getCachedLong(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
+        Long totalUvCount = getCachedLong(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
 
         //计算今天和昨天的时间范围 用于查询今天和昨天的数据
         LocalDate today = LocalDate.now();

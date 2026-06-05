@@ -3,6 +3,7 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.ResetPasswordDto;
 import com.mengze.domain.dto.VerifyResetCodeDto;
@@ -48,7 +49,7 @@ public class ResetResetPasswordServiceImpl extends ServiceImpl<SysUserMapper, Sy
         }
 
         //从Redis获取验证码
-        String redisKey = "forgot_password:code:email:" + dto.getEmail();
+        String redisKey = RedisKeyConstants.FORGOT_PASSWORD_CODE_EMAIL_KEY_PREFIX + dto.getEmail();
         String redisCode = redisCache.getCacheObject(redisKey);
 
         //验证码不存在或已过期
@@ -90,7 +91,7 @@ public class ResetResetPasswordServiceImpl extends ServiceImpl<SysUserMapper, Sy
         }
 
         //从Redis获取验证码
-        String redisKey = "forgot_password:code:email:" + dto.getEmail();
+        String redisKey = RedisKeyConstants.FORGOT_PASSWORD_CODE_EMAIL_KEY_PREFIX + dto.getEmail();
         String redisCode = redisCache.getCacheObject(redisKey);
 
         //验证码不存在或已过期

@@ -2,6 +2,8 @@ package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mengze.constants.OssFileConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
@@ -125,7 +127,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
             article.setCategoryName(category.getName());
             article.setCategoryStatus(category.getStatus());
             //从redis中获取viewCount
-            Integer viewCount = redisCache.getCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString());
+            Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString());
             article.setViewCount(viewCount.longValue());
         });
 
@@ -180,7 +182,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
         //处理缩略图
         String thumbnail = postsDto.getThumbnail();
-        if (StringUtils.hasText(thumbnail) && thumbnail.contains("temp/")) {
+        if (StringUtils.hasText(thumbnail) && thumbnail.contains(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX)) {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(thumbnail);
             //判断图片是否保存（从oss中的 临时 > 正式）成功
             if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
@@ -202,7 +204,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         articleService.save(article);
 
         //初始化Redis中的浏览量为0
-        redisCache.setCacheMapValue(SystemConstants.ARTICLE_VIEW_COUNT, article.getId().toString(), 0);
+        redisCache.setCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString(), 0);
 
         List<ArticleTag> articleTags = postsDto.getTags().stream()
                 .map(tagId -> new ArticleTag(article.getId(), tagId))
@@ -250,7 +252,7 @@ public class AdminPostsServiceImpl implements AdminPostsService
         String newThumbnail = updatePostsDto.getThumbnail();
         String oldThumbnail = oldArticle.getThumbnail();
 
-        if (StringUtils.hasText(newThumbnail) && newThumbnail.contains("temp/")) {
+        if (StringUtils.hasText(newThumbnail) && newThumbnail.contains(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX)) {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(newThumbnail);
             if (uploadFileMetaVo == null || !StringUtils.hasText(uploadFileMetaVo.getUrl())) {
                 throw new RuntimeException("缩略图保存失败，无法更新文章记录: " + newThumbnail);

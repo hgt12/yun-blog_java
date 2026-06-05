@@ -1,5 +1,6 @@
 package com.mengze.service.impl;
 
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.vo.QWeatherResponseVo;
 import com.mengze.domain.vo.WeatherNowVo;
@@ -56,8 +57,6 @@ public class WeatherServiceImpl implements WeatherService
     @Value("${weather.api.private-key}")
     private String privateKey;
 
-    private static final String WEATHER_CACHE_PREFIX = "weather:now:";
-
     @Override
     public ResponseResult getWeatherNow(String location, String lang, String unit)
     {
@@ -69,7 +68,7 @@ public class WeatherServiceImpl implements WeatherService
         unit = StringUtils.hasText(unit) ? unit : "m";
 
         // 构建缓存key并尝试从缓存获取
-        String cacheKey = WEATHER_CACHE_PREFIX + location + ":" + lang + ":" + unit;
+        String cacheKey = RedisKeyConstants.WEATHER_NOW_KEY_PREFIX + location + ":" + lang + ":" + unit;
         WeatherNowVo cachedWeather = redisCache.getCacheObject(cacheKey);
         if (cachedWeather != null) {
             log.info("从缓存获取天气数据: location={}", location);

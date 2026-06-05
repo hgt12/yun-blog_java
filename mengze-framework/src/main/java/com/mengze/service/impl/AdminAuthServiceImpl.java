@@ -1,5 +1,7 @@
 package com.mengze.service.impl;
 
+import com.mengze.constants.ResultPutConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AdminLoginDto;
 import com.mengze.domain.entity.LoginUser;
@@ -93,7 +95,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
         String refreshToken = JwtUtil.createJWT(userId, JwtUtil.JWT_REFRESH_TTL);
         
         //把用户信息存入Redis (格式为 adminLogin:id，用于后台管理系统)，设置过期时间与刷新Token一致
-        redisCache.setCacheObject("adminLogin:" + userId, loginUser, JwtUtil.JWT_REFRESH_TTL.intValue(), TimeUnit.MILLISECONDS);
+        redisCache.setCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId, loginUser, JwtUtil.JWT_REFRESH_TTL.intValue(), TimeUnit.MILLISECONDS);
         
         // 构建响应对象
         AdminAuthVo vo = new AdminAuthVo(token, refreshToken, JwtUtil.JWT_TTL / 1000);
@@ -110,7 +112,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
         //获取uesrid
         Long userId = loginUser.getSysUser().getId();
         //删除redis中的用户信息
-        redisCache.deleteObject("adminLogin:" + userId);
+        redisCache.deleteObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
         return ResponseResult.okResult();
     }
 
@@ -129,7 +131,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
             String base64Img = CaptchaUtil.generateImageBase64(code);
             
             // 将验证码存入Redis，有效期2分钟
-            redisCache.setCacheObject("captcha:" + captchaId, code, 2, TimeUnit.MINUTES);
+            redisCache.setCacheObject(RedisKeyConstants.CAPTCHA_KEY_PREFIX + captchaId, code, 2, TimeUnit.MINUTES);
             
             // 在控制台输出验证码（方便开发调试）
             System.out.println("========================================");
@@ -139,8 +141,8 @@ public class AdminAuthServiceImpl implements AdminAuthService
             
             // 构建响应数据
             Map<String, String> result = new HashMap<>();
-            result.put("captchaId", captchaId);
-            result.put("captchaBase64", base64Img);
+            result.put(ResultPutConstants.CAPTCHA_ID, captchaId);
+            result.put(ResultPutConstants.CAPTCHA_BASE64, base64Img);
             
             return ResponseResult.okResult(result);
         } catch (Exception e) {
@@ -162,7 +164,7 @@ public class AdminAuthServiceImpl implements AdminAuthService
             String userId = JwtUtil.parseJWT(refreshToken).getSubject();
             
             // 从Redis中获取用户信息，验证用户是否仍然登录
-            LoginUser loginUser = redisCache.getCacheObject("adminLogin:" + userId);
+            LoginUser loginUser = redisCache.getCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
             if (Objects.isNull(loginUser)) {
                 throw new SystemException(AppHttpCodeEnum.REFRESH_TOKEN_INVALID);
             }

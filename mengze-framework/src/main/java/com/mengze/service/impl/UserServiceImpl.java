@@ -3,6 +3,8 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.OssFileConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.UpdateUserInfoDto;
@@ -156,7 +158,7 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         
         //处理头像：如果是临时文件，转为正式文件
         String avatar = updateUserInfoDto.getAvatar();
-        if (StringUtils.hasText(avatar) && avatar.contains("temp/")) {
+        if (StringUtils.hasText(avatar) && avatar.contains(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX)) {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(avatar);
             avatar = uploadFileMetaVo.getUrl();
 
@@ -369,10 +371,10 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         // 判断是邮箱注册还是手机注册
         if (StringUtils.hasText(dto.getEmail())) {
             account = dto.getEmail();
-            redisKey = "register:code:email:" + account;
+            redisKey = RedisKeyConstants.REGISTER_CODE_EMAIL_KEY_PREFIX + account;
         } else if (StringUtils.hasText(dto.getPhone())) {
             account = dto.getPhone();
-            redisKey = "register:code:phone:" + account;
+            redisKey = RedisKeyConstants.REGISTER_CODE_PHONE_KEY_PREFIX + account;
         } else {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "邮箱和手机号至少填写一个");
         }

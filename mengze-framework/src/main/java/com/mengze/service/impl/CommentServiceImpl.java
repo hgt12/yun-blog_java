@@ -3,6 +3,7 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.ResultPutConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddCommentDto;
@@ -259,7 +260,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         
         // 封装返回结果
         java.util.Map<String, String> result = new java.util.HashMap<>();
-        result.put("avatar", avatarUrl);
+        result.put(ResultPutConstants.AVATAR, avatarUrl);
         
         return ResponseResult.okResult(result);
     }

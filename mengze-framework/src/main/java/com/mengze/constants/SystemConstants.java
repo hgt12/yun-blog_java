@@ -1,6 +1,6 @@
 package com.mengze.constants;
 
-//常量类，后面有需要的常量都可以在这里写
+//系统常量类，后面有需要的常量都可以在这里写
 public class SystemConstants
 {
     /**
@@ -59,34 +59,6 @@ public class SystemConstants
      *  博主邮箱（用于匿名评论时识别博主身份）
      */
     public static final String BLOGGER_EMAIL = "2962933152@qq.com";
-    /**
-     *  文章预览量
-     */
-    public static final String ARTICLE_VIEW_COUNT = "article:viewCount";
-    /**
-     *  网站总预览量（PV）Redis key
-     */
-    public static final String SITE_TOTAL_VIEWS = "site:totalViews";
-    /**
-     *  网站总预览量 Hash field
-     */
-    public static final String SITE_TOTAL_VIEWS_FIELD = "total";
-    /**
-     *  网站总访客数（UV）Redis key
-     */
-    public static final String SITE_TOTAL_VISITORS = "site:totalVisitors";
-    /**
-     *  网站总访客数 Hash field
-     */
-    public static final String SITE_TOTAL_VISITORS_FIELD = "total";
-    /**
-     *  全站访客去重 Set key
-     */
-    public static final String SITE_VISITOR_SET_PREFIX = "site:visitor:set:all";
-    /**
-     *  访问日志队列 key
-     */
-    public static final String VISIT_LOG_QUEUE = "site:visitLog:queue";
     /**
      *  菜单类型为目录
      */
@@ -196,11 +168,11 @@ public class SystemConstants
      */
     public static final String CODE_TYPE_MOBILE = "mobile";
     /**
-     *  验证类型：注册
+     *  验证类型：登录
      */
     public static final String VERIFY_TYPE_LOGIN = "login";
     /**
-     *  验证类型：登录
+     *  验证类型：注册
      */
     public static final String VERIFY_TYPE_REGISTER = "register";
     /**

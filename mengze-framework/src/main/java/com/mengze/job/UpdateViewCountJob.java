@@ -1,5 +1,7 @@
 package com.mengze.job;
 
+import com.mengze.constants.RedisHashFieldConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.SiteStatistics;
@@ -35,7 +37,7 @@ public class UpdateViewCountJob {
     // 每10分钟同步文章浏览量到数据库
     @Scheduled(cron = "0 0/10 * * * ?")
     public void updateViewCount() {
-        Map<String, Integer> viewCountMap = redisCache.getCacheMap(SystemConstants.ARTICLE_VIEW_COUNT);
+        Map<String, Integer> viewCountMap = redisCache.getCacheMap(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY);
         List<Article> articles = viewCountMap.entrySet()
                 .stream()
                 .map(entry -> new Article(Long.valueOf(entry.getKey()), entry.getValue().longValue()))
@@ -50,12 +52,12 @@ public class UpdateViewCountJob {
         SiteStatistics statistics = new SiteStatistics();
         statistics.setId(1L);
 
-        Integer cachedViews = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD);
+        Integer cachedViews = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
         if (cachedViews != null) {
             statistics.setTotalViews(cachedViews.longValue());
         }
 
-        Integer cachedVisitors = redisCache.getCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD);
+        Integer cachedVisitors = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
         if (cachedVisitors != null) {
             statistics.setTotalVisitors(cachedVisitors.longValue());
         }
@@ -67,7 +69,7 @@ public class UpdateViewCountJob {
     @Scheduled(cron = "0 0/5 * * * ?")
     public void flushVisitLogs()
     {
-        List<VisitLog> logs = redisCache.popAllFromList(SystemConstants.VISIT_LOG_QUEUE);
+        List<VisitLog> logs = redisCache.popAllFromList(RedisKeyConstants.VISIT_LOG_QUEUE_KEY);
         if (logs != null && !logs.isEmpty()) {
             visitLogService.saveBatch(logs);
         }

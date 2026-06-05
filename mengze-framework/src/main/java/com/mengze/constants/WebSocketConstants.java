@@ -25,18 +25,6 @@ public final class WebSocketConstants
     /** WebSocket CONNECT 中携带的认证信息请求头 */
     public static final String HEADER_AUTHENTICATION = "authentication";
 
-    /** 管理后台登录用户 Redis Key 前缀 */
-    public static final String REDIS_ADMIN_LOGIN_KEY_PREFIX = "adminLogin:";
-    /** 博客前台登录用户 Redis Key 前缀 */
-    public static final String REDIS_BLOG_LOGIN_KEY_PREFIX = "blogLogin:";
-
-    /** 在线用户统计 Redis Key 前缀 */
-    public static final String REDIS_ONLINE_USERS_KEY_PREFIX = "ws:online:users:";
-    /** 在线会话集合 Redis Key */
-    public static final String REDIS_ONLINE_SESSIONS_KEY = "ws:online:sessions";
-    /** 用户会话集合 Redis Key 前缀 */
-    public static final String REDIS_USER_SESSIONS_KEY_PREFIX = "ws:online:user:sessions:";
-
     /** 管理后台在线人数订阅主题 */
     public static final String TOPIC_ADMIN_ONLINE_COUNT = "/topic/admin/online-count";
     /** 博客前台在线人数订阅主题 */

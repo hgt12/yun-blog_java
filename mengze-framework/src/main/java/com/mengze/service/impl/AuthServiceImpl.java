@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.SendCodeDto;
@@ -103,7 +104,7 @@ public class AuthServiceImpl implements AuthService
         }
 
         //检查账号发送频率限制
-        String sendTimeKey = String.format("%s:send:time:%s:%s", scene, type, account);
+        String sendTimeKey = String.format(RedisKeyConstants.CODE_SEND_TIME_KEY_TEMPLATE, scene, type, account);
         String lastSendTime = redisCache.getCacheObject(sendTimeKey);
         if (StringUtils.hasText(lastSendTime)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SMS_SEND_FREQUENTLY, "验证码发送过于频繁，请1分钟后再试");
@@ -111,7 +112,7 @@ public class AuthServiceImpl implements AuthService
 
         //生成验证码并存入Redis
         String code = generateCode();
-        String redisKey = String.format("%s:code:%s:%s", scene, type, account);
+        String redisKey = String.format(RedisKeyConstants.CODE_KEY_TEMPLATE, scene, type, account);
         redisCache.setCacheObject(redisKey, code, 5, TimeUnit.MINUTES);
 
         //记录发送时间
@@ -233,21 +234,21 @@ public class AuthServiceImpl implements AuthService
     private ResponseResult checkIpLimit(String ip, String type)
     {
         // 检查1分钟内的发送次数（最多5次）
-        String minuteKey = "login:ip:limit:minute:" + type + ":" + ip;
+        String minuteKey = RedisKeyConstants.AUTH_IP_LIMIT_MINUTE_KEY_PREFIX + type + ":" + ip;
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         if (minuteCount != null && minuteCount >= 5) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1分钟后再试");
         }
 
         // 检查1小时内的发送次数（最多20次）
-        String hourKey = "login:ip:limit:hour:" + type + ":" + ip;
+        String hourKey = RedisKeyConstants.AUTH_IP_LIMIT_HOUR_KEY_PREFIX + type + ":" + ip;
         Integer hourCount = redisCache.getCacheObject(hourKey);
         if (hourCount != null && hourCount >= 20) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您今日发送次数过多，请1小时后再试");
         }
 
         // 检查1天内的发送次数（最多50次，防止恶意攻击）
-        String dayKey = "login:ip:limit:day:" + type + ":" + ip;
+        String dayKey = RedisKeyConstants.AUTH_IP_LIMIT_DAY_KEY_PREFIX + type + ":" + ip;
         Integer dayCount = redisCache.getCacheObject(dayKey);
         if (dayCount != null && dayCount >= 50) {
             System.err.println("检测到异常发送行为 - IP: " + ip + ", 类型: " + type + ", 24小时内发送次数: " + dayCount);
@@ -261,17 +262,17 @@ public class AuthServiceImpl implements AuthService
     private void recordIpSendCount(String ip, String type)
     {
         // 记录1分钟内的发送次数
-        String minuteKey = "login:ip:limit:minute:" + type + ":" + ip;
+        String minuteKey = RedisKeyConstants.AUTH_IP_LIMIT_MINUTE_KEY_PREFIX + type + ":" + ip;
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         redisCache.setCacheObject(minuteKey, minuteCount == null ? 1 : minuteCount + 1, 1, TimeUnit.MINUTES);
 
         // 记录1小时内的发送次数
-        String hourKey = "login:ip:limit:hour:" + type + ":" + ip;
+        String hourKey = RedisKeyConstants.AUTH_IP_LIMIT_HOUR_KEY_PREFIX + type + ":" + ip;
         Integer hourCount = redisCache.getCacheObject(hourKey);
         redisCache.setCacheObject(hourKey, hourCount == null ? 1 : hourCount + 1, 1, TimeUnit.HOURS);
 
         // 记录1天内的发送次数
-        String dayKey = "login:ip:limit:day:" + type + ":" + ip;
+        String dayKey = RedisKeyConstants.AUTH_IP_LIMIT_DAY_KEY_PREFIX + type + ":" + ip;
         Integer dayCount = redisCache.getCacheObject(dayKey);
         redisCache.setCacheObject(dayKey, dayCount == null ? 1 : dayCount + 1, 1, TimeUnit.DAYS);
 

@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mengze.constants.OssFileConstants;
+import com.mengze.constants.RedisKeyConstants;
+import com.mengze.constants.ResultPutConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.*;
@@ -678,9 +681,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("validCount", validCount.get());
-        result.put("invalidCount", invalidCount.get());
-        result.put("messageList", messageList);
+        result.put(ResultPutConstants.VALID_COUNT, validCount.get());
+        result.put(ResultPutConstants.INVALID_COUNT, invalidCount.get());
+        result.put(ResultPutConstants.MESSAGE_LIST, messageList);
         return ResponseResult.okResult(result);
     }
 
@@ -800,7 +803,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //处理头像：如果是临时文件，转为正式文件
         String avatar = updateUserProfileDto.getAvatar();
-        if (StringUtils.hasText(avatar) && avatar.contains("temp/"))
+        if (StringUtils.hasText(avatar) && avatar.contains(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX))
         {
             UploadFileMetaVo uploadFileMetaVo = ossFileService.moveTempToFormal(avatar);
             avatar = uploadFileMetaVo.getUrl();
@@ -974,7 +977,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
             aliyunSmsServiceImpl.sendVerificationCode(mobile, code);
         } catch (Exception e) {
             redisCache.deleteObject(redisKey);
-            redisCache.deleteObject(String.format("admin:send:time:%s", mobile));
+            redisCache.deleteObject(String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, mobile));
             log.error("发送手机验证码失败, mobile={}, error={}", mobile, e.getMessage(), e);
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
         }
@@ -1021,7 +1024,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         //校验验证码
-        String redisKey = String.format("admin:code:%s", mobile);
+        String redisKey = String.format(RedisKeyConstants.ADMIN_CODE_KEY_TEMPLATE, mobile);
         String cacheCode = redisCache.getCacheObject(redisKey);
         if (!StringUtils.hasText(cacheCode)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码已过期，请重新获取");
@@ -1055,7 +1058,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //删除验证码缓存
         redisCache.deleteObject(redisKey);
-        redisCache.deleteObject(String.format("admin:send:time:%s", mobile));
+        redisCache.deleteObject(String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, mobile));
 
         return ResponseResult.okResult();
     }
@@ -1135,7 +1138,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
             emailServiceImpl.sendVerificationCodeByUpdateOrBind(email, code);
         } catch (Exception e) {
             redisCache.deleteObject(redisKey);
-            redisCache.deleteObject(String.format("admin:send:time:%s", email));
+            redisCache.deleteObject(String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, email));
             log.error("发送邮箱验证码失败, email={}, error={}", email, e.getMessage(), e);
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码发送失败，请稍后重试");
         }
@@ -1182,7 +1185,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         }
 
         //校验验证码
-        String redisKey = String.format("admin:code:%s", email);
+        String redisKey = String.format(RedisKeyConstants.ADMIN_CODE_KEY_TEMPLATE, email);
         String cacheCode = redisCache.getCacheObject(redisKey);
         if (!StringUtils.hasText(cacheCode)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码已过期，请重新获取");
@@ -1216,7 +1219,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
         //删除验证码缓存
         redisCache.deleteObject(redisKey);
-        redisCache.deleteObject(String.format("admin:send:time:%s", email));
+        redisCache.deleteObject(String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, email));
 
         return ResponseResult.okResult();
     }
@@ -1367,28 +1370,28 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     private ResponseResult checkCodeLimit(String target, String clientIp)
     {
         //检查IP日发送次数限制
-        String dayKey = String.format("admin:ip:limit:day:%s", clientIp);
+        String dayKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_DAY_KEY_TEMPLATE, clientIp);
         Integer dayCount = redisCache.getCacheObject(dayKey);
         if (dayCount != null && dayCount >= 50) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "系统检测到异常行为，请24小时后再试或联系管理员");
         }
 
         //检查同账号发送频率限制
-        String sendTimeKey = String.format("admin:send:time:%s", target);
+        String sendTimeKey = String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, target);
         String lastSendTime = redisCache.getCacheObject(sendTimeKey);
         if (StringUtils.hasText(lastSendTime)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SMS_SEND_FREQUENTLY, "验证码发送过于频繁，请1分钟后再试");
         }
 
         //检查IP发送频率限制
-        String minuteKey = String.format("admin:ip:limit:minute:%s", clientIp);
+        String minuteKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_MINUTE_KEY_TEMPLATE, clientIp);
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         if (minuteCount != null && minuteCount >= 5) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1分钟后再试");
         }
 
         //检测每小时发送频率
-        String hourKey = String.format("admin:ip:limit:hour:%s", clientIp);
+        String hourKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_HOUR_KEY_TEMPLATE, clientIp);
         Integer hourCount = redisCache.getCacheObject(hourKey);
         if (hourCount != null && hourCount >= 20) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1小时后再试");
@@ -1400,11 +1403,11 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     //保存记录到redis
     private String saveCodeToRedis(String target, String code, String clientIp)
     {
-        String redisKey = String.format("admin:code:%s", target);
-        String sendTimeKey = String.format("admin:send:time:%s", target);
-        String minuteKey = String.format("admin:ip:limit:minute:%s", clientIp);
-        String hourKey = String.format("admin:ip:limit:hour:%s", clientIp);
-        String dayKey = String.format("admin:ip:limit:day:%s", clientIp);
+        String redisKey = String.format(RedisKeyConstants.ADMIN_CODE_KEY_TEMPLATE, target);
+        String sendTimeKey = String.format(RedisKeyConstants.ADMIN_CODE_SEND_TIME_KEY_TEMPLATE, target);
+        String minuteKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_MINUTE_KEY_TEMPLATE, clientIp);
+        String hourKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_HOUR_KEY_TEMPLATE, clientIp);
+        String dayKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_DAY_KEY_TEMPLATE, clientIp);
 
         Integer minuteCount = redisCache.getCacheObject(minuteKey);
         Integer hourCount = redisCache.getCacheObject(hourKey);

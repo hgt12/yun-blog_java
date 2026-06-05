@@ -1,6 +1,7 @@
 package com.mengze.runner;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mengze.constants.RedisHashFieldConstants;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.SiteStatistics;
@@ -43,15 +44,15 @@ public class ViewCountRunner implements CommandLineRunner
                 }));
 
         //存储文章预览量到redis
-        redisCache.setCacheMap(SystemConstants.ARTICLE_VIEW_COUNT, viewCountMap);
+        redisCache.setCacheMap(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, viewCountMap);
 
         //加载网站 PV 和 UV 到 Redis
         SiteStatistics statistics = siteStatisticsMapper.selectById(1L);
         long totalViews = (statistics != null && statistics.getTotalViews() != null) ? statistics.getTotalViews() : 0L;
         long totalVisitors = (statistics != null && statistics.getTotalVisitors() != null) ? statistics.getTotalVisitors() : 0L;
 
-        redisCache.setCacheMapValue(SystemConstants.SITE_TOTAL_VIEWS, SystemConstants.SITE_TOTAL_VIEWS_FIELD, (int) totalViews);
-        redisCache.setCacheMapValue(SystemConstants.SITE_TOTAL_VISITORS, SystemConstants.SITE_TOTAL_VISITORS_FIELD, (int) totalVisitors);
+        redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, (int) totalViews);
+        redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, (int) totalVisitors);
 
         System.out.println("! ======程序初始化完成====== !");
     }

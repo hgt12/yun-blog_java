@@ -1,5 +1,6 @@
 package com.mengze.interceptor;
 
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.domain.entity.LoginUser;
 import com.mengze.utils.JwtUtil;
 import com.mengze.utils.RedisCache;
@@ -59,10 +60,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         String userId = claims.getSubject();
-        LoginUser loginUser = redisCache.getCacheObject(WebSocketConstants.REDIS_ADMIN_LOGIN_KEY_PREFIX + userId);
+        LoginUser loginUser = redisCache.getCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
         String loginType = WebSocketConstants.LOGIN_TYPE_ADMIN;
         if (Objects.isNull(loginUser)){
-            loginUser = redisCache.getCacheObject(WebSocketConstants.REDIS_BLOG_LOGIN_KEY_PREFIX + userId);
+            loginUser = redisCache.getCacheObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId);
             loginType = WebSocketConstants.LOGIN_TYPE_BLOG;
         }
         if (Objects.isNull(loginUser)){

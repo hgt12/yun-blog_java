@@ -1,6 +1,7 @@
 package com.mengze.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.LoginByEmailOrPhoneDto;
@@ -71,7 +72,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         String userId = loginUser.getSysUser().getId().toString();
         String jwt = JwtUtil.createJWT(userId);//传数据进去jwt加密,最终生成一个字符串类型的jwt
         //把用户信息存入Redis (格式为 blogLogin：id)，设置过期时间与JWT一致
-        redisCache.setCacheObject("blogLogin:" + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
+        redisCache.setCacheObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
 
         //把token和userInfo封装，返回
         //把User转化成UserInfoVo
@@ -108,7 +109,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         //获取uesrid
         Long userId = loginUser.getSysUser().getId();
         //删除redis中的用户信息
-        redisCache.deleteObject("blogLogin:" + userId);
+        redisCache.deleteObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId);
         return ResponseResult.okResult();
     }
     
@@ -128,7 +129,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
         
         // 从Redis获取验证码
-        String redisKey = "login:code:email:" + email;
+        String redisKey = RedisKeyConstants.LOGIN_CODE_EMAIL_KEY_PREFIX + email;
         String redisCode = redisCache.getCacheObject(redisKey);
         
         // 验证码不存在或已过期
@@ -178,7 +179,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         }
         
         // 从Redis获取验证码
-        String redisKey = "login:code:phone:" + phone;
+        String redisKey = RedisKeyConstants.LOGIN_CODE_PHONE_KEY_PREFIX + phone;
         String redisCode = redisCache.getCacheObject(redisKey);
         
         // 验证码不存在或已过期
@@ -218,7 +219,7 @@ public class BlogLoginServiceImpl implements BlogLoginService
         String jwt = JwtUtil.createJWT(userId);
         
         // 把用户信息存入Redis，设置过期时间与JWT一致
-        redisCache.setCacheObject("blogLogin:" + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
+        redisCache.setCacheObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId, loginUser, JwtUtil.JWT_TTL.intValue(), TimeUnit.MILLISECONDS);
         
         // 封装返回数据
         SysUserInfoVo sysUserInfoVo = BeanCopyUtils.copyBean(sysUser, SysUserInfoVo.class);
