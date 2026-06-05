@@ -378,12 +378,23 @@ public class AdminPostsServiceImpl implements AdminPostsService
             }
 
             //此段注释掉，逻辑删除文章 + 上删除文章和标签关联关系会破坏逻辑删除的构想，如何后续开发回收站就可以连着关联关系一起删
+            ////如果不打算要回收站功能则取消注释就好
+
 //            //删除文章标签关联关系
 //            LambdaQueryWrapper<ArticleTag> deleteWrapper = new LambdaQueryWrapper<>();
 //            deleteWrapper.eq(ArticleTag::getArticleId, articleId);
 //            int deletedCount = articleTagMapper.delete(deleteWrapper);
 //            log.info("删除文章ID: {} 的标签关联记录，共 {} 条", articleId, deletedCount);
+
         }
+
+        //注意：
+        //删除文章或通知时不对里面的图片文件进行 sys_file 表的处理
+        //因为在前面已经对图片文件进行在 oss 里的删除(移动到 delete/ 目录)
+        //在sys_file中的图片文件还是原路径
+        //这样在用户预览文件列表的时候对应的图片就会加载不出来
+        //这样就可以反证该图片文件所在的文章或通知已删除
+        //然后用户再在文件列表中删除对应文件即可
 
         //逻辑删除文章（将 del_flag 从 0 > 1）
         articleService.removeByIds(idList);

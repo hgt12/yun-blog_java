@@ -449,8 +449,19 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下角色已分配给用户，不能删除：" + assignedRoleIds);
         }
 
-        //删除角色（逻辑删除）
         //注意：不应该将角色和菜单、部门的关联关系也一并删除，避免后续恢复角色时丢失权限配置
+        //如果不打算要回收站功能则取消注释就好
+//        //先删除角色和菜单的关联关系（如果后续有回收站功能，恢复角色后需重新分配权限）
+//        LambdaQueryWrapper<SysRoleMenu> roleMenuWrapper = new LambdaQueryWrapper<>();
+//        roleMenuWrapper.in(SysRoleMenu::getRoleId, idList);
+//        sysRoleMenuService.remove(roleMenuWrapper);
+//
+//        //再删除角色和部门的关联关系（如果后续有回收站功能，恢复角色后需重新分配部门）
+//        LambdaQueryWrapper<SysRoleDept> roleDeptWrapper = new LambdaQueryWrapper<>();
+//        roleDeptWrapper.in(SysRoleDept::getRoleId, idList);
+//        sysRoleDeptService.remove(roleDeptWrapper);
+
+        //删除角色（逻辑删除）
         boolean remove = sysRoleService.removeByIds(idList);
         if (!remove) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除角色失败！");

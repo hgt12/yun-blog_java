@@ -306,6 +306,14 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             }
         }
 
+        //注意：
+        //删除文章或通知时不对里面的图片文件进行 sys_file 表的处理
+        //因为在前面已经对图片文件进行在 oss 里的删除(移动到 delete/ 目录)
+        //在sys_file中的图片文件还是原路径
+        //这样在用户预览文件列表的时候对应的图片就会加载不出来
+        //这样就可以反证该图片文件所在的文章或通知已删除
+        //然后用户再在文件列表中删除对应文件即可
+
         //逻辑删除通知（将 del_flag 从 0 > 1）
         sysNoticeService.removeByIds(idList);
         log.info("批量逻辑删除通知成功，ID列表: {}", idList);
