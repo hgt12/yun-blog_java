@@ -1352,7 +1352,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
     //获取ip地址
     private String getClientIp()
     {
-        String clientIp = "unknown";
+        String clientIp = SystemConstants.UNKNOWN;
         try {
             ServletRequestAttributes attributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

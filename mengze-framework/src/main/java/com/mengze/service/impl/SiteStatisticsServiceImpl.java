@@ -337,7 +337,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         if (ua.contains("Firefox")) return "Firefox";
         if (ua.contains("Safari") && !ua.contains("Chrome")) return "Safari";
         if (ua.contains("MSIE") || ua.contains("Trident")) return "IE";
-        return "Unknown";
+        return SystemConstants.UNKNOWN;
     }
 
     //解析设备类型
@@ -348,13 +348,13 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         if (ua.contains("Android")) return "Android";
         if (ua.contains("iPhone") || ua.contains("iPad")) return "iOS";
         if (ua.contains("Linux")) return "Linux";
-        return "Unknown";
+        return SystemConstants.UNKNOWN;
     }
 
     // IP 脱敏：IPv4 末段替换为 *，IPv6 后两组替换为 *
     private String maskIp(String ip)
     {
-        if (ip == null || ip.isEmpty()) return "unknown";
+        if (ip == null || ip.isEmpty()) return SystemConstants.UNKNOWN;
         if (ip.contains(":")) {
             // IPv6：取前6组，后两组用 * 代替
             String[] parts = ip.split(":");

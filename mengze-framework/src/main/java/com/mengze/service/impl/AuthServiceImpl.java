@@ -227,7 +227,7 @@ public class AuthServiceImpl implements AuthService
         } catch (Exception e) {
             System.err.println("获取客户端IP失败: " + e.getMessage());
         }
-        return "unknown";
+        return SystemConstants.UNKNOWN;
     }
 
     //检查IP发送频率限制
