@@ -2,7 +2,6 @@ package com.mengze.runner;
 
 import com.mengze.constants.RedisHashFieldConstants;
 import com.mengze.constants.RedisKeyConstants;
-import com.mengze.constants.SystemConstants;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.entity.SiteStatistics;
 import com.mengze.mapper.ArticleMapper;

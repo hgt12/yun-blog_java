@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Article;
-import com.mengze.domain.vo.ArticleListVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.domain.vo.SearchArticleListVo;
 import com.mengze.mapper.ArticleMapper;

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.SysNotice;
 import com.mengze.domain.vo.BlogNoticeDetailVo;
-import com.mengze.domain.vo.BlogNoticeListVo;
 import com.mengze.domain.vo.PageVo;
 
 /**

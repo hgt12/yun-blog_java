@@ -7,7 +7,6 @@ import com.mengze.domain.dto.*;
 import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.service.AdminUserService;
-import com.mengze.service.AuthService;
 import com.mengze.utils.ExcelExportUtil;
 import com.mengze.utils.WebUtils;
 import io.swagger.annotations.Api;

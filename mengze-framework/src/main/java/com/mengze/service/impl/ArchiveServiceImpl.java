@@ -6,7 +6,6 @@ import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Article;
 import com.mengze.domain.vo.ArchiveArticleVo;
-import com.mengze.domain.vo.ArchiveVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.mapper.ArticleMapper;
 import com.mengze.service.ArchiveService;
