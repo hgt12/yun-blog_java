@@ -227,6 +227,17 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：以下字典 id 不存在：" + notExistIds);
         }
 
+        //检查字典下是否存在字典项，存在则禁止删除
+        LambdaQueryWrapper<SysDictItem> itemQueryWrapper = new LambdaQueryWrapper<>();
+        itemQueryWrapper.in(SysDictItem::getDictCode,
+                dictsToDelete.stream().map(SysDict::getDictCode).toList())
+                .select(SysDictItem::getDictCode)
+                .last("limit 1");
+        SysDictItem existDictItem = sysDictItemService.getOne(itemQueryWrapper);
+        if (existDictItem != null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "删除失败！！原因：该字典下存在字典项，不能删除");
+        }
+
         //删除字典
         sysDictService.removeByIds(idList);
 
