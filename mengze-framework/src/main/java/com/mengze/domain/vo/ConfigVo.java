@@ -7,13 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 前台配置VO
+ * 前后台获取配置VO
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "前台公共配置")
-public class BlogConfigVo {
+@ApiModel(description = "前后台公共配置响应对象")
+public class ConfigVo {
 
     @ApiModelProperty(value = "配置键", example = "site.name")
     private String configKey;

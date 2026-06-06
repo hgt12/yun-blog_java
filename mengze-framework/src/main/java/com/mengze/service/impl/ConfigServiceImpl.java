@@ -6,7 +6,7 @@ import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Config;
-import com.mengze.domain.vo.BlogConfigVo;
+import com.mengze.domain.vo.ConfigVo;
 import com.mengze.domain.vo.ConfigCacheVo;
 import com.mengze.mapper.ConfigMapper;
 import com.mengze.service.ConfigService;
@@ -35,23 +35,23 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     //获取前台配置
     @Override
     @SuppressWarnings("unchecked")
-    public ResponseResult<List<BlogConfigVo>> getBlogConfig()
+    public ResponseResult getBlogConfig()
     {
         //先从缓存读取前台配置
         Set<Object> keys = redisTemplate.keys(RedisKeyConstants.CONFIG_KEY_PREFIX + "*");
-        List<BlogConfigVo> blogConfigVos = new ArrayList<>();
+        List<ConfigVo> configVos = new ArrayList<>();
 
         if (keys != null && !keys.isEmpty()) {
             keys.forEach(key -> {
                 Object value = redisTemplate.opsForValue().get(key);
                 if (value instanceof ConfigCacheVo configCacheVo && SystemConstants.CONFIG_TYPE_IS_BLOG.equals(configCacheVo.getConfigType())) {
-                    blogConfigVos.add(new BlogConfigVo(configCacheVo.getConfigKey(), configCacheVo.getConfigValue()));
+                    configVos.add(new ConfigVo(configCacheVo.getConfigKey(), configCacheVo.getConfigValue()));
                 }
             });
         }
 
         //缓存为空时再查数据库
-        if (blogConfigVos.isEmpty())
+        if (configVos.isEmpty())
         {
             LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.select(Config::getConfigKey, Config::getConfigValue)
@@ -59,9 +59,9 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
                         .orderByAsc(Config::getId);
 
             List<Config> configList = list(queryWrapper);
-            blogConfigVos.addAll(BeanCopyUtils.copyBeanList(configList, BlogConfigVo.class));
+            configVos.addAll(BeanCopyUtils.copyBeanList(configList, ConfigVo.class));
         }
 
-        return ResponseResult.okResult(blogConfigVos);
+        return ResponseResult.okResult(configVos);
     }
 }

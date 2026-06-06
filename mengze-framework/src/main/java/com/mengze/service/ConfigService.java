@@ -3,7 +3,7 @@ package com.mengze.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.entity.Config;
-import com.mengze.domain.vo.BlogConfigVo;
+import com.mengze.domain.vo.ConfigVo;
 
 import java.util.List;
 
@@ -16,6 +16,6 @@ import java.util.List;
  */
 public interface ConfigService extends IService<Config> {
 
-    ResponseResult<List<BlogConfigVo>> getBlogConfig();
+    ResponseResult<List<ConfigVo>> getBlogConfig();
 }
 
