@@ -9,10 +9,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 系统配置表(SysConfig)表实体类
+ * 系统配置表(Config)表实体类
  *
  * @author makejava
- * @since 2026-04-24 13:38:10
+ * @since 2026-06-06 14:22:06
  */
 @SuppressWarnings("serial")
 @Data
@@ -33,6 +33,8 @@ public class Config extends Model<Config> {
     private String remark;
     //排序
     private Integer sort;
+    //配置分类（0-前台配置，1-后台配置）
+    private String configType;
     //删除标记(0-未删除,1-已删除)
     private String delFlag;
     //创建者ID

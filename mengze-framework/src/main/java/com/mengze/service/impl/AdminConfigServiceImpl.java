@@ -58,6 +58,11 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
             );
         }
 
+        //根据配置分类筛选
+        if (StringUtils.hasText(configListDto.getConfigType())) {
+            queryWrapper.eq(Config::getConfigType, configListDto.getConfigType());
+        }
+
         //按排序字段、id顺序排序
         queryWrapper.orderByAsc(Config::getSort)
                     .orderByAsc(Config::getId);

@@ -30,4 +30,7 @@ public class AdminConfigListVo
     @ApiModelProperty(value = "排序", example = "1")
     private Integer sort;
 
+    @ApiModelProperty(value = "配置分类（0-前台配置，1-后台配置）", example = "0")
+    private String configType;
+
 }
