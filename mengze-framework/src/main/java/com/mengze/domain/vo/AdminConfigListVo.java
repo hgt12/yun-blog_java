@@ -27,4 +27,7 @@ public class AdminConfigListVo
     @ApiModelProperty(value = "描述", example = "网站的标题配置")
     private String remark;
 
+    @ApiModelProperty(value = "排序", example = "1")
+    private Integer sort;
+
 }

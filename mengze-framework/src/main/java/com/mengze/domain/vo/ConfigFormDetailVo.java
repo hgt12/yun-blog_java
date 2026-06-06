@@ -26,4 +26,7 @@ public class ConfigFormDetailVo
 
     @ApiModelProperty(value = "备注", example = "对该配的一些描述")
     private String remark;
+
+    @ApiModelProperty(value = "排序", example = "1")
+    private Integer sort;
 }

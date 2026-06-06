@@ -31,6 +31,8 @@ public class Config extends Model<Config> {
     private String configValue;
     //备注
     private String remark;
+    //排序
+    private Integer sort;
     //删除标记(0-未删除,1-已删除)
     private String delFlag;
     //创建者ID

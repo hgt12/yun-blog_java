@@ -31,4 +31,7 @@ public class AddConfigDto {
 
     @ApiModelProperty(value = "备注", example = "给配置添加描述")
     private String remark;
+
+    @ApiModelProperty(value = "排序", example = "1")
+    private Integer sort;
 }

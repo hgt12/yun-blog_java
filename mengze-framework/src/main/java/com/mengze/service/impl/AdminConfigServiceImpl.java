@@ -58,8 +58,9 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
             );
         }
 
-        //按id顺序排序
-        queryWrapper.orderByAsc(Config::getId);
+        //按排序字段、id顺序排序
+        queryWrapper.orderByAsc(Config::getSort)
+                    .orderByAsc(Config::getId);
 
         //设置分页查询
         Page<Config> page = new Page<>(pageNum, pageSize);
