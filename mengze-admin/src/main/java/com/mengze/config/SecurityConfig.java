@@ -58,6 +58,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/auth/resetPassword").permitAll()
                 // 对于获取获取天气接口所有人都能访问
                 .antMatchers("/weather/now").permitAll()
+                // 对于获取后台配置接口所有人都能访问
+                .antMatchers("/configs/getConfig").permitAll()
                 // 对于后台记录访问日志接口所有人都能访问
                 .antMatchers("/statistics/visits/recordVisit").permitAll()
                 // 对于WebSocket连接端点允许握手，实际连接鉴权在STOMP CONNECT阶段完成

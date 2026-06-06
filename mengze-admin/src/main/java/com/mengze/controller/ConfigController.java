@@ -91,4 +91,12 @@ public class ConfigController
     {
         return adminConfigService.refreshConfigCache();
     }
+
+    @GetMapping("/getConfig")
+    @SystemLog(businessName = "获取后台系统站点配置接口")
+    @ApiOperation(value = "获取后台系统站点配置接口", notes = "获取博客后台站点的基本配置")
+    public ResponseResult getSiteConfig()
+    {
+        return adminConfigService.getSiteConfig();
+    }
 }

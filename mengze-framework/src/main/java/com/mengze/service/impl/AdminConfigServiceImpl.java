@@ -4,15 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mengze.constants.RedisKeyConstants;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddConfigDto;
 import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.dto.UpdateConfigDto;
 import com.mengze.domain.entity.Config;
-import com.mengze.domain.vo.AdminConfigListVo;
-import com.mengze.domain.vo.ConfigCacheVo;
-import com.mengze.domain.vo.ConfigFormDetailVo;
-import com.mengze.domain.vo.PageVo;
+import com.mengze.domain.vo.*;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.ConfigMapper;
 import com.mengze.service.AdminConfigService;
@@ -22,10 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -220,6 +215,39 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         }
 
         return ResponseResult.okResult();
+    }
+
+    //获取后台配置
+    @Override
+    @SuppressWarnings("unchecked")
+    public ResponseResult getSiteConfig()
+    {
+        //先从缓存读取后台配置
+        Set<Object> keys = redisTemplate.keys(RedisKeyConstants.CONFIG_KEY_PREFIX + "*");
+        List<ConfigVo> configVos = new ArrayList<>();
+
+        if (keys != null && !keys.isEmpty()) {
+            keys.forEach(key -> {
+                Object value = redisTemplate.opsForValue().get(key);
+                if (value instanceof ConfigCacheVo configCacheVo && SystemConstants.CONFIG_TYPE_IS_ADMIN.equals(configCacheVo.getConfigType())) {
+                    configVos.add(new ConfigVo(configCacheVo.getConfigKey(), configCacheVo.getConfigValue()));
+                }
+            });
+        }
+
+        //缓存为空时再查数据库里的后台配置
+        if (configVos.isEmpty())
+        {
+            LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.select(Config::getConfigKey, Config::getConfigValue)
+                    .eq(Config::getConfigType, SystemConstants.CONFIG_TYPE_IS_ADMIN)
+                    .orderByAsc(Config::getId);
+
+            List<Config> configList = list(queryWrapper);
+            configVos.addAll(BeanCopyUtils.copyBeanList(configList, ConfigVo.class));
+        }
+
+        return ResponseResult.okResult(configVos);
     }
 
     private String getConfigCacheKey(String configKey)
