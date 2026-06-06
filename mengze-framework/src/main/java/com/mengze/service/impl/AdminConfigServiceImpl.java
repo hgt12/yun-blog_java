@@ -10,6 +10,7 @@ import com.mengze.domain.dto.ConfigListDto;
 import com.mengze.domain.dto.UpdateConfigDto;
 import com.mengze.domain.entity.Config;
 import com.mengze.domain.vo.AdminConfigListVo;
+import com.mengze.domain.vo.ConfigCacheVo;
 import com.mengze.domain.vo.ConfigFormDetailVo;
 import com.mengze.domain.vo.PageVo;
 import com.mengze.enums.AppHttpCodeEnum;
@@ -113,7 +114,8 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         adminConfigService.save(config);
 
         //将配置加入缓存
-        redisTemplate.opsForValue().set(getConfigCacheKey(config.getConfigKey()), config.getConfigValue());
+        redisTemplate.opsForValue().set(getConfigCacheKey(config.getConfigKey()),
+                new ConfigCacheVo(config.getConfigKey(), config.getConfigValue(), config.getConfigType()));
 
         return ResponseResult.okResult();
     }
@@ -150,7 +152,8 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
         if (!Objects.equals(oldConfig.getConfigKey(), updateConfigDto.getConfigKey())) {
             redisTemplate.delete(oldCacheKey);
         }
-        redisTemplate.opsForValue().set(newCacheKey, updateConfigDto.getConfigValue());
+        redisTemplate.opsForValue().set(newCacheKey,
+                new ConfigCacheVo(updateConfigDto.getConfigKey(), updateConfigDto.getConfigValue(), updateConfigDto.getConfigType()));
 
         return ResponseResult.okResult();
     }
@@ -210,7 +213,7 @@ public class AdminConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> im
                     .filter(config -> StringUtils.hasText(config.getConfigKey()))
                     .collect(Collectors.toMap(
                             config -> getConfigCacheKey(config.getConfigKey()),
-                            Config::getConfigValue,
+                            config -> new ConfigCacheVo(config.getConfigKey(), config.getConfigValue(), config.getConfigType()),
                             (oldValue, newValue) -> newValue
                     ));
             redisTemplate.opsForValue().multiSet(configCacheMap);

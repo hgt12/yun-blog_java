@@ -207,4 +207,12 @@ public class SystemConstants
      *  通知状态：已撤回
      */
     public static final String NOTICE_STATUS_REVOKED = "2";
+    /**
+     *  配置分类：前台
+     */
+    public static final String CONFIG_TYPE_IS_BLOG = "0";
+    /**
+     *  通知状态：后台
+     */
+    public static final String CONFIG_TYPE_IS_ADMIN = "1";
 }
