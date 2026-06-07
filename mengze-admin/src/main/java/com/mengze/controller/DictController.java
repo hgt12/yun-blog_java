@@ -35,7 +35,7 @@ public class DictController
     private SysDictItemService sysDictItemService;
 
     @GetMapping
-    @PreAuthorize("@ps.hasPermission('blog:dict:query')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:query')")
     @SystemLog(businessName = "分页查询字典列表")
     @ApiOperation(value = "字典列表", notes = "分页查询字典列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -57,7 +57,7 @@ public class DictController
     }
 
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:update')")
     @SystemLog(businessName = "获取字典表单数据接口")
     @ApiOperation(value = "获取字典表单数据接口", notes = "获取字典表单数据，用于编辑字典详情", response = DictFormDetailVo.class)
     @ApiImplicitParams({
@@ -69,7 +69,7 @@ public class DictController
     }
 
     @PostMapping
-    @PreAuthorize("@ps.hasPermission('blog:dict:create')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:create')")
     @SystemLog(businessName = "新增字典")
     @ApiOperation(value = "新增字典接口", notes = "新增字典", response = String.class)
     public ResponseResult addDict(@Valid @RequestBody AddDictDto addDictDto)
@@ -78,7 +78,7 @@ public class DictController
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:update')")
     @SystemLog(businessName = "修改字典接口")
     @ApiOperation(value = "编辑字典接口", notes = "编辑字典", response = String.class)
     @ApiImplicitParam(name = "id", value = "字典ID", dataType = "long", paramType = "path", required = true)
@@ -88,7 +88,7 @@ public class DictController
     }
 
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ps.hasPermission('blog:dict:delete')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:delete')")
     @SystemLog(businessName = "删除字典(逻辑删除)")
     @ApiOperation(value = "删除字典接口（批量逻辑删除）", notes = "删除字典，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "字典id", dataType = "Long", paramType = "path", required = true)
@@ -98,7 +98,7 @@ public class DictController
     }
 
     @GetMapping("/{dictCode}/items")
-    @PreAuthorize("@ps.hasPermission('blog:dict:query')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:query')")
     @SystemLog(businessName = "分页查询字典项列表")
     @ApiOperation(value = "字典项列表", notes = "分页查询字典项列表", response = PageVo.class)
     @ApiImplicitParams({
@@ -121,7 +121,7 @@ public class DictController
     }
 
     @GetMapping("/{dictCode}/items/{id}/form")
-    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:update')")
     @SystemLog(businessName = "获取字典项表单数据接口")
     @ApiOperation(value = "获取字典项表单数据接口", notes = "获取字典项表单数据，用于编辑字典项详情", response = DictItemFormDetailVo.class)
     @ApiImplicitParams({
@@ -134,7 +134,7 @@ public class DictController
     }
 
     @PostMapping("/{dictCode}/items")
-    @PreAuthorize("@ps.hasPermission('blog:dict:create')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:create')")
     @SystemLog(businessName = "新增字典项")
     @ApiOperation(value = "新增字典项接口", notes = "新增字典项", response = String.class)
     public ResponseResult addDictItem(@PathVariable String dictCode, @Valid @RequestBody AddDictItemDto addDictItemDto)
@@ -143,7 +143,7 @@ public class DictController
     }
 
     @PutMapping("/{dictCode}/items/{id}")
-    @PreAuthorize("@ps.hasPermission('blog:dict:update')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:update')")
     @SystemLog(businessName = "修改字典项接口")
     @ApiOperation(value = "编辑字典项接口", notes = "编辑字典项", response = String.class)
     @ApiImplicitParam(name = "id", value = "字典项ID", dataType = "long", paramType = "path", required = true)
@@ -153,7 +153,7 @@ public class DictController
     }
 
     @DeleteMapping("/{dictCode}/items/{ids}")
-    @PreAuthorize("@ps.hasPermission('blog:dict:delete')")
+    @PreAuthorize("@ps.hasPermission('sys:dict:delete')")
     @SystemLog(businessName = "删除字典项(逻辑删除)")
     @ApiOperation(value = "删除字典项接口（批量逻辑删除）", notes = "删除字典项，支持批量删除", response = String.class)
     @ApiImplicitParam(name = "ids", value = "字典项id", dataType = "Long", paramType = "path", required = true)
