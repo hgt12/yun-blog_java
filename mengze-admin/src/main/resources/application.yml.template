@@ -5,7 +5,7 @@
 
 # 服务器配置
 server:
-  port: 1314  # 应用服务端口号
+  port: 7616  # 应用服务端口号
 
 # Spring框架配置
 spring:
@@ -15,14 +15,14 @@ spring:
     # characterEncoding=utf8: 字符编码设置为UTF-8
     # serverTimezone=Asia/Shanghai: 时区设置为上海（东八区）
     url: jdbc:mysql://localhost:3306/yun_blog?characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root                          # 数据库用户名
-    password: YOUR_DATABASE_PASSWORD        # 【请修改】数据库密码
+    username:  ${SQL_USERNAME:your_sql_username}       # 数据库用户名
+    password: ${SQL_PASSWORD:your_sql_password}        # 【请修改】数据库密码
     driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL驱动类
 
   # Spring Security配置
   security:
     sysUser:
-      name: root                            # 默认用户名
+      name: ${SECURITY_USER_NAME:your_security_username}           # 默认用户名
       password: YOUR_SECURITY_PASSWORD      # 【请修改】默认密码
 
   # Redis配置
@@ -47,8 +47,8 @@ spring:
   mail:
     host: smtp.qq.com                       # SMTP服务器地址
     port: 587                               # SMTP端口（587为TLS端口）
-    username: YOUR_EMAIL@qq.com             # 【请修改】发件人邮箱地址
-    password: YOUR_EMAIL_AUTH_CODE          # 【请修改】QQ邮箱授权码（不是QQ密码）
+    username: ${QQ_EMAIL_USERNAME:your_qq_email_username}             # 【请修改】发件人邮箱地址
+    password: ${QQ_EMAIL_KEY:your_qq_email_key}                       # 【请修改】QQ邮箱授权码（不是QQ密码）
     properties:
       mail:
         smtp:
@@ -90,7 +90,9 @@ oss:
   # 七牛云SecretKey（从环境变量读取，未设置时使用默认值）
   secretKey: ${OSS_SECRET_KEY:your_secret_key}
   # 存储空间名称改成你自己的存储空间名称（Bucket）
-  bucket: yun-mengze-blog
+  bucket: ${OSS_BUCKET_NAME:your_bucket_name}
+  # # OSS访问域名改成你自己的域名或者oss给的试用域名（需要以/结尾）
+  domain: ${OSS_VISIT_DOMAIN:your_oss_visit_domain}
 
 # 阿里云号码认证服务配置
 # 用于发送短信验证码（登录、注册、忘记密码）
@@ -118,7 +120,22 @@ aliyun:
 blog:
   frontend:
     # 前端网站URL（用于邮件通知中的链接）
-    url: http://localhost:3000  # 【请修改】改为你的前端网站地址，例如：https://www.yourdomain.com
+    url: ${BLOG_FRONTEND_URL:blog_frontend_url}  # 【请修改】改为你的前端网站地址，例如：https://www.yourdomain.com
+
+# 和风天气API配置（JWT认证方式）
+weather:
+  api:
+    key-id: ${WEATHER_KEY_ID:your_key_id}                       # 凭据ID
+    project-id: ${WEATHER_PROJECT_ID:your_project_id}           # 项目ID
+    host: ${WEATHER_API_HOST:your_api_host}                     # API Host
+    private-key: ${WEATHER_PRIVATE_KEY:your_private_key}        # 和风天气私钥（从环境变量读取）
+    cache-minutes: 30                                           # 天气数据缓存时间（分钟）
+
+# DeepSeek AI配置
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:your_deepseek_api_key} # DeepSeek API Key（从环境变量读取）
+  base-url: https://api.deepseek.com # DeepSeek API地址
+
 
 # 配置说明
 # 1. 必须修改的配置：
