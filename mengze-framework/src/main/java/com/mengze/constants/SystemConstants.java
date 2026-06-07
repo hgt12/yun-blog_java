@@ -215,4 +215,8 @@ public class SystemConstants
      *  通知状态：后台
      */
     public static final String CONFIG_TYPE_IS_ADMIN = "1";
+    /**
+     *  文章内容类型：富文本格式（Rich Text）
+     */
+    public static final String CONTENT_TYPE_RICH_TEXT = "0";
 }

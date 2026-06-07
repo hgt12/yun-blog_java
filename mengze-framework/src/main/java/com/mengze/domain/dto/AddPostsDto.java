@@ -28,6 +28,11 @@ public class AddPostsDto
     @ApiModelProperty(value = "文章内容（HTML格式/md格式）", required = true, example = "你好")
     private String content;
 
+    @NotBlank(message = "文章内容类型不能为空")
+    @Pattern(regexp = "^[01]$", message = "文章内容类型只能为0或1")
+    @ApiModelProperty(value = "文章内容类型（0-html/富文本格式, 1-md格式）", required = true, example = "0")
+    private String contentType;
+
     @ApiModelProperty(value = "文章摘要", example = "这是文章摘要")
     private String summary;
 

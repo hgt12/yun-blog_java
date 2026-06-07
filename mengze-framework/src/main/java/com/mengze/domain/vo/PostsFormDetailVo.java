@@ -23,6 +23,9 @@ public class PostsFormDetailVo
     @ApiModelProperty(value = "文章摘要", example = "本文介绍Spring Boot的基础知识")
     private String summary;
 
+    @ApiModelProperty(value = "文章内容类型（0-html/富文本格式, 1-md格式）", example = "0")
+    private String contentType;
+
     @ApiModelProperty(value = "所属分类ID", example = "1")
     private Long categoryId;
 

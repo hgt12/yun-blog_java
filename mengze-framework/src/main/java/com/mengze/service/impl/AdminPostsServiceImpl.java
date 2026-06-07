@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.OssFileConstants;
 import com.mengze.constants.RedisKeyConstants;
+import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
 import com.mengze.domain.dto.PostsListDto;
@@ -179,6 +180,11 @@ public class AdminPostsServiceImpl implements AdminPostsService
             postsDto.setContent(content);
         }
 
+        //若前端未传内容类型，默认按富文本处理(防御性编程)
+        if (!StringUtils.hasText(postsDto.getContentType())) {
+            postsDto.setContentType(SystemConstants.CONTENT_TYPE_RICH_TEXT);
+        }
+
         //处理缩略图
         String thumbnail = postsDto.getThumbnail();
         if (StringUtils.hasText(thumbnail) && thumbnail.contains(OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX)) {
@@ -230,6 +236,11 @@ public class AdminPostsServiceImpl implements AdminPostsService
         String content = updatePostsDto.getContent();
         List<String> oldContentImages = new ArrayList<>();
         List<String> newContentImages = new ArrayList<>();
+
+        //若前端未传内容类型，默认按富文本处理
+        if (!StringUtils.hasText(updatePostsDto.getContentType())) {
+            updatePostsDto.setContentType(SystemConstants.CONTENT_TYPE_RICH_TEXT);
+        }
 
         //提取旧内容中的图片URL
         if (StringUtils.hasText(oldArticle.getContent())) {

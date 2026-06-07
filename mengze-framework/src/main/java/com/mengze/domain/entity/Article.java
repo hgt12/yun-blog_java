@@ -28,8 +28,10 @@ public class Article extends Model<Article> {
     private Long id;
     //文章标题
     private String title;
-    //文章内容（HTML格式）
+    //文章内容
     private String content;
+    //文章内容类型（0-html/富文本格式, 1-md格式）
+    private String contentType;
     //文章摘要
     private String summary;
     //缩略图URL
