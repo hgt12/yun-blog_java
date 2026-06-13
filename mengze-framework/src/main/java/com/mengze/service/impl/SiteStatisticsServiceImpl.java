@@ -62,13 +62,27 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     @Override
     public ResponseResult getSiteInfo()
     {
-        //从Redis获取总预览量（PV）
+        //从Redis获取总预览量（PV），缓存没有数据则从数据库读取再存入redis
         Integer cachedViews = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
-        long totalViews = cachedViews != null ? cachedViews.longValue() : 0L;
+        long totalViews;
+        if (cachedViews != null) {
+            totalViews = cachedViews.longValue();
+        } else {
+            // Redis 无缓存，从数据库统计 visit_log 总记录数作为 PV
+            totalViews = visitLogMapper.selectCount(null);
+            redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, (int) totalViews);
+        }
 
-        //从Redis获取总访客数（UV）
+        //从Redis获取总访客数（UV），缓存没有数据则从数据库读取再存入redis
         Integer cachedVisitors = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
-        long totalVisitors = cachedVisitors != null ? cachedVisitors.longValue() : 0L;
+        long totalVisitors;
+        if (cachedVisitors != null) {
+            totalVisitors = cachedVisitors.longValue();
+        } else {
+            // Redis 无缓存，从数据库统计 unique_visitor 总记录数作为 UV
+            totalVisitors = uniqueVisitorMapper.selectCount(null);
+            redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, (int) totalVisitors);
+        }
 
         SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors);
         return ResponseResult.okResult(siteInfoVo);
