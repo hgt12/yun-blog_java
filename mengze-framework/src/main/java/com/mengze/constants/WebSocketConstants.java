@@ -32,6 +32,13 @@ public final class WebSocketConstants
     /** 游客在线人数订阅主题 */
     public static final String TOPIC_VISITOR_ONLINE_COUNT = "/topic/blog/visitor/online-count";
 
+    /** WebSocket 端点类型 - 后台 */
+    public static final String ENDPOINT_TYPE_ADMIN = "admin";
+    /** WebSocket 端点类型 - 前台 */
+    public static final String ENDPOINT_TYPE_BLOG = "blog";
+    /** 握手阶段保存端点类型的属性名 */
+    public static final String ATTR_ENDPOINT_TYPE = "webSocketEndpointType";
+
     /** 默认登录类型 */
     public static final String DEFAULT_LOGIN_TYPE = LOGIN_TYPE_ADMIN;
 }

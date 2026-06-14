@@ -23,7 +23,14 @@ import java.security.Principal;
 import java.util.Objects;
 import java.util.UUID;
 
-//WebSocket连接鉴权拦截器
+/**
+ * WebSocket 连接鉴权拦截器。
+ *
+ * 作用：
+ * 1. 在 STOMP CONNECT 阶段校验 token。
+ * 2. 根据握手阶段写入的端点类型，限制前台/后台用户只能连接对应端点。
+ * 3. 如果没有 token，则自动按游客身份处理。
+ */
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor
 {
@@ -38,9 +45,18 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
             return message;
         }
 
-        //获取STOMP CONNECT Header中的token
+        // 从握手阶段保存的会话属性中读取端点类型，用于区分前台和后台连接
+        String endpointType = (String) accessor.getSessionAttributes().get(WebSocketConstants.ATTR_ENDPOINT_TYPE);
+        if (WebSocketConstants.ENDPOINT_TYPE_ADMIN.equals(endpointType)){
+            accessor.setHeader(WebSocketConstants.HEADER_LOGIN_TYPE, WebSocketConstants.LOGIN_TYPE_ADMIN);
+        } else if (WebSocketConstants.ENDPOINT_TYPE_BLOG.equals(endpointType)){
+            accessor.setHeader(WebSocketConstants.HEADER_LOGIN_TYPE, WebSocketConstants.LOGIN_TYPE_BLOG);
+        }
+
+        // 获取 STOMP CONNECT Header 中携带的 token
         String token = accessor.getFirstNativeHeader(WebSocketConstants.HEADER_TOKEN);
         if (!StringUtils.hasText(token)){
+            // 没有 token 时，按游客处理；如果前端传了 visitorId，则沿用，否则随机生成一个
             String visitorId = accessor.getFirstNativeHeader(WebSocketConstants.HEADER_VISITOR_ID);
             if (!StringUtils.hasText(visitorId)){
                 visitorId = UUID.randomUUID().toString().replace("-", "");
@@ -60,8 +76,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         String userId = claims.getSubject();
+        // 先尝试从后台登录缓存中读取用户信息
         LoginUser loginUser = redisCache.getCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
         String loginType = WebSocketConstants.LOGIN_TYPE_ADMIN;
+        // 后台缓存没有命中时，再尝试从前台登录缓存中读取
         if (Objects.isNull(loginUser)){
             loginUser = redisCache.getCacheObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId);
             loginType = WebSocketConstants.LOGIN_TYPE_BLOG;
@@ -69,8 +87,16 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         if (Objects.isNull(loginUser)){
             throw new IllegalArgumentException("token无效或过期！");
         }
+        // 后台端点只允许后台用户连接
+        if (WebSocketConstants.ENDPOINT_TYPE_ADMIN.equals(endpointType) && !WebSocketConstants.LOGIN_TYPE_ADMIN.equals(loginType)){
+            throw new IllegalArgumentException("当前 WebSocket 端点仅允许后台用户连接！");
+        }
+        // 前台端点只允许前台用户连接
+        if (WebSocketConstants.ENDPOINT_TYPE_BLOG.equals(endpointType) && !WebSocketConstants.LOGIN_TYPE_BLOG.equals(loginType)){
+            throw new IllegalArgumentException("当前 WebSocket 端点仅允许前台用户连接！");
+        }
 
-        //绑定当前登录用户身份，后续可通过Principal获取当前用户
+        // 绑定当前登录用户身份，后续可通过 Principal 获取当前用户
         WebSocketPrincipal principal = new WebSocketPrincipal(userId, loginUser, loginType);
         accessor.setUser(principal);
         accessor.setHeader(WebSocketConstants.HEADER_LOGIN_USER, loginUser);
