@@ -66,31 +66,30 @@ public class OssFileServiceImpl implements OssFileService
             InputStream inputStream = file.getInputStream();
             Auth auth = Auth.create(accessKey, secretKey);
             String upToken = auth.uploadToken(bucket);
+            Response response = uploadManager.put(inputStream, key, upToken, null, null);
+            //解析上传成功的结果
+            DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+            log.info("文件上传七牛云成功: key={}, hash={}", putRet.key, putRet.hash);
+            //返回图片的完整URL
+            return domain + key;
+        } catch (QiniuException ex) {
+            Response r = ex.response;
+            String errMsg = r == null ? ex.getMessage() : r.toString();
+            log.error("文件上传七牛云失败: key={}, error={}", key, errMsg, ex);
             try {
-                Response response =
-                        uploadManager.put(inputStream,key,upToken,null, null);
-                //解析上传成功的结果
-                DefaultPutRet putRet = new
-                        Gson().fromJson(response.bodyString(), DefaultPutRet.class);
-                System.out.println(putRet.key);
-                System.out.println(putRet.hash);
-                //返回图片的完整URL
-                return domain + key;
-            } catch (QiniuException ex) {
-                Response r = ex.response;
-                System.err.println(r.toString());
-                try {
-                    System.err.println(r.bodyString());
-                } catch (QiniuException ex2) {
-                    //ignore
+                if (r != null) {
+                    log.error("七牛云错误响应: {}", r.bodyString());
                 }
+            } catch (QiniuException ex2) {
+                log.warn("读取七牛云错误响应失败", ex2);
             }
+            throw new RuntimeException("上传失败");
         } catch (Exception ex) {
-            //ignore
+            log.error("文件上传七牛云异常: key={}", key, ex);
+            throw new RuntimeException("上传失败");
         }
-        return key;
     }
-    
+
     /**
      * 获取BucketManager实例
      */

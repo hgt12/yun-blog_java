@@ -49,7 +49,12 @@ public class UploadServiceImpl implements UploadService
         
         //上传到临时目录，文件路径格式：temp/yyyy/MM/dd/文件名.后缀
         String filePath = OssFileConstants.TEMP_OSS_DIRECTORY_PATH_PREFIX + PathUtils.generateFilePath(originalFilename);
-        String url = ossFileService.uploadOss(image, filePath);
+        String url;
+        try {
+            url = ossFileService.uploadOss(image, filePath);
+        } catch (RuntimeException ex) {
+            throw new SystemException(AppHttpCodeEnum.FILE_UPLOAD_ERROR);
+        }
         
         //将临时文件信息存入Redis，设置24小时过期时间
         //存储格式：key=temp:file:文件路径, value=上传时间戳
