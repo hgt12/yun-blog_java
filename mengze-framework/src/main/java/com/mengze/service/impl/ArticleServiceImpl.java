@@ -80,9 +80,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //stream流方式查询
         articles.forEach(article -> {
             article.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
-            //从redis中获取viewCount
-            Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString());
-            article.setViewCount(viewCount.longValue());
+            //从redis中获取viewCount，若不存在则使用数据库中的值并回写redis
+            Long viewCount = getViewCountWithFallback(article.getId());
+            article.setViewCount(viewCount);
         });
 
         //封装查询结果为Vo
@@ -104,9 +104,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (article == null) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "该文章不存在！");
         }
-        //从redis中获取viewCount
-        Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString());
-        article.setViewCount(viewCount.longValue());
+        //从redis中获取viewCount，若不存在则回源数据库并回写redis
+        Long viewCount = getViewCountWithFallback(article.getId());
+        article.setViewCount(viewCount);
         //转化成Vo
         ArticleDetailVo articleDetailVo = BeanCopyUtils.copyBean(article, ArticleDetailVo.class);
         
@@ -172,9 +172,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         List<Article> articles = page.getRecords();
         articles.forEach(article -> {
             article.setCategoryName(categoryService.getById(article.getCategoryId()).getName());
-            //从redis中获取viewCount
-            Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString());
-            article.setViewCount(viewCount.longValue());
+            //从redis中获取viewCount，若不存在则使用数据库中的值并回写redis
+            Long viewCount = getViewCountWithFallback(article.getId());
+            article.setViewCount(viewCount);
         });
 
         //封装查询结果为Vo
@@ -190,6 +190,22 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 更新redis中对应文章id的浏览量
         redisCache.incrementCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, id.toString(), 1);
         return ResponseResult.okResult();
+    }
+
+    //获取文章浏览量，优先读 Redis，若 Redis 中不存在则回源数据库并写入 Redis。
+    private Long getViewCountWithFallback(Long articleId)
+    {
+        //先读 Redis
+        Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, articleId.toString());
+        if (viewCount != null) {
+            return viewCount.longValue();
+        }
+
+        //若 Redis 中不存在则回源数据库并回写 Redis
+        Article article = getById(articleId);
+        Long dbViewCount = article != null && article.getViewCount() != null ? article.getViewCount() : 0L;
+        redisCache.setCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, articleId.toString(), dbViewCount.intValue());
+        return dbViewCount;
     }
 
     //根据标签id查询文章列表
