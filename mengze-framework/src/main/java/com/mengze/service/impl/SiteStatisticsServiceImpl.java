@@ -155,22 +155,39 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         // PV 计数递增
         redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, 1);
 
-        // UV 去重：使用全站统一 key，保证 unique_visitor 统计的是全站唯一访客
+        // UV 去重：先用 Redis 做快速判断，数据库做最终兜底
         String visitorHash = DigestUtils.md5DigestAsHex((ip + userAgent).getBytes(StandardCharsets.UTF_8));
         String visitorKey = RedisKeyConstants.SITE_VISITOR_SET_KEY;
+        Date now = new Date();
 
         // 如果是全站新访客就写入 Redis 和数据库
         boolean isNewVisitor = redisCache.addToSet(visitorKey, visitorHash);
         if (isNewVisitor) {
-            redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, 1);
-
             UniqueVisitor uniqueVisitor = new UniqueVisitor();
             uniqueVisitor.setVisitorHash(visitorHash);
             uniqueVisitor.setIp(ip);
-            uniqueVisitor.setFirstVisitTime(new Date());
-            uniqueVisitor.setLastVisitTime(new Date());
+            uniqueVisitor.setFirstVisitTime(now);
+            uniqueVisitor.setLastVisitTime(now);
             uniqueVisitor.setVisitCount(1);
-            uniqueVisitorMapper.insert(uniqueVisitor);
+
+            try {
+                uniqueVisitorMapper.insert(uniqueVisitor);
+                redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, 1);
+            } catch (org.springframework.dao.DuplicateKeyException e) {
+                // 在 Redis 状态丢失或并发下数据库已存在时，转为查库更新，并补回 Redis
+                redisCache.addToSet(visitorKey, visitorHash);
+                UniqueVisitor existedVisitor = uniqueVisitorMapper.selectOne(new LambdaQueryWrapper<UniqueVisitor>()
+                        .eq(UniqueVisitor::getVisitorHash, visitorHash)
+                        .last("limit 1"));
+                if (existedVisitor != null) {
+                    existedVisitor.setIp(ip);
+                    existedVisitor.setLastVisitTime(now);
+                    existedVisitor.setVisitCount(existedVisitor.getVisitCount() == null ? 1 : existedVisitor.getVisitCount() + 1);
+                    uniqueVisitorMapper.updateById(existedVisitor);
+                } else {
+                    throw e;
+                }
+            }
         } else {
             // 已存在的全站唯一访客，更新最近访问时间和访问次数
             UniqueVisitor uniqueVisitor = uniqueVisitorMapper.selectOne(new LambdaQueryWrapper<UniqueVisitor>()
@@ -178,7 +195,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
                     .last("limit 1"));
             if (uniqueVisitor != null) {
                 uniqueVisitor.setIp(ip);
-                uniqueVisitor.setLastVisitTime(new Date());
+                uniqueVisitor.setLastVisitTime(now);
                 uniqueVisitor.setVisitCount(uniqueVisitor.getVisitCount() == null ? 1 : uniqueVisitor.getVisitCount() + 1);
                 uniqueVisitorMapper.updateById(uniqueVisitor);
             }
