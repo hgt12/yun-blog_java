@@ -22,7 +22,8 @@
             m.route_name,
             m.redirect,
             m.component,
-            m.icon
+            m.icon,
+            m.sort
         FROM sys_menu m
         WHERE m.type IN ('M', 'C')
           AND m.visible = 0
@@ -40,7 +41,8 @@
             m.route_name,
             m.redirect,
             m.component,
-            m.icon
+            m.icon,
+            m.sort
         FROM sys_user_role ur
                  LEFT JOIN sys_role_menu rm ON ur.role_id = rm.role_id
                  LEFT JOIN sys_menu m ON m.id = rm.menu_id
