@@ -127,21 +127,28 @@ public class IpLocationUtils {
 
         try {
             String[] parts = region.split("\\|");
-            if (parts.length < 4) {
+            if (parts.length == 0) {
                 return null;
             }
 
-            String city = normalizeRegionPart(parts[3]);
-            if (city != null) {
-                return city;
+            // 常见格式：国家|区域|省份|城市|ISP
+            // 也可能是：国家|省份|城市|ISP
+            // 这里按“从右往左优先找城市”的方式，避免把 ISP/运营商当成城市
+            for (int i = parts.length - 2; i >= 0; i--) {
+                String candidate = normalizeRegionPart(parts[i]);
+                if (isValidCityCandidate(candidate)) {
+                    return candidate;
+                }
             }
 
-            String province = normalizeRegionPart(parts[2]);
-            if (province != null) {
-                return province;
+            for (String part : parts) {
+                String candidate = normalizeRegionPart(part);
+                if (isValidCityCandidate(candidate)) {
+                    return candidate;
+                }
             }
 
-            return normalizeRegionPart(parts[0]);
+            return null;
         } catch (Exception e) {
             log.error("提取城市名称失败: region={}, error={}", region, e.getMessage(), e);
             return null;
@@ -154,6 +161,17 @@ public class IpLocationUtils {
         }
         String value = part.trim();
         return value.isEmpty() || "0".equals(value) ? null : value;
+    }
+
+    private static boolean isValidCityCandidate(String value) {
+        if (value == null) {
+            return false;
+        }
+        if (value.contains("电信") || value.contains("联通") || value.contains("移动") || value.contains("铁通")
+                || value.contains("广电") || value.contains("未知") || value.contains("保留") || value.contains("ISP")) {
+            return false;
+        }
+        return true;
     }
 
     /**

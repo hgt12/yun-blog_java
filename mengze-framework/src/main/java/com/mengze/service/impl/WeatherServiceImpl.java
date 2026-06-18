@@ -60,60 +60,58 @@ public class WeatherServiceImpl implements WeatherService
     @Override
     public ResponseResult getWeatherNow(String location, String lang, String unit)
     {
-        // 解析并获取城市位置
-        location = resolveLocation(location);
+        // 解析并获取城市名称
+        String cityName = resolveCityName(location);
         
+        // 将城市名称转换为 Location_ID
+        String locationId = CityLocationUtils.getLocationIdByCityName(cityName);
+        if (!StringUtils.hasText(locationId)) {
+            log.warn("城市名称无法映射到Location_ID: cityName={}", cityName);
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(),
+                    "获取天气信息异常：无法获取“ " + cityName + " ”城市的天气信息");
+        }
+
         // 设置默认参数
         lang = StringUtils.hasText(lang) ? lang : "zh";
         unit = StringUtils.hasText(unit) ? unit : "m";
 
         // 构建缓存key并尝试从缓存获取
-        String cacheKey = RedisKeyConstants.WEATHER_NOW_KEY_PREFIX + location + ":" + lang + ":" + unit;
+        String cacheKey = RedisKeyConstants.WEATHER_NOW_KEY_PREFIX + locationId + ":" + lang + ":" + unit;
         WeatherNowVo cachedWeather = redisCache.getCacheObject(cacheKey);
         if (cachedWeather != null) {
-            log.info("从缓存获取天气数据: location={}", location);
+            log.info("从缓存获取天气数据: locationId={}", locationId);
             return ResponseResult.okResult(cachedWeather);
         }
 
         try {
             // 调用和风天气API获取数据
-            ResponseEntity<QWeatherResponseVo<WeatherNowVo>> response = callWeatherApi(location, lang, unit);
+            ResponseEntity<QWeatherResponseVo<WeatherNowVo>> response = callWeatherApi(locationId, lang, unit);
             
             // 处理API响应
-            return handleWeatherResponse(response, cacheKey, location);
+            return handleWeatherResponse(response, cacheKey, locationId);
         } catch (Exception e) {
-            log.error("调用和风天气API异常: location={}, error={}", location, e.getMessage(), e);
+            log.error("调用和风天气API异常: locationId={}, cityName={}, error={}", locationId, cityName, e.getMessage(), e);
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR.getCode(),
-                    "获取天气信息异常：" + e.getMessage());
+                    "获取天气信息异常：无法获取“ " + cityName + " ”的天气信息");
         }
     }
 
     /**
-     * 解析并获取城市位置
+     * 解析并获取城市名称
      * 如果location为空，则根据客户端IP自动解析城市
-     * 无论如何都会将城市名称转换为Location_ID
      * 
      * @param location 城市位置（可以是城市名称或Location_ID）
-     * @return 解析后的城市位置ID
+     * @return 解析后的城市名称
      */
-    private String resolveLocation(String location)
+    private String resolveCityName(String location)
     {
-        String cityName;
-        
-        // 如果传入了location参数，直接使用
         if (StringUtils.hasText(location)) {
-            cityName = location;
+            String cityName = location.trim();
             log.info("使用传入的城市参数: {}", cityName);
-        } else {
-            // 否则根据IP解析城市
-            cityName = resolveCityNameByIp();
+            return cityName;
         }
-        
-        // 将城市名称转换为Location_ID
-        String locationId = CityLocationUtils.getLocationIdByCityName(cityName);
-        log.info("城市名称转换为Location_ID: cityName={}, locationId={}", cityName, locationId);
-        
-        return locationId;
+
+        return resolveCityNameByIp();
     }
     
     /**
@@ -136,15 +134,15 @@ public class WeatherServiceImpl implements WeatherService
                     return cityName;
                 }
                 
-                log.warn("IP地址解析城市失败，使用默认城市: 广州");
+                log.warn("IP地址解析城市失败");
             } else {
-                log.warn("无法获取请求上下文，使用默认城市: 广州");
+                log.warn("无法获取请求上下文");
             }
         } catch (Exception e) {
             log.error("IP地址解析异常: {}", e.getMessage(), e);
         }
         
-        return "广州";  // 默认城市
+        return null;
     }
 
     /**
