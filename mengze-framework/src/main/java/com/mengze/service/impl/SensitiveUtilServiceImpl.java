@@ -11,7 +11,9 @@ import com.mengze.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author mengze
@@ -23,6 +25,20 @@ public class SensitiveUtilServiceImpl implements SensitiveUtilService
 
     @Resource
     private AiChatService aiChatService;
+
+    // 应用启动时预热一次开源词库，避免首次请求触发较大的初始化内存峰值
+    @PostConstruct
+    public void warmUpOpenSourceSensitiveWords() {
+        try {
+            List<String> warmUpSamples = java.util.Arrays.asList("预热敏感词检测", "普通文本测试");
+            for (String sample : warmUpSamples) {
+                SensitiveWordHelper.contains(sample);
+            }
+            log.info("开源词库预热完成");
+        } catch (Exception e) {
+            log.warn("开源词库预热失败，但不影响应用启动", e);
+        }
+    }
 
     /**
      * 内容校验敏感词
