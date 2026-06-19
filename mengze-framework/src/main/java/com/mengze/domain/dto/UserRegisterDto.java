@@ -22,8 +22,8 @@ public class UserRegisterDto {
     private String username;
     
     @NotBlank(message = "密码不能为空")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,20}$", 
-             message = "密码必须包含大小写字母和数字，长度8-20位")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&.]{8,20}$",
+             message = "密码必须包含大小写字母和数字，长度8-20位，只能包含字母、数字和特殊字符 @$!%*?&.")
     @ApiModelProperty(value = "密码", required = true, example = "Pass123456")
     private String password;
     

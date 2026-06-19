@@ -61,7 +61,7 @@ public class RedisKeyConstants
 
     //前台重置密码相关
     /** 忘记/重置密码邮箱验证码 Redis Key 前缀 */
-    public static final String FORGOT_PASSWORD_CODE_EMAIL_KEY_PREFIX = "forgotPassword:code:email:";
+    public static final String FORGOT_PASSWORD_CODE_EMAIL_KEY_PREFIX = "forgot_password:code:email:";
 
     //天气相关
     /**  Redis Key 前缀 */
