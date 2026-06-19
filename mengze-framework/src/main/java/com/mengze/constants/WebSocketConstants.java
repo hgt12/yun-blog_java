@@ -39,6 +39,9 @@ public final class WebSocketConstants
     /** 握手阶段保存端点类型的属性名 */
     public static final String ATTR_ENDPOINT_TYPE = "webSocketEndpointType";
 
+    /** WebSocket 端点心跳 在线记录的兜底过期时间，防止 WebSocket 异常断开后 Redis 脏数据长期存在*/
+    public static final long ONLINE_TTL_SECONDS = 1800L;
+
     /** 默认登录类型 */
     public static final String DEFAULT_LOGIN_TYPE = LOGIN_TYPE_ADMIN;
 }

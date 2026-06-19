@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WebSocket在线用户服务实现
@@ -40,10 +41,45 @@ public class OnlineUserServiceImpl implements OnlineUserService
         String onlineUsersKey = getOnlineUsersKey(normalizedLoginType);
 
         //将用户加入 redis对应在线用户集合（去重后）
+        // 全局 session 映射：用于后续离线时快速定位用户和登录类型
         redisCache.setCacheMapValue(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, sessionId, buildSessionValue(userId, normalizedLoginType));
+        redisCache.expire(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
+        // 用户会话集合：用于判断该用户是否还有其他活跃连接
         redisCache.addToSet(userSessionsKey, sessionId);
+        redisCache.expire(userSessionsKey, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
+        // 在线用户集合：用于统计指定登录类型的在线人数
         redisCache.addToSet(onlineUsersKey, userId);
+        redisCache.expire(onlineUsersKey, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
         pushOnlineCount(normalizedLoginType);
+    }
+
+    @Override
+    public void heartbeat(String sessionId)
+    {
+        // 心跳只负责续期，不负责新增在线关系，避免无效 session 被误写入
+        if (!StringUtils.hasText(sessionId)){
+            return;
+        }
+
+        String sessionValue = redisCache.getCacheMapValue(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, sessionId);
+        if (!StringUtils.hasText(sessionValue)){
+            return;
+        }
+
+        // sessionValue 格式为 userId:loginType，用于定位对应的会话集合与在线集合
+        String[] sessionParts = sessionValue.split(":", 2);
+        if (sessionParts.length != 2 || !StringUtils.hasText(sessionParts[0]) || !StringUtils.hasText(sessionParts[1])){
+            return;
+        }
+
+        String userId = sessionParts[0];
+        String loginType = sessionParts[1];
+        String userSessionsKey = getUserSessionsKey(userId, loginType);
+        String onlineUsersKey = getOnlineUsersKey(loginType);
+
+        redisCache.expire(RedisKeyConstants.WS_ONLINE_SESSIONS_KEY, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
+        redisCache.expire(userSessionsKey, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
+        redisCache.expire(onlineUsersKey, WebSocketConstants.ONLINE_TTL_SECONDS, TimeUnit.SECONDS);
     }
 
     //标记用户为离线

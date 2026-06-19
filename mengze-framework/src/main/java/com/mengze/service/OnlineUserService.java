@@ -9,6 +9,8 @@ public interface OnlineUserService
 {
     void online(String sessionId, String userId, String loginType);
 
+    void heartbeat(String sessionId);
+
     void offline(String sessionId);
 
     OnlineCountVo getOnlineCount();
