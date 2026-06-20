@@ -76,24 +76,22 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor
         }
 
         String userId = claims.getSubject();
-        // 先尝试从后台登录缓存中读取用户信息
-        LoginUser loginUser = redisCache.getCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
-        String loginType = WebSocketConstants.LOGIN_TYPE_ADMIN;
-        // 后台缓存没有命中时，再尝试从前台登录缓存中读取
-        if (Objects.isNull(loginUser)){
+        LoginUser loginUser;
+        String loginType;
+
+        // 根据端点类型只查询对应的登录缓存，避免前台/后台用户 ID 串号导致冲突
+        if (WebSocketConstants.ENDPOINT_TYPE_ADMIN.equals(endpointType)){
+            loginUser = redisCache.getCacheObject(RedisKeyConstants.ADMIN_LOGIN_KEY_PREFIX + userId);
+            loginType = WebSocketConstants.LOGIN_TYPE_ADMIN;
+        } else if (WebSocketConstants.ENDPOINT_TYPE_BLOG.equals(endpointType)){
             loginUser = redisCache.getCacheObject(RedisKeyConstants.BLOG_LOGIN_KEY_PREFIX + userId);
             loginType = WebSocketConstants.LOGIN_TYPE_BLOG;
+        } else {
+            throw new IllegalArgumentException("未知的 WebSocket 端点类型！");
         }
+
         if (Objects.isNull(loginUser)){
             throw new IllegalArgumentException("token无效或过期！");
-        }
-        // 后台端点只允许后台用户连接
-        if (WebSocketConstants.ENDPOINT_TYPE_ADMIN.equals(endpointType) && !WebSocketConstants.LOGIN_TYPE_ADMIN.equals(loginType)){
-            throw new IllegalArgumentException("当前 WebSocket 端点仅允许后台用户连接！");
-        }
-        // 前台端点只允许前台用户连接
-        if (WebSocketConstants.ENDPOINT_TYPE_BLOG.equals(endpointType) && !WebSocketConstants.LOGIN_TYPE_BLOG.equals(loginType)){
-            throw new IllegalArgumentException("当前 WebSocket 端点仅允许前台用户连接！");
         }
 
         // 绑定当前登录用户身份，后续可通过 Principal 获取当前用户
