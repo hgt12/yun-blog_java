@@ -62,27 +62,10 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     @Override
     public ResponseResult getSiteInfo()
     {
-        //从Redis获取总预览量（PV），缓存没有数据则从数据库读取再存入redis
-        Integer cachedViews = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
-        long totalViews;
-        if (cachedViews != null) {
-            totalViews = cachedViews.longValue();
-        } else {
-            // Redis 无缓存，从数据库统计 visit_log 总记录数作为 PV
-            totalViews = visitLogMapper.selectCount(null);
-            redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, (int) totalViews);
-        }
-
-        //从Redis获取总访客数（UV），缓存没有数据则从数据库读取再存入redis
-        Integer cachedVisitors = redisCache.getCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
-        long totalVisitors;
-        if (cachedVisitors != null) {
-            totalVisitors = cachedVisitors.longValue();
-        } else {
-            // Redis 无缓存，从数据库统计 unique_visitor 总记录数作为 UV
-            totalVisitors = uniqueVisitorMapper.selectCount(null);
-            redisCache.setCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, (int) totalVisitors);
-        }
+        // 去数据库 site_statistics 表中取全站累计 PV/UV，如果没有数据就默认 0
+        SiteStatistics siteStatistics = getById(1L); // 只查第一行 因为这个表默认就一行数据
+        long totalViews = siteStatistics == null || siteStatistics.getTotalViews() == null ? 0L : siteStatistics.getTotalViews();
+        long totalVisitors = siteStatistics == null || siteStatistics.getTotalVisitors() == null ? 0L : siteStatistics.getTotalVisitors();
 
         SiteInfoVo siteInfoVo = new SiteInfoVo(totalViews, totalVisitors);
         return ResponseResult.okResult(siteInfoVo);
@@ -139,9 +122,11 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
             visitLog.setOs(parseOs(userAgent));
         }
 
-        // pageUrl 只保留路径部分，去除查询参数
+        // pageUrl 只保留路径部分，去除查询参数；为空时给默认值“/”，避免落库异常
         String pageUrl = recordVisitDto.getPageUrl();
-        if (pageUrl != null && pageUrl.contains("?")) {
+        if (pageUrl == null || pageUrl.isBlank()) {
+            pageUrl = "/";
+        } else if (pageUrl.contains("?")) {
             pageUrl = pageUrl.substring(0, pageUrl.indexOf('?'));
         }
         visitLog.setPageUrl(pageUrl);
@@ -251,19 +236,15 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
                     .lt(VisitLog::getVisitTime, dayEnd));
             pvList.add((int) pvCount);
 
-            //查询当天所有 IP
-            List<VisitLog> logs = visitLogMapper.selectList(new LambdaQueryWrapper<VisitLog>()
+            // 在数据库侧按 IP 分组后计数，减少数据传输和 Java 侧聚合开销
+            List<VisitLog> uniqueIps = visitLogMapper.selectList(new LambdaQueryWrapper<VisitLog>()
                     .ge(VisitLog::getVisitTime, dayStart)
                     .lt(VisitLog::getVisitTime, dayEnd)
-                    .select(VisitLog::getIp));
-
-            //给ip去重并统计UV
-            Set<String> uniqueIpSet = logs.stream()
-                    .map(VisitLog::getIp)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            uvList.add(uniqueIpSet.size());
-            ipList.add(uniqueIpSet.size());
+                    .select(VisitLog::getIp)
+                    .groupBy(VisitLog::getIp));
+            int count = uniqueIps == null ? 0 : uniqueIps.size();
+            uvList.add(count);
+            ipList.add(count);
         }
 
         //封装成vo并返回结果
@@ -275,9 +256,10 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
     @Override
     public ResponseResult getVisitOverview()
     {
-        //从 Redis 中获取累计 PV 和 UV
-        Long totalPvCount = getCachedLong(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD);
-        Long totalUvCount = getCachedLong(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD);
+        // 去数据库 site_statistics 表中取全站累计 PV/UV，如果没有数据就默认 0
+        SiteStatistics siteStatistics = getById(1L); // 只查第一行 因为这个表默认就一行数据
+        long totalPvCount = siteStatistics == null || siteStatistics.getTotalViews() == null ? 0L : siteStatistics.getTotalViews();
+        long totalUvCount = siteStatistics == null || siteStatistics.getTotalVisitors() == null ? 0L : siteStatistics.getTotalVisitors();
 
         //计算今天和昨天的时间范围 用于查询今天和昨天的数据
         LocalDate today = LocalDate.now();
@@ -333,12 +315,6 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         return ResponseResult.okResult(visitOverviewVo);
     }
 
-    //缓存
-    private Long getCachedLong(String key, String field)
-    {
-        Integer value = redisCache.getCacheMapValue(key, field);
-        return value == null ? 0L : value.longValue();
-    }
 
     //计算增长率方法
     private double calcGrowthRate(long current, long previous) {
