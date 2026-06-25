@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -137,8 +136,8 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
         visitLog.setExecutionTime((int) (System.currentTimeMillis() - startTime));
         redisCache.pushToList(RedisKeyConstants.VISIT_LOG_QUEUE_KEY, visitLog);
 
-        // PV 计数递增
-        redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VIEWS_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, 1);
+        // PV 增量递增
+        redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_VIEWS_ADD_INCREMENT_KEY, RedisHashFieldConstants.SITE_TOTAL_VIEWS_FIELD, 1);
 
         // UV 去重：先用 Redis 做快速判断，数据库做最终兜底
         String visitorHash = DigestUtils.md5DigestAsHex((ip + userAgent).getBytes(StandardCharsets.UTF_8));
@@ -157,7 +156,7 @@ public class SiteStatisticsServiceImpl extends ServiceImpl<SiteStatisticsMapper,
 
             try {
                 uniqueVisitorMapper.insert(uniqueVisitor);
-                redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_TOTAL_VISITORS_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, 1);
+                redisCache.incrementCacheMapValue(RedisKeyConstants.SITE_VISITORS_INCREMENT_KEY, RedisHashFieldConstants.SITE_TOTAL_VISITORS_FIELD, 1);
             } catch (org.springframework.dao.DuplicateKeyException e) {
                 // 在 Redis 状态丢失或并发下数据库已存在时，转为查库更新，并补回 Redis
                 redisCache.addToSet(visitorKey, visitorHash);

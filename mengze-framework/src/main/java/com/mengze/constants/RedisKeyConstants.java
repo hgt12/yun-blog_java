@@ -76,12 +76,12 @@ public class RedisKeyConstants
     public static final String WS_ONLINE_USER_SESSIONS_KEY_PREFIX = "ws:online:user:sessions:";
 
     //浏览量相关
-    /** 文章预览量 Redis Key */
-    public static final String ARTICLE_VIEW_COUNT_KEY = "article:viewCount";
-    /** 网站总预览量（PV）Redis key */
-    public static final String SITE_TOTAL_VIEWS_KEY = "site:totalViews";
-    /** 网站总访客数（UV）Redis key */
-    public static final String SITE_TOTAL_VISITORS_KEY = "site:totalVisitors";
+    /** 文章预览量增量 Redis Key */
+    public static final String ARTICLE_VIEW_COUNT_INCREMENT_KEY = "article:viewCount:increment";
+    /** 网站 PV 增量 Redis key */
+    public static final String SITE_VIEWS_ADD_INCREMENT_KEY = "site:views:increment";
+    /** 网站 UV 增量 Redis key */
+    public static final String SITE_VISITORS_INCREMENT_KEY = "site:visitors:increment";
     /** 全站访客去重 Set key */
     public static final String SITE_VISITOR_SET_KEY = "site:visitor:set:all";
 

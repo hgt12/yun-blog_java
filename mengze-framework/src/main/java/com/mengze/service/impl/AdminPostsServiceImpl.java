@@ -3,7 +3,6 @@ package com.mengze.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mengze.constants.OssFileConstants;
-import com.mengze.constants.RedisKeyConstants;
 import com.mengze.constants.SystemConstants;
 import com.mengze.domain.ResponseResult;
 import com.mengze.domain.dto.AddPostsDto;
@@ -16,7 +15,6 @@ import com.mengze.mapper.ArticleTagMapper;
 import com.mengze.service.*;
 import com.mengze.utils.BeanCopyUtils;
 import com.mengze.utils.ImageUrlUtils;
-import com.mengze.utils.RedisCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,9 +43,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
 
     @Autowired
     private CategoryService categoryService;
-
-    @Autowired
-    private RedisCache redisCache;
 
     @Autowired
     private ArticleTagMapper articleTagMapper;
@@ -126,9 +121,9 @@ public class AdminPostsServiceImpl implements AdminPostsService
             Category category = categoryService.getById(article.getCategoryId());
             article.setCategoryName(category.getName());
             article.setCategoryStatus(category.getStatus());
-            //从redis中获取viewCount
-            Integer viewCount = redisCache.getCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString());
-            article.setViewCount(viewCount.longValue());
+            //读取数据库中的文章预览量
+            Article dbArticle = articleService.getById(article.getId());
+            article.setViewCount(dbArticle != null && dbArticle.getViewCount() != null ? dbArticle.getViewCount() : 0L);
         });
 
         //封装查询结果为Vo
@@ -207,9 +202,6 @@ public class AdminPostsServiceImpl implements AdminPostsService
         //添加文章
         Article article = BeanCopyUtils.copyBean(postsDto, Article.class);
         articleService.save(article);
-
-        //初始化Redis中的浏览量为0
-        redisCache.setCacheMapValue(RedisKeyConstants.ARTICLE_VIEW_COUNT_KEY, article.getId().toString(), 0);
 
         List<ArticleTag> articleTags = postsDto.getTags().stream()
                 .map(tagId -> new ArticleTag(article.getId(), tagId))
