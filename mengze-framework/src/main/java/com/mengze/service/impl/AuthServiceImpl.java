@@ -240,17 +240,17 @@ public class AuthServiceImpl implements AuthService
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1分钟后再试");
         }
 
-        // 检查1小时内的发送次数（最多20次）
+        // 检查1小时内的发送次数（最多10次）
         String hourKey = RedisKeyConstants.AUTH_IP_LIMIT_HOUR_KEY_PREFIX + type + ":" + ip;
         Integer hourCount = redisCache.getCacheObject(hourKey);
-        if (hourCount != null && hourCount >= 20) {
+        if (hourCount != null && hourCount >= 10) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您今日发送次数过多，请1小时后再试");
         }
 
-        // 检查1天内的发送次数（最多50次，防止恶意攻击）
+        // 检查1天内的发送次数（最多20次，防止恶意攻击）
         String dayKey = RedisKeyConstants.AUTH_IP_LIMIT_DAY_KEY_PREFIX + type + ":" + ip;
         Integer dayCount = redisCache.getCacheObject(dayKey);
-        if (dayCount != null && dayCount >= 50) {
+        if (dayCount != null && dayCount >= 20) {
             System.err.println("检测到异常发送行为 - IP: " + ip + ", 类型: " + type + ", 24小时内发送次数: " + dayCount);
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "系统检测到异常行为，请24小时后再试或联系管理员");
         }
@@ -276,8 +276,8 @@ public class AuthServiceImpl implements AuthService
         Integer dayCount = redisCache.getCacheObject(dayKey);
         redisCache.setCacheObject(dayKey, dayCount == null ? 1 : dayCount + 1, 1, TimeUnit.DAYS);
 
-        // 如果24小时内发送次数超过30次，记录异常日志
-        if (dayCount != null && dayCount >= 30) {
+        // 如果24小时内发送次数超过20次，记录异常日志
+        if (dayCount != null && dayCount >= 20) {
             System.err.println("警告：检测到可能的异常发送行为 - IP: " + ip + ", 类型: " + type + ", 24小时内发送次数: " + (dayCount + 1));
         }
     }

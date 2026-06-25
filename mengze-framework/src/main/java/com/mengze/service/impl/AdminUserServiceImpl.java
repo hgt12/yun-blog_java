@@ -1372,7 +1372,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //检查IP日发送次数限制
         String dayKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_DAY_KEY_TEMPLATE, clientIp);
         Integer dayCount = redisCache.getCacheObject(dayKey);
-        if (dayCount != null && dayCount >= 50) {
+        if (dayCount != null && dayCount >= 20) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "系统检测到异常行为，请24小时后再试或联系管理员");
         }
 
@@ -1393,7 +1393,7 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
         //检测每小时发送频率
         String hourKey = String.format(RedisKeyConstants.ADMIN_IP_LIMIT_HOUR_KEY_TEMPLATE, clientIp);
         Integer hourCount = redisCache.getCacheObject(hourKey);
-        if (hourCount != null && hourCount >= 20) {
+        if (hourCount != null && hourCount >= 10) {
             return ResponseResult.errorResult(AppHttpCodeEnum.IP_REQUEST_LIMIT, "您的操作过于频繁，请1小时后再试");
         }
 
