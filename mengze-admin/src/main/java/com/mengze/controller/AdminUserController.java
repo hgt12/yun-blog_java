@@ -232,10 +232,13 @@ public class AdminUserController
     @PostMapping("/mobile/code")
     @SystemLog(businessName = "获取手机验证码接口")
     @ApiOperation(value = "获取手机验证码接口", notes = "用户更换或绑定手机号时获取手机验证码", response = String.class)
-    @ApiImplicitParam(name = "mobile", value = "手机号", dataType = "String", paramType = "query", required = true)
-    public ResponseResult getMobileCode(@RequestParam String mobile)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "mobile", value = "手机号", dataType = "String", paramType = "query", required = true),
+        @ApiImplicitParam(name = "captchaToken", value = "图形验证码二次验证Token（通过/genCaptcha获取验证码并完成校验后获得）", dataType = "String", paramType = "query")
+    })
+    public ResponseResult getMobileCode(@RequestParam String mobile, @RequestParam(required = false) String captchaToken)
     {
-        return adminUserService.getMobileCode(mobile);
+        return adminUserService.getMobileCode(mobile, captchaToken);
     }
 
     @PutMapping("/mobile")
@@ -258,10 +261,14 @@ public class AdminUserController
     @PostMapping("/email/code")
     @SystemLog(businessName = "获取邮箱验证码接口")
     @ApiOperation(value = "获取邮箱验证码接口", notes = "用户更换或绑定邮箱时获取邮箱验证码", response = String.class)
-    @ApiImplicitParam(name = "email", value = "邮箱地址", dataType = "String", paramType = "query", required = true)
-    public ResponseResult getEmailCode(@RequestParam String email)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "email", value = "邮箱地址", dataType = "String", paramType = "query", required = true),
+        @ApiImplicitParam(name = "captchaToken", value = "图形验证码二次验证Token（通过/genCaptcha获取验证码并完成校验后获得）", dataType = "String", paramType = "query")
+    })
+    public ResponseResult getEmailCode(@RequestParam String email,
+                                        @RequestParam(required = false) String captchaToken)
     {
-        return adminUserService.getEmailCode(email);
+        return adminUserService.getEmailCode(email, captchaToken);
     }
 
     @PutMapping("/email")

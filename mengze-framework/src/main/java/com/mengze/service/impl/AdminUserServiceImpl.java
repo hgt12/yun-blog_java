@@ -17,6 +17,7 @@ import com.mengze.mapper.CommentMapper;
 import com.mengze.mapper.SysUserMapper;
 import com.mengze.mapper.SysUserRoleMapper;
 import com.mengze.service.*;
+import com.mengze.service.CaptchaVerificationService;
 import com.mengze.utils.*;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
@@ -99,6 +100,9 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     @Autowired
     private EmailServiceImpl emailServiceImpl;
+
+    @Autowired
+    private CaptchaVerificationService captchaVerificationService;
 
     @Override
     public ResponseResult getAdminInfo()
@@ -948,8 +952,13 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     //发送手机验证码
     @Override
-    public ResponseResult getMobileCode(String mobile)
+    public ResponseResult getMobileCode(String mobile, String captchaToken)
     {
+        //要先完成安全验证码验证才能发送手机验证码
+        if (!captchaVerificationService.verifyAndConsumeToken(captchaToken)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CAPTCHA_ERROR, "请先完成图形验证码验证");
+        }
+
         //校验手机号不能为空
         if (!StringUtils.hasText(mobile)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");
@@ -1109,8 +1118,13 @@ public class AdminUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> im
 
     //发送邮箱验证码
     @Override
-    public ResponseResult getEmailCode(String email)
+    public ResponseResult getEmailCode(String email, String captchaToken)
     {
+        //要先完成安全验证码验证才能收到邮箱验证码
+        if (!captchaVerificationService.verifyAndConsumeToken(captchaToken)) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CAPTCHA_ERROR, "请先完成图形验证码验证");
+        }
+
         //校验邮箱不能为空
         if (!StringUtils.hasText(email)) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "手机号不能为空");

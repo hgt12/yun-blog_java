@@ -50,6 +50,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/auth/refreshToken").permitAll()
                 // 对于获取图形验证码接口所有人都能访问
                 .antMatchers("/auth/captcha").permitAll()
+                // 对于tianai行为验证码接口（生成和校验）所有人都能访问
+                .antMatchers("/genCaptcha", "/check").permitAll()
                 // 对于获取忘记密码的验证码接口所有人都能访问
                 .antMatchers("/auth/sendCode").permitAll()
                 // 对于验证验证码接口所有人都能访问

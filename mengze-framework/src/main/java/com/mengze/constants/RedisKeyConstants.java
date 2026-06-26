@@ -89,4 +89,13 @@ public class RedisKeyConstants
     /** 访问日志队列 key */
     public static final String VISIT_LOG_QUEUE_KEY = "site:visitLog:queue";
 
+    //图形验证码相关
+    /**
+     * 二次验证 Token 在 Redis 中的 Key 前缀
+     * 与 yml 中 captcha.secondary.keyPrefix 配置保持一致
+     */
+    public static final String SECONDARY_TOKEN_KEY_PREFIX = "captcha:secondary:";
+    /** Token 有效期（分钟），与 yml 中 captcha.secondary.expire 配置保持一致 */
+    public static final Integer TOKEN_EXPIRE_MINUTES = 2;
+
 }

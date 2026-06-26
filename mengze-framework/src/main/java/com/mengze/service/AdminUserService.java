@@ -45,13 +45,13 @@ public interface AdminUserService extends IService<SysUser> {
 
     ResponseResult updateIndividualPassword(UpdateIndividualPasswordDto updateIndividualPasswordDto);
 
-    ResponseResult getMobileCode(String mobile);
+    ResponseResult getMobileCode(String mobile, String captchaToken);
 
     ResponseResult updateOrBindPhone(UpdateOrBindPhoneDto updateOrBindPhoneDto);
 
     ResponseResult unbindPhone(UnbindPhoneOrEmailDto unbindPhoneOrEmailDto);
 
-    ResponseResult getEmailCode(String email);
+    ResponseResult getEmailCode(String email, String captchaToken);
 
     ResponseResult updateOrBindEmail(UpdateOrBindEmailDto updateOrBindEmailDto);
 

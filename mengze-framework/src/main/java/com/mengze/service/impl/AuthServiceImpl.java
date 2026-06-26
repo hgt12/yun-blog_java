@@ -9,6 +9,7 @@ import com.mengze.domain.entity.SysUser;
 import com.mengze.enums.AppHttpCodeEnum;
 import com.mengze.mapper.SysUserMapper;
 import com.mengze.service.AuthService;
+import com.mengze.service.CaptchaVerificationService;
 import com.mengze.utils.IpUtils;
 import com.mengze.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +38,18 @@ public class AuthServiceImpl implements AuthService
     @Autowired
     private RedisCache redisCache;
 
+    @Autowired
+    private CaptchaVerificationService captchaVerificationService;
+
     //前台统一发送验证码接口
     @Override
     public ResponseResult sendCode(SendCodeDto dto)
     {
+        //图形验证码二次校验
+        if (!captchaVerificationService.verifyAndConsumeToken(dto.getCaptchaToken())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.CAPTCHA_ERROR, "请先完成图形验证码验证");
+        }
+
         //验证必填参数
         if (!StringUtils.hasText(dto.getAccount())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "账号不能为空");
@@ -48,7 +57,7 @@ public class AuthServiceImpl implements AuthService
         if (!StringUtils.hasText(dto.getType())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR, "验证码类型不能为空");
         }
-        
+
         String account = dto.getAccount().trim();
         String type = dto.getType().toLowerCase();
         
