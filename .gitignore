@@ -39,9 +39,19 @@ build/
 
 ### 敏感信息 ###
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.template
 **/application-local.yml
 **/application-dev.yml
+**/application-prod.yml
+**/application-*.yml
 **/application.yml
 !**/application.yml.template
+
+### 日志与证书 ###
+*.log
+logs/
+*.pem
+*.key
+*.p12
+*.jks

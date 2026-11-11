@@ -115,8 +115,8 @@ public class AdminUserController
                             "云梦泽",
                             "云梦泽",
                             "1",
-                            "2962933152@qq.com",
-                            "18329384753"
+                            "admin@example.com",
+                            "13800138000"
                     )
             );
 

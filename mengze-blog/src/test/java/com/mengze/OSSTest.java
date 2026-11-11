@@ -50,7 +50,7 @@ public class OSSTest {
 //            byte[] uploadBytes = "hello qiniu cloud".getBytes("utf-8");
 //            ByteArrayInputStream byteInputStream=newByteArrayInputStream(uploadBytes);
             InputStream inputStream = new
-                    FileInputStream("F:\\Mi Manchi\\themes\\fluid\\source\\img\\mi_manchi.png");
+                    FileInputStream("your-image-path.png");
             Auth auth = Auth.create(accessKey, secretKey);
             String upToken = auth.uploadToken(bucket);
             try {

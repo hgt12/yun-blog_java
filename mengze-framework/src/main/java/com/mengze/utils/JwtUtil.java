@@ -21,8 +21,8 @@ public class JwtUtil {
     //刷新token有效期为7天
     public static final Long JWT_REFRESH_TTL = 7 * 24 * 60 * 60 * 1000L; // 7天
     //public static final Long JWT_TTL = 60 *1000L; //测试用token持续一分钟
-    //设置秘钥明文
-    public static final String JWT_KEY = "mengze";
+    //设置秘钥明文（生产环境请通过环境变量 JWT_SECRET 覆盖，值为 Base64 字符串）
+    public static final String JWT_KEY = System.getenv().getOrDefault("JWT_SECRET", "mengze");
 
     public static String getUUID(){
         String token = UUID.randomUUID().toString().replaceAll("-", "");

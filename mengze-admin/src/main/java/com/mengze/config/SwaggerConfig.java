@@ -24,7 +24,7 @@ public class SwaggerConfig
     private ApiInfo apiInfo()
     {
         //url改为最终部署后的网页url
-        Contact contact = new Contact("梦泽", "https://hgt12.github.io", "2962933152@qq.com");
+        Contact contact = new Contact("梦泽", "https://example.com", "admin@example.com");
         return new ApiInfoBuilder()
                 .title("后台接口文档")
                 .description("这是云梦泽个人博客前台接口文档")

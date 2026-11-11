@@ -40,13 +40,13 @@ public class UserImportTemplateVo
 
     @ColumnWidth(30)
     @ExcelProperty("邮箱")
-    @ApiModelProperty(value = "用户邮箱", example = "2962933152@qq.com")
+    @ApiModelProperty(value = "用户邮箱", example = "admin@example.com")
     @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER)
     private String email;
 
     @ColumnWidth(25)
     @ExcelProperty("手机号")
-    @ApiModelProperty(value = "手机号", example = "18329384753")
+    @ApiModelProperty(value = "手机号", example = "13800138000")
     @JSONField(name = "mobile")//转换成 mobile 再响应给前端
     @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER)
     private String phone;

@@ -20,7 +20,7 @@ public class UpdateOrBindEmailDto
 {
     @NotBlank(message = "邮箱不能为空")
     @Pattern(regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", message = "邮箱格式不正确")
-    @ApiModelProperty(value = "邮箱", required = true, example = "2962933152@qq.com")
+    @ApiModelProperty(value = "邮箱", required = true, example = "admin@example.com")
     private String email;
 
     @NotBlank(message = "验证码不能为空")

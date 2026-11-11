@@ -24,11 +24,11 @@ public class AddLinkDto {
     
     @NotBlank(message = "站点地址不能为空")
     @Pattern(regexp = "^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "站点地址格式不正确，请输入有效的URL")
-    @ApiModelProperty(value = "站点地址", required = true, example = "https://hgt12.github.io")
+    @ApiModelProperty(value = "站点地址", required = true, example = "https://example.com")
     private String address;
 
     @Pattern(regexp = "^$|^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "头像地址格式不正确，请输入有效的URL")
-    @ApiModelProperty(value = "头像地址", example = "https://hgt12.github.io/img/mi_manchi.png")
+    @ApiModelProperty(value = "头像地址", example = "https://example.com/avatar.png")
     private String logo;
 
     @NotBlank(message = "状态不能为空")

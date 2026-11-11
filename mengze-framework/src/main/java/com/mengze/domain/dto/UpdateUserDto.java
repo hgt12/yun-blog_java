@@ -27,7 +27,7 @@ public class UpdateUserDto
     @ApiModelProperty(value = "部门id", required = true, example = "3")
     private String deptId;
 
-    @ApiModelProperty(value = "邮箱", example = "2962933152@qq.com")
+    @ApiModelProperty(value = "邮箱", example = "admin@example.com")
     private String email;
 
     @ApiModelProperty(value = "用户性别，（0 男，1 女，2 隐藏）", example = "0")

@@ -24,13 +24,13 @@ public class UserFormDetailVo
     @ApiModelProperty(value = "部门id", example = "测试不")
     private String deptId;
 
-    @ApiModelProperty(value = "用户邮箱", example = "2962933152@qq.com")
+    @ApiModelProperty(value = "用户邮箱", example = "admin@example.com")
     private String email;
 
     @ApiModelProperty(value = "用户性别，（0 男，1 女，2 隐藏）", example = "0")
     private String sex;
 
-    @ApiModelProperty(value = "手机号", example = "18329384753")
+    @ApiModelProperty(value = "手机号", example = "13800138000")
     @JSONField(name = "mobile")//转换成 mobile 再响应给前端
     private String phone;
 
