@@ -104,7 +104,7 @@ yun-blog-java/
 ### 5.1 获取代码并进入项目根目录
 
 ```bash
-git clone <your-repository-url> yun-blog-java
+git clone https://github.com/hgt12/yun-blog_java.git yun-blog-java
 cd yun-blog-java
 ```
 
